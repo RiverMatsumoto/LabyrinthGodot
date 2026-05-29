@@ -54,6 +54,7 @@
     "lightmapper",
     "lihop",
     "linecoverage",
+    "Matsumoto",
     "methodcoverage",
     "missingall",
     "msbuild",
@@ -97,6 +98,6 @@
     "vulkan",
     "Wyri",
     "XRIP",
-    "Xunit",
+    "Xunit"
   ]
 }
