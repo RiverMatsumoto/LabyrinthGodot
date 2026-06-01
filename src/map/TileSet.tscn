@@ -1,0 +1,11 @@
+[gd_scene format=3 uid="uid://1jxe57ixjf3x"]
+
+[ext_resource type="PackedScene" uid="uid://dkbl66xt5o7ni" path="res://src/map/visuals/tiles.gltf" id="1_3be4t"]
+
+[node name="default" unique_id=1561947512 instance=ExtResource("1_3be4t")]
+
+[node name="Floor" parent="." index="0" unique_id=1212438831]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0)
+
+[node name="Wall" parent="." index="1" unique_id=46548669]
+transform = Transform3D(1, 0, 0, 0, 2, 0, 0, 0, 1, 0, 0, 0)
