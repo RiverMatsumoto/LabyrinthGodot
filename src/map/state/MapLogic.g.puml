@@ -1,0 +1,7 @@
+@startuml MapLogic
+state "MapLogic State" as Labyrinth_MapLogic_State {
+  state "Idle" as Labyrinth_MapLogic_State_Idle
+  state "Moving" as Labyrinth_MapLogic_State_Moving
+}
+[*] --> Labyrinth_MapLogic_State
+@enduml

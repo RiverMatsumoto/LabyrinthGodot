@@ -1,0 +1,6 @@
+[gd_scene format=3 uid="uid://6j72sdtos6ad"]
+
+[ext_resource type="Script" uid="uid://daukdqth1gnqe" path="res://src/map_movement/MapMovement.cs" id="1_85dv2"]
+
+[node name="MapMovement" type="Node3D" unique_id=362388738]
+script = ExtResource("1_85dv2")
