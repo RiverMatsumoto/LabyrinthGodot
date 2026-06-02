@@ -1,6 +1,6 @@
 namespace Labyrinth;
 
-public partial record MapLogicState
+public partial record MapState
 {
-    public record Idle : MapLogicState;
+    public record Idle : MapState;
 }

@@ -6,7 +6,7 @@ using Chickensoft.LogicBlocks;
 
 [Meta]
 [StateDiagram]
-public partial record MapLogicState : LogicBlockState
+public partial record MapState : LogicBlockState
 {
     public static class Input
     {
