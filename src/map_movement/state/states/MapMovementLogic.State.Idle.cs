@@ -1,15 +1,22 @@
 namespace Labyrinth;
 
-using Chickensoft.Introspection;
+using System;
+using Chickensoft.LogicBlocks;
+using Godot;
 
-public partial class MapMovementLogic
+public partial record MapMovementState
 {
-    public partial record State
+    public record Idle : MapMovementState, IGet<Input.Moved>
     {
-        [Meta]
-        public partial record Idle : State
+        public Idle()
         {
-            // public Transition
+            this.OnEnter(() => GD.Print("Entered Idle"));
+        }
+
+        public Type On(in Input.Moved input)
+        {
+            GD.Print($"Moved: {input.Direction}");
+            return To<Moving>();
         }
     }
 }

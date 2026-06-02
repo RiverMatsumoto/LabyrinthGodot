@@ -4,8 +4,17 @@ namespace Labyrinth;
 using Chickensoft.Introspection;
 using Chickensoft.LogicBlocks;
 
-public partial class MapLogic
+[Meta]
+[StateDiagram]
+public partial record MapLogicState : LogicBlockState
 {
-    [Meta]
-    public abstract partial record State : StateLogic<State>;
+    public static class Input
+    {
+
+    }
+
+    public static class Output
+    {
+
+    }
 }

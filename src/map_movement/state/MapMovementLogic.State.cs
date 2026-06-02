@@ -2,9 +2,20 @@ namespace Labyrinth;
 
 using Chickensoft.Introspection;
 using Chickensoft.LogicBlocks;
+using Godot;
 
-public partial class MapMovementLogic
+[Meta]
+[StateDiagram]
+public partial record MapMovementState : LogicBlockState
 {
-    [Meta]
-    public abstract partial record State : StateLogic<State>;
+    public static class Input
+    {
+        // public readonly record struct <NameOfInput>(DataAttachedToTheInput);
+        public readonly record struct Moved(Vector2 Direction);
+    }
+
+    public static class Output
+    {
+        // public readonly record struct <NameOfOutput>(DataAttachedToTheOutput);
+    }
 }

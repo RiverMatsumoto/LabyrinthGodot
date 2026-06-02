@@ -1,15 +1,6 @@
 namespace Labyrinth;
 
-using Chickensoft.Introspection;
-
-public partial class MapLogic
+public partial record MapLogicState
 {
-    public partial record State
-    {
-        [Meta]
-        public partial record Idle : State
-        {
-
-        }
-    }
+    public record Idle : MapLogicState;
 }

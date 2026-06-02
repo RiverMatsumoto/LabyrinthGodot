@@ -3,11 +3,10 @@ namespace Labyrinth;
 using Chickensoft.Introspection;
 using Chickensoft.LogicBlocks;
 
-public interface IMapMovementLogic : ILogicBlock<MapMovementLogic.State>;
+public interface IMapMovementLogic : ILogicBlock;
 
 [Meta, Id("map_movement_logic")]
-[LogicBlock(typeof(State), Diagram = true)]
-public partial class MapMovementLogic : LogicBlock<MapMovementLogic.State>, IMapMovementLogic
+// [LogicBlock(typeof(State), Diagram = true)]
+public partial class MapMovementLogic : LogicBlock, IMapMovementLogic
 {
-    public override Transition GetInitialState() => To<State.Idle>();
 }
