@@ -1,0 +1,46 @@
+[
+  {
+    "label": "Debug Game",
+    "adapter": "netcoredbg",
+    "request": "launch",
+    "program": "$GODOT",
+    "args": [],
+    "cwd": "$ZED_WORKTREE_ROOT",
+    "build": "build-without-tests"
+  },
+  {
+    "label": "Debug Current Scene",
+    "adapter": "netcoredbg",
+    "request": "launch",
+    "program": "$GODOT",
+    "args": [
+      "$ZED_DIRNAME/$ZED_STEM.tscn"
+    ],
+    "cwd": "$ZED_WORKTREE_ROOT",
+    "build": "build-without-tests"
+  },
+  {
+    "label": "Debug Tests",
+    "adapter": "netcoredbg",
+    "request": "launch",
+    "program": "$GODOT",
+    "args": [
+      "--run-tests",
+      "--quit-on-finish"
+    ],
+    "cwd": "$ZED_WORKTREE_ROOT",
+    "build": "build"
+  },
+  {
+    "label": "Debug Current Test",
+    "adapter": "netcoredbg",
+    "request": "launch",
+    "program": "$GODOT",
+    "args": [
+      "--run-tests=$ZED_STEM",
+      "--quit-on-finish"
+    ],
+    "cwd": "$ZED_WORKTREE_ROOT",
+    "build": "build"
+  }
+]

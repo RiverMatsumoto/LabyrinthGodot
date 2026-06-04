@@ -1,0 +1,430 @@
+{
+  "C# Class": {
+    "prefix": "class",
+    "body": [
+      "namespace ${1:Labyrinth};",
+      "",
+      "public class ${2:ClassName}",
+      "{",
+      "    $0",
+      "}",
+      ""
+    ],
+    "description": "Project-style C# class file"
+  },
+  "C# Class (csclass)": {
+    "prefix": "csclass",
+    "body": [
+      "namespace ${1:Labyrinth};",
+      "",
+      "public class ${2:ClassName}",
+      "{",
+      "    $0",
+      "}",
+      ""
+    ],
+    "description": "Project-style C# class file"
+  },
+  "C# Interface": {
+    "prefix": "interface",
+    "body": [
+      "namespace ${1:Labyrinth};",
+      "",
+      "public interface ${2:IInterfaceName}",
+      "{",
+      "    $0",
+      "}",
+      ""
+    ],
+    "description": "Project-style C# interface file"
+  },
+  "C# Interface (csinterface)": {
+    "prefix": "csinterface",
+    "body": [
+      "namespace ${1:Labyrinth};",
+      "",
+      "public interface ${2:IInterfaceName}",
+      "{",
+      "    $0",
+      "}",
+      ""
+    ],
+    "description": "Project-style C# interface file"
+  },
+  "C# Record": {
+    "prefix": "record",
+    "body": [
+      "namespace ${1:Labyrinth};",
+      "",
+      "public record ${2:RecordName}($0);",
+      ""
+    ],
+    "description": "Project-style C# record file"
+  },
+  "C# Record (csrecord)": {
+    "prefix": "csrecord",
+    "body": [
+      "namespace ${1:Labyrinth};",
+      "",
+      "public record ${2:RecordName}($0);",
+      ""
+    ],
+    "description": "Project-style C# record file"
+  },
+  "C# Disposable Repo Interface": {
+    "prefix": "repo",
+    "body": [
+      "namespace ${1:Labyrinth};",
+      "",
+      "using System;",
+      "",
+      "public interface ${2:IRepository} : IDisposable",
+      "{",
+      "    $0",
+      "}",
+      ""
+    ],
+    "description": "Project-style IDisposable repository interface"
+  },
+  "C# Disposable Repo Interface (repository)": {
+    "prefix": "repository",
+    "body": [
+      "namespace ${1:Labyrinth};",
+      "",
+      "using System;",
+      "",
+      "public interface ${2:IRepository} : IDisposable",
+      "{",
+      "    $0",
+      "}",
+      ""
+    ],
+    "description": "Project-style IDisposable repository interface"
+  },
+  "Chickensoft AutoNode": {
+    "prefix": "autonode",
+    "body": [
+      "namespace ${1:Labyrinth};",
+      "",
+      "using Chickensoft.AutoInject;",
+      "using Chickensoft.Introspection;",
+      "using Godot;",
+      "",
+      "[Meta(typeof(IAutoNode))]",
+      "public partial class ${2:NodeName} : ${3:Node} {",
+      "    public override void _Notification(int what) => this.Notify(what);",
+      "$0",
+      "}",
+      ""
+    ],
+    "description": "Chickensoft AutoNode template"
+  },
+  "Chickensoft AutoInject Provision": {
+    "prefix": "provide",
+    "body": [
+      "${1:ProvisionType} IProvide<${1:ProvisionType}>.Value() => ${2:ProvisionValue};"
+    ],
+    "description": "Chickensoft AutoInject IProvide implementation"
+  },
+  "Chickensoft AutoInject Dependency": {
+    "prefix": "depend",
+    "body": [
+      "[Dependency] ${1:public} ${2:DependencyType} ${3:DependencyValue} => this.DependOn<${2:DependencyType}>();"
+    ],
+    "description": "Chickensoft AutoInject Dependency attribute"
+  },
+  "Chickensoft AutoProp": {
+    "prefix": "autoprop",
+    "body": [
+      "public IAutoProp<${1:PropType}> ${2:PublicPropName} => ${3:_privatePropName};",
+      "private readonly AutoProp<${1:PropType}> ${3:_privatePropName} = new($0);"
+    ],
+    "description": "Chickensoft Collections AutoProp attribute"
+  },
+  "Chickensoft LogicBlock": {
+    "prefix": "logicblock",
+    "body": [
+      "namespace ${1:Labyrinth};",
+      "",
+      "using Chickensoft.Introspection;",
+      "using Chickensoft.LogicBlocks;",
+      "",
+      "public interface I${2:LogicBlockName} : ILogicBlock;",
+      "",
+      "[Meta, Id(\"${3:logic_block_name}\")]",
+      "public partial class ${2:LogicBlockName} : LogicBlock, I${2:LogicBlockName}",
+      "{",
+      "    $0",
+      "}",
+      ""
+    ],
+    "description": "Chickensoft LogicBlocks v6 logic block template"
+  },
+  "Chickensoft LogicBlock (lb)": {
+    "prefix": "lb",
+    "body": [
+      "namespace ${1:Labyrinth};",
+      "",
+      "using Chickensoft.Introspection;",
+      "using Chickensoft.LogicBlocks;",
+      "",
+      "public interface I${2:LogicBlockName} : ILogicBlock;",
+      "",
+      "[Meta, Id(\"${3:logic_block_name}\")]",
+      "public partial class ${2:LogicBlockName} : LogicBlock, I${2:LogicBlockName}",
+      "{",
+      "    $0",
+      "}",
+      ""
+    ],
+    "description": "Chickensoft LogicBlocks v6 logic block template"
+  },
+  "Chickensoft LogicBlock Inputs": {
+    "prefix": "logicblock-input",
+    "body": [
+      "public readonly record struct ${1:MyInput}${2};"
+    ],
+    "description": "Chickensoft LogicBlocks v6 input record"
+  },
+  "Chickensoft LogicBlock Inputs (lbin)": {
+    "prefix": "lbin",
+    "body": [
+      "public readonly record struct ${1:MyInput}${2};"
+    ],
+    "description": "Chickensoft LogicBlocks v6 input record"
+  },
+  "Chickensoft LogicBlock Outputs": {
+    "prefix": "logicblock-output",
+    "body": [
+      "public readonly record struct ${1:MyOutput}${2};"
+    ],
+    "description": "Chickensoft LogicBlocks v6 output record"
+  },
+  "Chickensoft LogicBlock Outputs (lbout)": {
+    "prefix": "lbout",
+    "body": [
+      "public readonly record struct ${1:MyOutput}${2};"
+    ],
+    "description": "Chickensoft LogicBlocks v6 output record"
+  },
+  "Chickensoft LogicBlock Class Project Style": {
+    "prefix": "logicblock-class",
+    "body": [
+      "namespace ${1:Labyrinth};",
+      "",
+      "using Chickensoft.Introspection;",
+      "using Chickensoft.LogicBlocks;",
+      "",
+      "public interface I${2:LogicBlockName} : ILogicBlock;",
+      "",
+      "[Meta, Id(\"${3:logic_block_name}\")]",
+      "public partial class ${2:LogicBlockName} : LogicBlock, I${2:LogicBlockName}",
+      "{",
+      "    $0",
+      "}",
+      ""
+    ],
+    "description": "Project-style Chickensoft LogicBlocks v6 class with interface"
+  },
+  "Chickensoft LogicBlock Class Project Style (lbclass)": {
+    "prefix": "lbclass",
+    "body": [
+      "namespace ${1:Labyrinth};",
+      "",
+      "using Chickensoft.Introspection;",
+      "using Chickensoft.LogicBlocks;",
+      "",
+      "public interface I${2:LogicBlockName} : ILogicBlock;",
+      "",
+      "[Meta, Id(\"${3:logic_block_name}\")]",
+      "public partial class ${2:LogicBlockName} : LogicBlock, I${2:LogicBlockName}",
+      "{",
+      "    $0",
+      "}",
+      ""
+    ],
+    "description": "Project-style Chickensoft LogicBlocks v6 class with interface"
+  },
+  "Chickensoft LogicBlock State Base Project Style": {
+    "prefix": "logicblock-state-base",
+    "body": [
+      "namespace ${1:Labyrinth};",
+      "",
+      "using Chickensoft.Introspection;",
+      "using Chickensoft.LogicBlocks;",
+      "",
+      "[Meta]",
+      "[StateDiagram]",
+      "public partial record ${2:LogicBlockState} : LogicBlockState",
+      "{",
+      "    public static class Input",
+      "    {",
+      "        $0",
+      "    }",
+      "",
+      "    public static class Output",
+      "    {",
+      "    }",
+      "}",
+      ""
+    ],
+    "description": "Project-style base state file for Chickensoft LogicBlocks v6"
+  },
+  "Chickensoft LogicBlock State Base Project Style (lbsbase)": {
+    "prefix": "lbsbase",
+    "body": [
+      "namespace ${1:Labyrinth};",
+      "",
+      "using Chickensoft.Introspection;",
+      "using Chickensoft.LogicBlocks;",
+      "",
+      "[Meta]",
+      "[StateDiagram]",
+      "public partial record ${2:LogicBlockState} : LogicBlockState",
+      "{",
+      "    public static class Input",
+      "    {",
+      "        $0",
+      "    }",
+      "",
+      "    public static class Output",
+      "    {",
+      "    }",
+      "}",
+      ""
+    ],
+    "description": "Project-style base state file for Chickensoft LogicBlocks v6"
+  },
+  "Chickensoft LogicBlock State Project Style": {
+    "prefix": "logicblock-state",
+    "body": [
+      "namespace ${1:Labyrinth};",
+      "",
+      "using System;",
+      "using Chickensoft.LogicBlocks;",
+      "",
+      "public partial record ${2:LogicBlockState}",
+      "{",
+      "    public record ${3:StateName} : ${2:LogicBlockState}, IGet<Input.${4:MyInput}>",
+      "    {",
+      "        public ${3:StateName}()",
+      "        {",
+      "            $0",
+      "        }",
+      "",
+      "        public Type On(in Input.${4:MyInput} input) => ToSelf();",
+      "    }",
+      "}",
+      ""
+    ],
+    "description": "Project-style individual state file for Chickensoft LogicBlocks v6"
+  },
+  "Chickensoft LogicBlock State Project Style (lbs)": {
+    "prefix": "lbs",
+    "body": [
+      "namespace ${1:Labyrinth};",
+      "",
+      "using System;",
+      "using Chickensoft.LogicBlocks;",
+      "",
+      "public partial record ${2:LogicBlockState}",
+      "{",
+      "    public record ${3:StateName} : ${2:LogicBlockState}, IGet<Input.${4:MyInput}>",
+      "    {",
+      "        public ${3:StateName}()",
+      "        {",
+      "            $0",
+      "        }",
+      "",
+      "        public Type On(in Input.${4:MyInput} input) => ToSelf();",
+      "    }",
+      "}",
+      ""
+    ],
+    "description": "Project-style individual state file for Chickensoft LogicBlocks v6"
+  },
+  "Chickensoft LogicBlock Data Project Style": {
+    "prefix": "logicblock-data",
+    "body": [
+      "namespace ${1:Labyrinth};",
+      "",
+      "using Chickensoft.Introspection;",
+      "",
+      "public partial class ${2:LogicBlockName}",
+      "{",
+      "    [Meta, Id(\"${3:logic_block_name}\")]",
+      "    public partial record Data",
+      "    {",
+      "        $0",
+      "    }",
+      "}",
+      ""
+    ],
+    "description": "Project-style nested Data record for a Chickensoft LogicBlock"
+  },
+  "Chickensoft LogicBlock Data Project Style (lbdata)": {
+    "prefix": "lbdata",
+    "body": [
+      "namespace ${1:Labyrinth};",
+      "",
+      "using Chickensoft.Introspection;",
+      "",
+      "public partial class ${2:LogicBlockName}",
+      "{",
+      "    [Meta, Id(\"${3:logic_block_name}\")]",
+      "    public partial record Data",
+      "    {",
+      "        $0",
+      "    }",
+      "}",
+      ""
+    ],
+    "description": "Project-style nested Data record for a Chickensoft LogicBlock"
+  },
+  "Chickensoft Data Record Project Style": {
+    "prefix": "data",
+    "body": [
+      "namespace ${1:Labyrinth};",
+      "",
+      "using Chickensoft.Introspection;",
+      "",
+      "[Meta, Id(\"${3:data_name}\")]",
+      "public partial record ${2:DataName}",
+      "{",
+      "    $0",
+      "}",
+      ""
+    ],
+    "description": "Project-style Chickensoft data record"
+  },
+  "Chickensoft Data Record Project Style (csdata)": {
+    "prefix": "csdata",
+    "body": [
+      "namespace ${1:Labyrinth};",
+      "",
+      "using Chickensoft.Introspection;",
+      "",
+      "[Meta, Id(\"${3:data_name}\")]",
+      "public partial record ${2:DataName}",
+      "{",
+      "    $0",
+      "}",
+      ""
+    ],
+    "description": "Project-style Chickensoft data record"
+  },
+  "Godot [Export]": {
+    "prefix": "export",
+    "body": [
+      "[Export] ${1:public} ${2:Node} ${3:MyExport} { get; set; } = default!;"
+    ],
+    "description": "Godot [Export] attribute"
+  },
+  "Godot [Signal]": {
+    "prefix": "signal",
+    "body": [
+      "[Signal] public delegate void ${1:My}EventHandler($2);"
+    ],
+    "description": "Godot [Signal] attribute"
+  }
+}

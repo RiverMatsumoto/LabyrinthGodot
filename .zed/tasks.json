@@ -1,0 +1,50 @@
+[
+  {
+    "label": "build",
+    "command": "dotnet",
+    "args": [
+      "build"
+    ],
+    "cwd": "$ZED_WORKTREE_ROOT",
+    "reveal": "no_focus",
+    "hide": "on_success",
+    "save": "all"
+  },
+  {
+    "label": "build-without-tests",
+    "command": "dotnet",
+    "args": [
+      "build"
+    ],
+    "cwd": "$ZED_WORKTREE_ROOT",
+    "env": {
+      "SKIP_TESTS": "1"
+    },
+    "reveal": "no_focus",
+    "hide": "on_success",
+    "save": "all"
+  },
+  {
+    "label": "coverage",
+    "command": "bash",
+    "args": [
+      "$ZED_WORKTREE_ROOT/coverage.sh"
+    ],
+    "cwd": "$ZED_WORKTREE_ROOT",
+    "reveal": "always",
+    "hide": "never",
+    "save": "all"
+  },
+  {
+    "label": "build-solutions",
+    "command": "bash",
+    "args": [
+      "-lc",
+      "dotnet restore; \"$GODOT\" --headless --build-solutions --quit || exit 0"
+    ],
+    "cwd": "$ZED_WORKTREE_ROOT",
+    "reveal": "no_focus",
+    "hide": "on_success",
+    "save": "all"
+  }
+]

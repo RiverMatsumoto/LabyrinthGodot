@@ -1,0 +1,8 @@
+id = "labyrinth-snippets"
+name = "Labyrinth Snippets"
+version = "0.0.1"
+schema_version = 1
+authors = ["RiverMatsumoto"]
+description = "Project C# snippets ported from the VS Code workspace snippets."
+repository = "https://github.com/RiverMatsumoto/LabyrinthGodot"
+snippets = ["./snippets/csharp.json"]
