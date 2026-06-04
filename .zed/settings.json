@@ -14,12 +14,12 @@
     "CSharp": {
       "format_on_save": "on",
       "formatter": "language_server",
-      // "code_actions_on_format": {
-      //   "source.addMissingImports": true,
-      //   "source.organizeImports": true,
-      //   "source.fixAll": true
-      // },
-      "tab_size": 2
+      "code_actions_on_format": {
+        "source.addMissingImports": true,
+        "source.organizeImports": true,
+        "source.fixAll": true
+      },
+      "tab_size": 4
     },
     "JSON": {
       "format_on_save": "on",
@@ -30,10 +30,10 @@
       "formatter": "language_server"
     }
   },
-  "telemetry": {
-    "diagnostics": false,
-    "metrics": false
-  },
+  // "telemetry": {
+  //   "diagnostics": false,
+  //   "metrics": false
+  // },
   "file_types": {
     "XML": [
       "csproj",
