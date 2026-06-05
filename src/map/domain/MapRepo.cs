@@ -1,12 +1,13 @@
 namespace Labyrinth;
 
 using System;
+using Godot;
 
 public interface IMapRepo : IDisposable
 {
 
-    bool CanEnter(GridPosition gridPosition);
-    bool IsInside(GridPosition gridPosition);
+    bool CanEnter(Vector2I gridPosition);
+    bool IsInside(Vector2I gridPosition);
 }
 
 public class MapRepo : IMapRepo
@@ -20,7 +21,7 @@ public class MapRepo : IMapRepo
         _gridCellMap = new GridCellMap(50, 50, GridCellTerrain.Floor);
     }
 
-    public bool CanEnter(GridPosition gridPosition) => throw new NotImplementedException();
+    public bool CanEnter(Vector2I gridPosition) => throw new NotImplementedException();
 
     public void Dispose(bool disposing)
     {
@@ -41,5 +42,5 @@ public class MapRepo : IMapRepo
         GC.SuppressFinalize(this);
     }
 
-    public bool IsInside(GridPosition gridPosition) => throw new NotImplementedException();
+    public bool IsInside(Vector2I gridPosition) => throw new NotImplementedException();
 }

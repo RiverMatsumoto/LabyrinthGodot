@@ -17,16 +17,16 @@ the VS Code setup.
 ## Debug
 
 `.zed/debug.json` contains best-effort C# launch equivalents for the Godot debug
-profiles. They use the `netcoredbg` adapter name and assume `GODOT` points at
-the Godot executable.
-
-Zed's official debugger docs do not currently list C#/.NET as a built-in debug
-target, so these profiles require a Zed extension or local adapter setup that
-registers `netcoredbg`. If your adapter setup does not expand `$GODOT` in the
-`program` field, replace it with the absolute Godot executable path.
+profiles. They use the `godot` adapter provided by the GDScript Zed extension.
 
 The VS Code VSCodium-specific `pipeTransport` profile was not ported because
 Zed debug configs do not have a direct `pipeTransport` equivalent.
+
+Zed's official debugger docs do not currently list C#/.NET as a built-in debug
+target, and this machine does not have a registered `netcoredbg` adapter. These
+profiles should be discoverable as Godot debug profiles, but they are not a
+replacement for full CLR/C# debugging unless a future Zed extension provides
+that adapter.
 
 ## Snippets
 

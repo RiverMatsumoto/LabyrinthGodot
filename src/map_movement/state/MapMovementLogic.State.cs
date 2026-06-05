@@ -6,7 +6,7 @@ using Godot;
 
 [Meta]
 [StateDiagram]
-public partial record MapMovementState : LogicBlockState
+public abstract partial record MapMovementState : LogicBlockState
 {
     public static class Input
     {

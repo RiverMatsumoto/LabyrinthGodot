@@ -44,9 +44,9 @@ public partial class Main : Node2D
 
 #if RUN_TESTS
     private void RunTests()
-      => _ = GoTest.RunTests(Assembly.GetExecutingAssembly(), this, Environment);
+        => _ = GoTest.RunTests(Assembly.GetExecutingAssembly(), this, Environment);
 #endif
 
     private void RunScene()
-      => GetTree().ChangeSceneToFile("res://src/Game.tscn");
+        => GetTree().ChangeSceneToFile("res://src/game/Game.tscn");
 }

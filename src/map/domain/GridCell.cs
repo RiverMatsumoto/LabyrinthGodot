@@ -1,11 +1,12 @@
 namespace Labyrinth;
 
 using System;
+using Godot;
 
 public readonly record struct GridCell
 {
     public GridCell(
-        GridPosition position,
+        Vector2I position,
         GridCellTerrain terrain = GridCellTerrain.Floor,
         GridCellSides walls = GridCellSides.None,
         GridCellFlags flags = GridCellFlags.None
@@ -17,7 +18,7 @@ public readonly record struct GridCell
         Flags = flags;
     }
 
-    public GridPosition Position { get; init; }
+    public Vector2I Position { get; init; }
     public GridCellTerrain Terrain { get; init; }
     public GridCellSides Walls { get; init; }
     public GridCellFlags Flags { get; init; }
@@ -28,9 +29,9 @@ public readonly record struct GridCell
     public bool BlocksSight =>
         Terrain.BlocksSight() || Flags.Has(GridCellFlags.BlocksSight);
 
-    public static GridCell Floor(GridPosition position) => new(position);
+    public static GridCell Floor(Vector2I position) => new(position);
 
-    public static GridCell Wall(GridPosition position) =>
+    public static GridCell Wall(Vector2I position) =>
         new(position, GridCellTerrain.Wall);
 
     public bool HasWall(GridDirection side) => Walls.Has(side);
@@ -41,7 +42,7 @@ public readonly record struct GridCell
     public bool CanEnterFrom(GridDirection side) =>
         IsWalkable && !HasWall(side);
 
-    public GridPosition Neighbor(GridDirection direction) =>
+    public Vector2I Neighbor(GridDirection direction) =>
         Position + direction.ToGridOffset();
 
     public GridCell WithWall(GridDirection side) =>
@@ -125,14 +126,14 @@ public static class GridCellExtensions
             _ => GridCellSides.None,
         };
 
-    public static GridPosition ToGridOffset(this GridDirection direction) =>
+    public static Vector2I ToGridOffset(this GridDirection direction) =>
         direction switch
         {
-            GridDirection.North => new GridPosition(0, -1),
-            GridDirection.East => new GridPosition(1, 0),
-            GridDirection.South => new GridPosition(0, 1),
-            GridDirection.West => new GridPosition(-1, 0),
-            _ => new GridPosition(0, 0),
+            GridDirection.North => new Vector2I(0, -1),
+            GridDirection.East => new Vector2I(1, 0),
+            GridDirection.South => new Vector2I(0, 1),
+            GridDirection.West => new Vector2I(-1, 0),
+            _ => new Vector2I(0, 0),
         };
 
     public static GridDirection Opposite(this GridDirection direction) =>

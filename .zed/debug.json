@@ -1,46 +1,46 @@
 [
   {
     "label": "Debug Game",
-    "adapter": "netcoredbg",
+    "adapter": "godot",
     "request": "launch",
-    "program": "$GODOT",
-    "args": [],
-    "cwd": "$ZED_WORKTREE_ROOT",
+    "project": "$ZED_WORKTREE_ROOT",
+    "platform": "host",
+    "scene": "main",
     "build": "build-without-tests"
   },
   {
     "label": "Debug Current Scene",
-    "adapter": "netcoredbg",
+    "adapter": "godot",
     "request": "launch",
-    "program": "$GODOT",
-    "args": [
-      "$ZED_DIRNAME/$ZED_STEM.tscn"
-    ],
-    "cwd": "$ZED_WORKTREE_ROOT",
+    "project": "$ZED_WORKTREE_ROOT",
+    "platform": "host",
+    "scene": "current",
     "build": "build-without-tests"
   },
   {
     "label": "Debug Tests",
-    "adapter": "netcoredbg",
+    "adapter": "godot",
     "request": "launch",
-    "program": "$GODOT",
-    "args": [
+    "project": "$ZED_WORKTREE_ROOT",
+    "platform": "host",
+    "scene": "main",
+    "playArgs": [
       "--run-tests",
       "--quit-on-finish"
     ],
-    "cwd": "$ZED_WORKTREE_ROOT",
     "build": "build"
   },
   {
     "label": "Debug Current Test",
-    "adapter": "netcoredbg",
+    "adapter": "godot",
     "request": "launch",
-    "program": "$GODOT",
-    "args": [
-      "--run-tests=$ZED_STEM",
+    "project": "$ZED_WORKTREE_ROOT",
+    "platform": "host",
+    "scene": "main",
+    "playArgs": [
+      "--run-tests=${ZED_STEM:CurrentTestName}",
       "--quit-on-finish"
     ],
-    "cwd": "$ZED_WORKTREE_ROOT",
     "build": "build"
   }
 ]

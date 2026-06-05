@@ -1,6 +1,7 @@
 namespace Labyrinth;
 
 using System;
+using Godot;
 
 public sealed class GridCellMap
 {
@@ -36,7 +37,7 @@ public sealed class GridCellMap
         {
             for (var x = 0; x < Width; x++)
             {
-                var position = new GridPosition(x, y);
+                var position = new Vector2I(x, y);
                 _cells[GetIndexUnchecked(position)] =
                     new GridCell(position, defaultTerrain);
             }
@@ -47,7 +48,7 @@ public sealed class GridCellMap
     public int Height { get; }
     public int Count => _cells.Length;
 
-    public GridCell this[GridPosition position]
+    public GridCell this[Vector2I position]
     {
         get => _cells[GetIndex(position)];
         set => _cells[GetIndex(position)] = value;
@@ -55,19 +56,19 @@ public sealed class GridCellMap
 
     public GridCell this[int x, int y]
     {
-        get => this[new GridPosition(x, y)];
-        set => this[new GridPosition(x, y)] = value;
+        get => this[new Vector2I(x, y)];
+        set => this[new Vector2I(x, y)] = value;
     }
 
     public ReadOnlySpan<GridCell> Cells => _cells;
 
-    public bool IsInside(GridPosition position) =>
+    public bool IsInside(Vector2I position) =>
         position.X >= 0
             && position.Y >= 0
             && position.X < Width
             && position.Y < Height;
 
-    public bool TryGetCell(GridPosition position, out GridCell cell)
+    public bool TryGetCell(Vector2I position, out GridCell cell)
     {
         if (!IsInside(position))
         {
@@ -79,7 +80,7 @@ public sealed class GridCellMap
         return true;
     }
 
-    public int GetIndex(GridPosition position)
+    public int GetIndex(Vector2I position)
     {
         if (!IsInside(position))
         {
@@ -92,6 +93,6 @@ public sealed class GridCellMap
         return GetIndexUnchecked(position);
     }
 
-    private int GetIndexUnchecked(GridPosition position) =>
+    private int GetIndexUnchecked(Vector2I position) =>
         position.X + (position.Y * Width);
 }

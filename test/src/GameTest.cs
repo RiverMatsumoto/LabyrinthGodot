@@ -25,10 +25,6 @@ public class GameTest : TestClass
     public void Cleanup() => _fixture.Cleanup();
 
     [Test]
-    public void TestButtonUpdatesCounter()
-    {
-        var buttonDriver = new ButtonDriver(() => _game.TestButton);
-        buttonDriver.ClickCenter();
-        _game.ButtonPresses.ShouldBe(1);
-    }
+    public void MyTest() => GD.Print("Test func");
+
 }

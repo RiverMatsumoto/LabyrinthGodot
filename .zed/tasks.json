@@ -1,6 +1,7 @@
 [
   {
     "label": "build",
+    "type": "shell",
     "command": "dotnet",
     "args": [
       "build"
@@ -12,6 +13,7 @@
   },
   {
     "label": "build-without-tests",
+    "type": "shell",
     "command": "dotnet",
     "args": [
       "build"
@@ -26,6 +28,7 @@
   },
   {
     "label": "coverage",
+    "type": "shell",
     "command": "bash",
     "args": [
       "$ZED_WORKTREE_ROOT/coverage.sh"
@@ -37,6 +40,7 @@
   },
   {
     "label": "build-solutions",
+    "type": "shell",
     "command": "bash",
     "args": [
       "-lc",

@@ -1,0 +1,12 @@
+@startuml GameState
+state "GameState" as Labyrinth_GameState {
+  state "InGame" as Labyrinth_GameState_InGame
+  state "MainMenu" as Labyrinth_GameState_MainMenu
+}
+
+Labyrinth_GameState_InGame --> Labyrinth_GameState_MainMenu : EnterMainMenu
+Labyrinth_GameState_MainMenu --> Labyrinth_GameState_InGame : EnterGame
+
+Labyrinth_GameState_InGame : OnEnter → EnteredGame
+Labyrinth_GameState_MainMenu : OnEnter → EnteredMainMenu
+@enduml

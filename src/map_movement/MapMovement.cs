@@ -5,15 +5,18 @@ using Chickensoft.GodotNodeInterfaces;
 using Chickensoft.Introspection;
 using Godot;
 
+// Interfaces for visuals specific
 public interface IMapMovement : INode3D
 {
-    IMapMovementLogic MapMovementLogic { get; }
 }
 
 [Meta(typeof(IAutoNode))]
 public partial class MapMovement : Node3D, IMapMovement
 {
     public IMapMovementLogic MapMovementLogic { get; set; } = default!;
+
+    [Dependency] public IGameRepo GameRepo => this.DependOn<IGameRepo>();
+    [Dependency] public IMapRepo MapRepo => this.DependOn<IMapRepo>();
 
     public void Setup()
     {
