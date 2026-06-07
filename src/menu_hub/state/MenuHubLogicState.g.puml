@@ -1,0 +1,5 @@
+@startuml MenuHubLogicState
+state "MenuHubLogicState" as Labyrinth_MenuHubLogicState {
+  state "Idle" as Labyrinth_MenuHubLogicState_Idle
+}
+@enduml

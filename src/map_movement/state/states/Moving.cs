@@ -3,9 +3,9 @@ namespace Labyrinth;
 using Chickensoft.Introspection;
 using Chickensoft.LogicBlocks;
 
-public partial record MapMovementState
+public partial record MapMovementLogicState
 {
-    public record Moving : MapMovementState
+    public record Moving : MapMovementLogicState
     {
         public Moving()
         {

@@ -1,8 +1,0 @@
-@startuml MapMovementState
-state "MapMovementState" as Labyrinth_MapMovementState {
-  state "Idle" as Labyrinth_MapMovementState_Idle
-  state "Moving" as Labyrinth_MapMovementState_Moving
-}
-
-Labyrinth_MapMovementState_Idle --> Labyrinth_MapMovementState_Moving : Moved
-@enduml

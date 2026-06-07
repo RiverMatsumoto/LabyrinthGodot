@@ -5,8 +5,8 @@ using Chickensoft.LogicBlocks;
 
 public interface IMapMovementLogic : ILogicBlock;
 
-[Meta, Id("map_movement_logic")]
-// [LogicBlock(typeof(State), Diagram = true)]
+[Meta]
 public partial class MapMovementLogic : LogicBlock, IMapMovementLogic
 {
+
 }

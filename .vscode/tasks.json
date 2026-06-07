@@ -76,5 +76,47 @@
         "clear": false
       }
     },
+    {
+      "label": "scaffold-state-machine",
+      "type": "process",
+      "command": "powershell",
+      "args": [
+        "-NoProfile",
+        "-ExecutionPolicy",
+        "Bypass",
+        "-File",
+        "${workspaceFolder}/tools/scaffold-state-machine.ps1",
+        "-TargetDir",
+        "${input:stateMachineDir}",
+        "-States",
+        "${input:stateMachineStates}"
+      ],
+      "options": {
+        "cwd": "${workspaceFolder}"
+      },
+      "problemMatcher": [],
+      "presentation": {
+        "echo": true,
+        "reveal": "always",
+        "focus": false,
+        "panel": "shared",
+        "showReuseMessage": false,
+        "clear": true
+      }
+    },
+  ],
+  "inputs": [
+    {
+      "id": "stateMachineDir",
+      "type": "promptString",
+      "description": "Feature directory to scaffold into, such as src/map_movement",
+      "default": "src/new_feature"
+    },
+    {
+      "id": "stateMachineStates",
+      "type": "promptString",
+      "description": "Comma-separated state names",
+      "default": "Idle"
+    }
   ]
 }

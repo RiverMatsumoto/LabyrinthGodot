@@ -3,7 +3,12 @@ namespace Labyrinth;
 using System;
 using Godot;
 
-public sealed class GridCellMap
+public interface IGridCellMap
+{
+    bool TryGetCell(Vector2I gridPosition, out GridCell gridCell);
+}
+
+public sealed class GridCellMap : IGridCellMap
 {
     private readonly GridCell[] _cells;
 

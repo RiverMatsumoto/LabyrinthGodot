@@ -1,0 +1,8 @@
+@startuml MapMovementLogicState
+state "MapMovementLogicState" as Labyrinth_MapMovementLogicState {
+  state "Idle" as Labyrinth_MapMovementLogicState_Idle
+  state "Moving" as Labyrinth_MapMovementLogicState_Moving
+}
+
+Labyrinth_MapMovementLogicState_Idle --> Labyrinth_MapMovementLogicState_Moving : Moved
+@enduml

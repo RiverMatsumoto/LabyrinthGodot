@@ -4,9 +4,9 @@ using System;
 using Chickensoft.LogicBlocks;
 using Godot;
 
-public partial record MapMovementState
+public partial record MapMovementLogicState
 {
-    public record Idle : MapMovementState, IGet<Input.Moved>
+    public record Idle : MapMovementLogicState, IGet<Input.Moved>
     {
         public Idle()
         {

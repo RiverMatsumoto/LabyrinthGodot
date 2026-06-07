@@ -5,8 +5,7 @@ using Godot;
 
 public interface IMapRepo : IDisposable
 {
-
-    bool CanEnter(Vector2I gridPosition);
+    bool CanPlayerEnter(Vector2I gridPosition);
     bool IsInside(Vector2I gridPosition);
 }
 
@@ -21,7 +20,12 @@ public class MapRepo : IMapRepo
         _gridCellMap = new GridCellMap(50, 50, GridCellTerrain.Floor);
     }
 
-    public bool CanEnter(Vector2I gridPosition) => throw new NotImplementedException();
+    public bool CanPlayerEnter(Vector2I gridPosition)
+    {
+        if (_gridCellMap.TryGetCell(gridPosition, out var cell))
+            return cell.IsWalkable;
+        return false;
+    }
 
     public void Dispose(bool disposing)
     {

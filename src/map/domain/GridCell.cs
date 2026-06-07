@@ -109,9 +109,7 @@ public static class GridCellExtensions
         (sides & side.ToCellSide()) != GridCellSides.None;
 
     public static bool IsWalkable(this GridCellTerrain terrain) =>
-        terrain is GridCellTerrain.Floor
-            or GridCellTerrain.StairsUp
-            or GridCellTerrain.StairsDown;
+        terrain is GridCellTerrain.Floor;
 
     public static bool BlocksSight(this GridCellTerrain terrain) =>
         terrain == GridCellTerrain.Wall;
