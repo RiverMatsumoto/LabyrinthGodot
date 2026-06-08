@@ -1,6 +1,7 @@
 namespace Labyrinth;
 
 using System;
+using Chickensoft.AutoInject;
 using Chickensoft.Sync.Primitives;
 
 public interface IGameRepo : IDisposable
@@ -8,6 +9,10 @@ public interface IGameRepo : IDisposable
     IAutoValue<GameMode> CurrentGameState { get; }
     IAutoValue<MenuOverlay> GameMenuOverlay { get; }
 
+    void EnterMainMenu();
+    void EnterTown();
+    void EnterLabyrinth();
+    void EnterBattle();
     void EnterMap();
     void OpenMenuHub();
     void CloseMenuHub();
@@ -31,7 +36,27 @@ public partial class GameRepo : IGameRepo
         _currentGameMode = new AutoValue<GameMode>(GameMode.MainMenu);
     }
 
-    public void EnterMap() => throw new NotImplementedException();
+    public void EnterMainMenu()
+    {
+        _currentGameMode.Value = GameMode.MainMenu;
+    }
+
+    public void EnterTown()
+    {
+        _currentGameMode.Value = GameMode.Town;
+    }
+
+    public void EnterLabyrinth()
+    {
+        _currentGameMode.Value = GameMode.Labyrinth;
+    }
+
+    public void EnterBattle()
+    {
+        _currentGameMode.Value = GameMode.Battle;
+    }
+
+    public void EnterMap() => EnterLabyrinth();
 
     public void OpenMenuHub()
     {

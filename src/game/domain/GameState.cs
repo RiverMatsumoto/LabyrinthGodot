@@ -4,7 +4,8 @@ public enum GameMode
 {
     MainMenu,
     Town,
+    Labyrinth,
+    Battle,
     Textbox,
-    DungeonExploration,
-    Battle
+    DungeonExploration = Labyrinth
 }

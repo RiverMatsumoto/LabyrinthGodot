@@ -6,6 +6,8 @@ public partial record MapMovementLogicState
 {
     public static class Input
     {
-        public readonly record struct Moved(Vector2I Direction);
+        public readonly record struct MoveAccepted(GridMove Move);
+        public readonly record struct MoveBlocked(Vector2I Offset);
+        public readonly record struct Arrived;
     }
 }

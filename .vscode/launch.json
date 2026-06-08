@@ -11,10 +11,28 @@
       "request": "launch",
       "preLaunchTask": "build-without-tests",
       "program": "${env:GODOT}",
-      "args": [],
+      "args": [
+        // Enable Debug > Keep Debug Server Open in the Godot editor,
+        // then use the editor's Scene dock Remote tab while debugging from VS Code.
+        "--remote-debug",
+        "tcp://127.0.0.1:6007"
+      ],
       "cwd": "${workspaceFolder}",
       "stopAtEntry": false,
       "console": "integratedTerminal"
+    },
+    {
+      "name": "Debug Game From Godot Editor",
+      "type": "godot-mono",
+      "request": "launch",
+      "mode": "playInEditor"
+    },
+    {
+      "name": "Attach to Running Godot",
+      "type": "godot-mono",
+      "request": "attach",
+      "address": "localhost",
+      "port": 6006
     },
     {
       "name": "🕹 Debug Game (VSCodium)",

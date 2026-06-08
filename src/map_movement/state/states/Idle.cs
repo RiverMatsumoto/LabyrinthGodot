@@ -2,21 +2,24 @@ namespace Labyrinth;
 
 using System;
 using Chickensoft.LogicBlocks;
-using Godot;
 
 public partial record MapMovementLogicState
 {
-    public record Idle : MapMovementLogicState, IGet<Input.Moved>
+    public record Idle
+        : MapMovementLogicState,
+            IGet<Input.MoveAccepted>,
+            IGet<Input.MoveBlocked>
     {
-        public Idle()
+        public Type On(in Input.MoveAccepted input)
         {
-            this.OnEnter(() => GD.Print("Entered Idle"));
+            Output(new Output.MoveStarted(input.Move));
+            return To<Moving>();
         }
 
-        public Type On(in Input.Moved input)
+        public Type On(in Input.MoveBlocked input)
         {
-            GD.Print($"Moved: {input.Direction}");
-            return To<Moving>();
+            Output(new Output.MoveBlocked(input.Offset));
+            return To<Idle>();
         }
     }
 }

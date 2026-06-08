@@ -135,7 +135,7 @@ dotnet_style_parentheses_in_other_operators = never_if_unnecessary:warning
 
 # Expression-level preferences
 dotnet_style_object_initializer = true:warning
-dotnet_style_collection_initializer = true:warning
+dotnet_style_collection_initializer = false:warning
 dotnet_style_explicit_tuple_names = true:warning
 dotnet_style_prefer_inferred_tuple_names = true:warning
 dotnet_style_prefer_inferred_anonymous_type_member_names = true:warning
@@ -154,8 +154,8 @@ dotnet_style_null_propagation = true:warning
 dotnet_style_prefer_is_null_check_over_reference_equality_method = true:warning
 
 # Unused parameters and methods
-dotnet_diagnostic.IDE0060.severity = warn
-dotnet_diagnostic.IDE0051.severity = warn
+dotnet_diagnostic.IDE0060.severity = warning
+dotnet_diagnostic.IDE0051.severity = warning
 
 # File header preferences
 # Keep operators at end of line when wrapping.
@@ -267,7 +267,7 @@ csharp_space_between_empty_square_brackets = false
 csharp_space_between_square_brackets = false
 
 # Wrap options
-csharp_preserve_single_line_statements = false
+csharp_preserve_single_line_statements = true
 csharp_preserve_single_line_blocks = true
 
 # Namespace options
@@ -415,3 +415,8 @@ dotnet_diagnostic.IDE0062.severity = warning
 dotnet_diagnostic.IDE0032.severity = none
 # Don't warn single statement method body
 dotnet_diagnostic.IDE0022.severity = none
+# Don't warn if statements not using braces
+dotnet_diagnostic.IDE0011.severity = none
+
+# Default severity for analyzer diagnostics with category 'Style'
+dotnet_analyzer_diagnostic.category-Style.severity = silent

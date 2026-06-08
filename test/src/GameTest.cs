@@ -25,6 +25,16 @@ public class GameTest : TestClass
     public void Cleanup() => _fixture.Cleanup();
 
     [Test]
-    public void MyTest() => GD.Print("Test func");
+    public void CreatesTopLevelRepos()
+    {
+        _game.GameRepo.ShouldNotBeNull();
+        _game.MapRepo.ShouldNotBeNull();
+    }
 
+    [Test]
+    public void FindsAreaAndUiRoots()
+    {
+        _game.AreaRoot.Name.ToString().ShouldBe("AreaRoot");
+        _game.UiRoot.Name.ToString().ShouldBe("UiRoot");
+    }
 }

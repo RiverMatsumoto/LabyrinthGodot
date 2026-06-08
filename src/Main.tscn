@@ -1,6 +1,16 @@
 [gd_scene format=3 uid="uid://cn355ppcyyfd3"]
 
 [ext_resource type="Script" uid="uid://bkvo4rfjdm70n" path="res://src/game/Game.cs" id="1_4gxt3"]
+[ext_resource type="PackedScene" uid="uid://dgqhv8ahecoso" path="res://src/map/Map.tscn" id="2_hk4rc"]
 
 [node name="Game" type="Node" unique_id=708336247]
 script = ExtResource("1_4gxt3")
+
+[node name="AreaRoot" type="Node" parent="."]
+unique_name_in_owner = true
+
+[node name="Map" parent="AreaRoot" unique_id=858963444 instance=ExtResource("2_hk4rc")]
+unique_name_in_owner = true
+
+[node name="UiRoot" type="Node" parent="."]
+unique_name_in_owner = true

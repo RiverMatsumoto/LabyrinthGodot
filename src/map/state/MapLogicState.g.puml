@@ -1,0 +1,5 @@
+@startuml MapLogicState
+state "MapLogicState" as Labyrinth_MapLogicState {
+  state "Idle" as Labyrinth_MapLogicState_Idle
+}
+@enduml

@@ -6,6 +6,11 @@ using Godot;
 public interface IGridCellMap
 {
     bool TryGetCell(Vector2I gridPosition, out GridCell gridCell);
+    bool TryGetCellNeighbor(
+        Vector2I gridPosition,
+        Vector2I offset,
+        out GridCell gridCell
+    );
 }
 
 public sealed class GridCellMap : IGridCellMap
@@ -73,15 +78,15 @@ public sealed class GridCellMap : IGridCellMap
             && position.X < Width
             && position.Y < Height;
 
-    public bool TryGetCell(Vector2I position, out GridCell cell)
+    public bool TryGetCell(Vector2I gridPosition, out GridCell gridCell)
     {
-        if (!IsInside(position))
+        if (!IsInside(gridPosition))
         {
-            cell = default;
+            gridCell = default;
             return false;
         }
 
-        cell = this[position];
+        gridCell = this[gridPosition];
         return true;
     }
 
@@ -100,4 +105,10 @@ public sealed class GridCellMap : IGridCellMap
 
     private int GetIndexUnchecked(Vector2I position) =>
         position.X + (position.Y * Width);
+
+    public bool TryGetCellNeighbor(
+        Vector2I gridPosition,
+        Vector2I offset,
+        out GridCell gridCell
+    ) => TryGetCell(gridPosition + offset, out gridCell);
 }

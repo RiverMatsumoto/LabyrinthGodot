@@ -1,12 +1,26 @@
-@startuml GameState
-state "GameState" as Labyrinth_GameState {
-  state "InGame" as Labyrinth_GameState_InGame
-  state "MainMenu" as Labyrinth_GameState_MainMenu
+@startuml GameLogicState
+state "GameLogicState" as Labyrinth_GameLogicState {
+  state "Battle" as Labyrinth_GameLogicState_Battle
+  state "Labyrinth" as Labyrinth_GameLogicState_Labyrinth
+  state "MainMenu" as Labyrinth_GameLogicState_MainMenu
+  state "Town" as Labyrinth_GameLogicState_Town
 }
 
-Labyrinth_GameState_InGame --> Labyrinth_GameState_MainMenu : EnterMainMenu
-Labyrinth_GameState_MainMenu --> Labyrinth_GameState_InGame : EnterGame
+Labyrinth_GameLogicState_Battle --> Labyrinth_GameLogicState_Labyrinth : EnterLabyrinth
+Labyrinth_GameLogicState_Battle --> Labyrinth_GameLogicState_MainMenu : EnterMainMenu
+Labyrinth_GameLogicState_Battle --> Labyrinth_GameLogicState_Town : EnterTown
+Labyrinth_GameLogicState_Labyrinth --> Labyrinth_GameLogicState_Battle : EnterBattle
+Labyrinth_GameLogicState_Labyrinth --> Labyrinth_GameLogicState_MainMenu : EnterMainMenu
+Labyrinth_GameLogicState_Labyrinth --> Labyrinth_GameLogicState_Town : EnterTown
+Labyrinth_GameLogicState_MainMenu --> Labyrinth_GameLogicState_Battle : EnterBattle
+Labyrinth_GameLogicState_MainMenu --> Labyrinth_GameLogicState_Labyrinth : EnterLabyrinth
+Labyrinth_GameLogicState_MainMenu --> Labyrinth_GameLogicState_Town : EnterTown
+Labyrinth_GameLogicState_Town --> Labyrinth_GameLogicState_Battle : EnterBattle
+Labyrinth_GameLogicState_Town --> Labyrinth_GameLogicState_Labyrinth : EnterLabyrinth
+Labyrinth_GameLogicState_Town --> Labyrinth_GameLogicState_MainMenu : EnterMainMenu
 
-Labyrinth_GameState_InGame : OnEnter → EnteredGame
-Labyrinth_GameState_MainMenu : OnEnter → EnteredMainMenu
+Labyrinth_GameLogicState_Battle : OnEnter → EnteredBattle
+Labyrinth_GameLogicState_Labyrinth : OnEnter → EnteredLabyrinth
+Labyrinth_GameLogicState_MainMenu : OnEnter → EnteredMainMenu
+Labyrinth_GameLogicState_Town : OnEnter → EnteredTown
 @enduml

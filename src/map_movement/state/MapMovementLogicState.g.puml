@@ -4,5 +4,13 @@ state "MapMovementLogicState" as Labyrinth_MapMovementLogicState {
   state "Moving" as Labyrinth_MapMovementLogicState_Moving
 }
 
-Labyrinth_MapMovementLogicState_Idle --> Labyrinth_MapMovementLogicState_Moving : Moved
+Labyrinth_MapMovementLogicState_Idle --> Labyrinth_MapMovementLogicState_Idle : MoveBlocked
+Labyrinth_MapMovementLogicState_Idle --> Labyrinth_MapMovementLogicState_Moving : MoveAccepted
+Labyrinth_MapMovementLogicState_Moving --> Labyrinth_MapMovementLogicState_Idle : Arrived
+Labyrinth_MapMovementLogicState_Moving --> Labyrinth_MapMovementLogicState_Moving : MoveAccepted
+Labyrinth_MapMovementLogicState_Moving --> Labyrinth_MapMovementLogicState_Moving : MoveBlocked
+
+Labyrinth_MapMovementLogicState_Idle : OnMoveAccepted → MoveStarted
+Labyrinth_MapMovementLogicState_Idle : OnMoveBlocked → MoveBlocked
+Labyrinth_MapMovementLogicState_Moving : OnArrived → MoveFinished
 @enduml

@@ -1,15 +1,24 @@
 namespace Labyrinth;
 
-using Chickensoft.Introspection;
+using System;
 using Chickensoft.LogicBlocks;
 
 public partial record MapMovementLogicState
 {
-    public record Moving : MapMovementLogicState
+    public record Moving
+        : MapMovementLogicState,
+            IGet<Input.Arrived>,
+            IGet<Input.MoveAccepted>,
+            IGet<Input.MoveBlocked>
     {
-        public Moving()
+        public Type On(in Input.Arrived input)
         {
-            // start lerping character in on enter with the params passed in?
+            Output(new Output.MoveFinished());
+            return To<Idle>();
         }
+
+        public Type On(in Input.MoveAccepted input) => To<Moving>();
+
+        public Type On(in Input.MoveBlocked input) => To<Moving>();
     }
 }
