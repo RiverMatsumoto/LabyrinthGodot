@@ -50,9 +50,12 @@ public partial class MapMovement : Node3D, IMapMovement
     private AutoChannel.Binding? _mapRepoBinding;
     private AutoValue<double>.Binding? _mapMoveDurationBinding;
 
+    private Camera3D _playerCamera { get; set; } = default!;
+    private PlayerMovementController _playerMovementController { get; set; } = default!;
+
     private PackedScene _playerCameraScene =
         GD.Load<PackedScene>("res://src/map_movement/PlayerCamera.tscn");
-    private PackedScene _playerMovementController =
+    private PackedScene _playerMovementControllerScene =
         GD.Load<PackedScene>("res://src/map_movement/PlayerMovementController.tscn");
 
     [Node]
@@ -110,8 +113,7 @@ public partial class MapMovement : Node3D, IMapMovement
 
         if (id.Value == "player")
         {
-            SpawnPlayerCamera();
-            SpawnPlayerMovementController();
+            SpawnPlayerNodes();
         }
     }
 
@@ -168,11 +170,13 @@ public partial class MapMovement : Node3D, IMapMovement
         _moveTween.TweenProperty(
             this,
             "global_position",
-            target + new Vector3(0, 0.5f * GridMap.Scale.Y, 0),
+            target + new Vector3(0, PlayerPositionGridOffset(), 0),
             moveDuration
         );
         _moveTween.Finished += FinishMove;
     }
+
+    private static float PlayerPositionGridOffset() => 0.5f;
 
     private Vector3 GridToGlobalPosition(Vector2I gridPosition) =>
         GridMap.ToGlobal(GridMap.MapToLocal(GridToMapCell(gridPosition)));
@@ -184,7 +188,8 @@ public partial class MapMovement : Node3D, IMapMovement
             return;
         }
 
-        GlobalPosition = GridToGlobalPosition(_startPosition);
+        GlobalPosition = GridToGlobalPosition(_startPosition)
+            + new Vector3(0, PlayerPositionGridOffset(), 0);
 
         if (MapRepo.TryGetEntityPose(EntityId, out var pose))
         {
@@ -202,16 +207,13 @@ public partial class MapMovement : Node3D, IMapMovement
         MapMovementLogic.Input(new MapMovementLogicState.Input.MoveFinished());
     }
 
-    private void SpawnPlayerCamera()
+    private void SpawnPlayerNodes()
     {
-        var playerCamera = _playerCameraScene.Instantiate<Camera3D>();
-        AddChild(playerCamera);
-    }
-
-    private void SpawnPlayerMovementController()
-    {
-        var controller = _playerMovementController.Instantiate<PlayerMovementController>();
-        AddChild(controller);
+        _playerCamera = _playerCameraScene.Instantiate<Camera3D>();
+        _playerMovementController = _playerMovementControllerScene.Instantiate<PlayerMovementController>();
+        _playerMovementController.PlayerCamera = _playerCamera;
+        AddChild(_playerCamera);
+        AddChild(_playerMovementController);
     }
 
     private void AnimateTurn(Vector2I turnTo)

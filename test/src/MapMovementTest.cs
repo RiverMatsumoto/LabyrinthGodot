@@ -34,4 +34,17 @@ public class MapMovementTest : TestClass
         MapMovement.FacingDirectionToYaw(GridDirection.West)
             .ShouldBe(Mathf.Pi / 2.0f);
     }
+
+    [Test]
+    public void MapsCameraAimInputToLocalOffset()
+    {
+        PlayerMovementController.CameraAimInputToLocalOffset(
+                new Vector2(1.0f, -1.0f)
+            )
+            .ShouldBe(new Vector3(
+                Mathf.Sqrt(2.0f),
+                0.0f,
+                -Mathf.Sqrt(2.0f)
+            ));
+    }
 }
