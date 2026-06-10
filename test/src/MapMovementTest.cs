@@ -21,4 +21,17 @@ public class MapMovementTest : TestClass
         MapMovement.GridToWorldPosition(new Vector2I(2, 3))
             .ShouldBe(new Vector3(2, 0, 3));
     }
+
+    [Test]
+    public void MapsFacingDirectionToYaw()
+    {
+        MapMovement.FacingDirectionToYaw(GridDirection.North)
+            .ShouldBe(0.0f);
+        MapMovement.FacingDirectionToYaw(GridDirection.East)
+            .ShouldBe(-Mathf.Pi / 2.0f);
+        MapMovement.FacingDirectionToYaw(GridDirection.South)
+            .ShouldBe(Mathf.Pi);
+        MapMovement.FacingDirectionToYaw(GridDirection.West)
+            .ShouldBe(Mathf.Pi / 2.0f);
+    }
 }

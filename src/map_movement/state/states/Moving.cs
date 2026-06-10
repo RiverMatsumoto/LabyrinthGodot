@@ -7,18 +7,12 @@ public partial record MapMovementLogicState
 {
     public record Moving
         : MapMovementLogicState,
-            IGet<Input.Arrived>,
-            IGet<Input.MoveAccepted>,
-            IGet<Input.MoveBlocked>
+            IGet<Input.MoveFinished>
     {
-        public Type On(in Input.Arrived input)
+        public Type On(in Input.MoveFinished input)
         {
             Output(new Output.MoveFinished());
-            return To<Idle>();
+            return To<MoveCooldown>();
         }
-
-        public Type On(in Input.MoveAccepted input) => To<Moving>();
-
-        public Type On(in Input.MoveBlocked input) => To<Moving>();
     }
 }

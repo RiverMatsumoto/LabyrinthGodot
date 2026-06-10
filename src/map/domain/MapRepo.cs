@@ -2,6 +2,7 @@ namespace Labyrinth;
 
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using Chickensoft.Sync.Primitives;
 using Godot;
 
@@ -12,13 +13,40 @@ public interface IMapRepo : IDisposable
     bool IsInside(Vector2I gridPosition);
     bool CanEnter(Vector2I gridPosition);
     bool TryRegisterEntity(string id, Vector2I position);
+    bool TryRegisterEntity(
+        string id,
+        Vector2I position,
+        Vector2I facingDirection
+    );
     bool TryRegisterEntity(MapEntityId id, Vector2I position);
+    bool TryRegisterEntity(
+        MapEntityId id,
+        Vector2I position,
+        Vector2I facingDirection
+    );
     bool TryUnregisterEntity(MapEntityId id);
     bool TryGetEntityPosition(MapEntityId id, out Vector2I position);
+    bool TryGetEntityPose(MapEntityId id, out MapEntityPose pose);
     bool ContainsEntity(MapEntityId id);
     bool IsOccupied(Vector2I position);
-    bool CanEntityMove(MapEntityId id, Vector2I offset);
-    bool TryMoveEntity(MapEntityId id, Vector2I offset, out GridMove move);
+    bool CanEntityMove(MapEntityId id, Vector2I direction);
+    bool TryMoveEntity(
+        MapEntityId id,
+        Vector2I direction,
+        out GridMove move
+    );
+    bool TryMoveEntityPreservingFacing(
+        MapEntityId id,
+        Vector2I direction,
+        out GridMove move
+    );
+    bool TryTurnEntity(
+        MapEntityId id,
+        TurnDirection turnDirection,
+        out MapEntityPose pose
+    );
+
+    bool PlayerCameraActive { get; }
 
     #region Events
     readonly record struct MapEntityWasRegistered(MapEntityId Id, Vector2I InitialPosition);
@@ -34,14 +62,17 @@ public class MapRepo : IMapRepo
 
     private bool _disposedValue;
     public GridCellMap GridCellMap => _gridCellMap;
+
+    public bool PlayerCameraActive => _entityPoses.ContainsKey(new MapEntityId("player"));
+
     private readonly GridCellMap _gridCellMap;
-    private readonly Dictionary<MapEntityId, Vector2I> _entityPositions;
+    private readonly Dictionary<MapEntityId, MapEntityPose> _entityPoses;
     private readonly Dictionary<Vector2I, MapEntityId> _occupants;
 
     public MapRepo()
     {
         _gridCellMap = new GridCellMap(56, 56, GridCellTerrain.Floor);
-        _entityPositions = new Dictionary<MapEntityId, Vector2I>();
+        _entityPoses = new Dictionary<MapEntityId, MapEntityPose>();
         _occupants = new Dictionary<Vector2I, MapEntityId>();
     }
 
@@ -62,13 +93,26 @@ public class MapRepo : IMapRepo
         => TryRegisterEntity(new MapEntityId(id), position);
 
     public bool TryRegisterEntity(MapEntityId id, Vector2I position)
+        => TryRegisterEntity(id, position, GridDirection.North);
+
+    public bool TryRegisterEntity(
+        string id,
+        Vector2I position,
+        Vector2I facingDirection
+    ) => TryRegisterEntity(new MapEntityId(id), position, facingDirection);
+
+    public bool TryRegisterEntity(
+        MapEntityId id,
+        Vector2I position,
+        Vector2I facingDirection
+    )
     {
-        if (id.IsEmpty)
+        if (id.IsEmpty || !GridDirection.IsValid(facingDirection))
         {
             return false;
         }
 
-        if (_entityPositions.ContainsKey(id))
+        if (_entityPoses.ContainsKey(id))
         {
             return false;
         }
@@ -78,7 +122,7 @@ public class MapRepo : IMapRepo
             return false;
         }
 
-        _entityPositions[id] = position;
+        _entityPoses[id] = new MapEntityPose(position, facingDirection);
         _occupants[position] = id;
         _autoChannel.Send(new IMapRepo.MapEntityWasRegistered(id, position));
         return true;
@@ -86,58 +130,112 @@ public class MapRepo : IMapRepo
 
     public bool TryUnregisterEntity(MapEntityId id)
     {
-        if (!_entityPositions.Remove(id, out var position))
+        if (!_entityPoses.Remove(id, out var pose))
         {
             return false;
         }
 
-        _occupants.Remove(position);
+        _occupants.Remove(pose.Position);
         _autoChannel.Send(new IMapRepo.MapEntityWasUnregistered(id));
         return true;
     }
 
-    public bool TryGetEntityPosition(MapEntityId id, out Vector2I position) =>
-        _entityPositions.TryGetValue(id, out position);
+    public bool TryGetEntityPosition(MapEntityId id, out Vector2I position)
+    {
+        if (!TryGetEntityPose(id, out var pose))
+        {
+            position = default;
+            return false;
+        }
+
+        position = pose.Position;
+        return true;
+    }
+
+    public bool TryGetEntityPose(MapEntityId id, out MapEntityPose pose) =>
+        _entityPoses.TryGetValue(id, out pose);
 
     public bool IsOccupied(Vector2I position) => _occupants.ContainsKey(position);
 
-    public bool CanEntityMove(MapEntityId id, Vector2I offset) =>
-        TryGetMove(id, offset, out _);
+    public bool CanEntityMove(MapEntityId id, Vector2I direction) =>
+        TryGetMove(id, direction, out _);
 
     public bool TryMoveEntity(
         MapEntityId id,
-        Vector2I offset,
+        Vector2I direction,
+        out GridMove move
+    )
+        => TryMoveEntity(id, direction, updateFacing: true, out move);
+
+    public bool TryMoveEntityPreservingFacing(
+        MapEntityId id,
+        Vector2I direction,
+        out GridMove move
+    )
+        => TryMoveEntity(id, direction, updateFacing: false, out move);
+
+    private bool TryMoveEntity(
+        MapEntityId id,
+        Vector2I direction,
+        bool updateFacing,
         out GridMove move
     )
     {
-        if (!TryGetMove(id, offset, out move))
+        if (!TryGetMove(id, direction, out move))
         {
             return false;
         }
 
         _occupants.Remove(move.From);
         _occupants[move.To] = id;
-        _entityPositions[id] = move.To;
+        _entityPoses[id] = new MapEntityPose(
+            move.To,
+            updateFacing ? direction : _entityPoses[id].FacingDirection
+        );
+        return true;
+    }
+
+    public bool TryTurnEntity(
+        MapEntityId id,
+        TurnDirection turnDirection,
+        out MapEntityPose pose
+    )
+    {
+        if (!_entityPoses.TryGetValue(id, out pose))
+        {
+            return false;
+        }
+
+        pose = pose with
+        {
+            FacingDirection = GridDirection.Turn(
+                pose.FacingDirection,
+                turnDirection
+            ),
+        };
+        _entityPoses[id] = pose;
         return true;
     }
 
     private bool TryGetMove(
         MapEntityId id,
-        Vector2I offset,
+        Vector2I direction,
         out GridMove move
     )
     {
         move = default;
 
-        if (offset == Vector2I.Zero)
+        if (!GridDirection.IsValid(direction))
         {
             return false;
         }
 
-        if (!_entityPositions.TryGetValue(id, out var from))
+        if (!_entityPoses.TryGetValue(id, out var pose))
         {
             return false;
         }
+
+        var from = pose.Position;
 
         if (!_gridCellMap.TryGetCell(from, out var sourceCell))
         {
@@ -149,7 +247,7 @@ public class MapRepo : IMapRepo
             return false;
         }
 
-        var to = sourceCell.Neighbor(offset);
+        var to = sourceCell.Neighbor(direction);
 
         if (!_gridCellMap.TryGetCell(to, out var targetCell))
         {
@@ -166,11 +264,11 @@ public class MapRepo : IMapRepo
             return false;
         }
 
-        move = new GridMove(id, from, to, offset);
+        move = new GridMove(id, from, direction);
         return true;
     }
 
-    public bool ContainsEntity(MapEntityId id) => _entityPositions.ContainsKey(id);
+    public bool ContainsEntity(MapEntityId id) => _entityPoses.ContainsKey(id);
 
     #region Internals
 
@@ -180,7 +278,7 @@ public class MapRepo : IMapRepo
         {
             if (disposing)
             {
-                _entityPositions.Clear();
+                _entityPoses.Clear();
                 _occupants.Clear();
                 _autoChannel.Dispose();
             }

@@ -1,0 +1,6 @@
+[gd_scene format=3 uid="uid://b2igqgrii5k45"]
+
+[ext_resource type="Script" uid="uid://gb7m4yoc6qtv" path="res://src/map_movement/PlayerMovementController.cs" id="1_dw1fa"]
+
+[node name="PlayerMovementController" type="Node" unique_id=2110512833]
+script = ExtResource("1_dw1fa")

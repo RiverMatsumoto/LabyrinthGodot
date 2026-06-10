@@ -4,3 +4,7 @@
 
 [node name="MapMovement" type="Node3D" unique_id=362388738]
 script = ExtResource("1_85dv2")
+
+[node name="CooldownTimer" type="Timer" parent="." unique_id=2032784192]
+unique_name_in_owner = true
+one_shot = true

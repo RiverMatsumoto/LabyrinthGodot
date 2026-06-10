@@ -7,11 +7,16 @@ using Chickensoft.Introspection;
 using Chickensoft.Sync.Primitives;
 using Godot;
 
-// Interfaces for visuals specific
-public interface IMapMovement : INode3D
+public interface IMapMovement : INode3D,
+    IProvide<IMapMovementLogic>,
+    IProvide<IMapMovement>
 {
     MapEntityId EntityId { get; }
-    Vector2I GridPosition { get; }
+    IMapMovementLogic MapMovementLogic { get; }
+    bool IsEnabled { get; }
+    bool IsMoving { get; }
+
+    void StartCooldownTimer();
     void Initialize(MapEntityId id, Vector2I startPosition);
 }
 
@@ -21,78 +26,93 @@ public partial class MapMovement : Node3D, IMapMovement
     public override void _Notification(int what) => this.Notify(what);
 
     private bool _isInitialized;
-    private bool _isMoving;
     private Tween? _moveTween;
-    private Vector2I _gridPosition;
+    private Tween? _turnTween;
+    private Vector2I _startPosition;
 
-    public IMapMovementLogic MapMovementLogic { get; set; } = default!;
-    public MapEntityId EntityId { get; private set; }
-    public Vector2I GridPosition => _gridPosition;
+    public IMapMovementLogic MapMovementLogic { get; } = new MapMovementLogic();
+    IMapMovementLogic IProvide<IMapMovementLogic>.Value() => MapMovementLogic;
+    private MapMovementLogic.Binding? _mapMovementBinding;
+
+    IMapMovement IProvide<IMapMovement>.Value() => this;
+
+    public MapEntityId EntityId => MapMovementLogic.Data.EntityId;
+    public bool IsEnabled =>
+        MapMovementLogic.State is not MapMovementLogicState.Disabled;
+    public bool IsMoving =>
+        MapMovementLogic.State is MapMovementLogicState.Moving;
 
     [Dependency]
     public IGridMap GridMap => this.DependOn<IGridMap>();
 
-    [Export]
-    public string EntityIdValue { get; set; } = string.Empty;
-
-    [Export]
-    public Vector2I InitialGridPosition { get; set; }
-
-    [Export]
-    public float MoveDuration { get; set; } = 0.18f;
-
     [Dependency] public IGameRepo GameRepo => this.DependOn<IGameRepo>();
     [Dependency] public IMapRepo MapRepo => this.DependOn<IMapRepo>();
-    public AutoChannel.Binding MapRepoBinding { get; set; } = default!;
+    private AutoChannel.Binding? _mapRepoBinding;
+    private AutoValue<double>.Binding? _mapMoveDurationBinding;
+
+    private PackedScene _playerCameraScene =
+        GD.Load<PackedScene>("res://src/map_movement/PlayerCamera.tscn");
+    private PackedScene _playerMovementController =
+        GD.Load<PackedScene>("res://src/map_movement/PlayerMovementController.tscn");
+
+    [Node]
+    public Timer CooldownTimer { get; set; } = default!;
 
     public void Setup()
     {
-        MapMovementLogic = new MapMovementLogic();
     }
 
     public void OnResolved()
     {
+        MapMovementLogic.Set(MapRepo);
+        MapMovementLogic.Set(this as IMapMovement);
+
+        _mapMoveDurationBinding = GameRepo.MapMoveDuration.Bind()
+            .OnValue(moveDuration =>
+                MapMovementLogic.Data.MoveDuration = moveDuration);
+
+        _mapMovementBinding = MapMovementLogic.Bind()
+            .OnOutput((in MapMovementLogicState.Output.MoveStarted output) =>
+                AnimateMove(output.Move))
+            .OnOutput((in MapMovementLogicState.Output.TurnStarted output) =>
+                AnimateTurn(output.FacingDirection));
+
+        _mapRepoBinding = MapRepo.AutoChannel.Bind();
+        _mapRepoBinding.On((in IMapRepo.MapEntityWasUnregistered message) =>
+        {
+            if (message.Id == EntityId)
+            {
+                QueueFree();
+            }
+        });
+
+        ApplyStartPosition();
+
+        this.Provide();
+
         MapMovementLogic.Start<MapMovementLogicState.Idle>();
-        MapRepoBinding = MapRepo.AutoChannel.Bind();
-        MapRepoBinding.On((in IMapRepo.MapEntityWasUnregistered message) =>
-            QueueFree());
-        GlobalPosition = GridToGlobalPosition(_gridPosition);
     }
 
     public void Initialize(MapEntityId id, Vector2I startPosition)
     {
         if (_isInitialized || id.IsEmpty)
+        {
             GD.PrintErr("MapMovement: initialization error");
+            return;
+        }
 
-        EntityId = id;
-        _gridPosition = startPosition;
+        var data = MapMovementLogic.Data;
+        data.EntityId = id;
+
+        _startPosition = startPosition;
         _isInitialized = true;
         Name = id.Value;
-    }
 
-    public bool TryRequestMove(Vector2I offset)
-    {
-        if (!_isInitialized || _isMoving)
+        if (id.Value == "player")
         {
-            return false;
+            SpawnPlayerCamera();
+            SpawnPlayerMovementController();
         }
-
-        if (!MapRepo.TryMoveEntity(EntityId, offset, out var move))
-        {
-            MapMovementLogic.Input(
-                new MapMovementLogicState.Input.MoveBlocked(offset)
-            );
-            return false;
-        }
-
-        _isMoving = true;
-        _gridPosition = move.To;
-
-        MapMovementLogic.Input(
-            new MapMovementLogicState.Input.MoveAccepted(move)
-        );
-        AnimateMove(move);
-        return true;
     }
 
     public static Vector3I GridToMapCell(Vector2I gridPosition) =>
@@ -101,41 +121,163 @@ public partial class MapMovement : Node3D, IMapMovement
     public static Vector3 GridToWorldPosition(Vector2I gridPosition) =>
         new(gridPosition.X, 0, gridPosition.Y);
 
+    public static float FacingDirectionToYaw(Vector2I facingDirection)
+    {
+        if (facingDirection == GridDirection.North)
+        {
+            return 0.0f;
+        }
+
+        if (facingDirection == GridDirection.East)
+        {
+            return -Mathf.Pi / 2.0f;
+        }
+
+        if (facingDirection == GridDirection.South)
+        {
+            return Mathf.Pi;
+        }
+
+        if (facingDirection == GridDirection.West)
+        {
+            return Mathf.Pi / 2.0f;
+        }
+
+        throw new ArgumentOutOfRangeException(
+            nameof(facingDirection),
+            facingDirection,
+            "Facing direction must be a cardinal unit vector."
+        );
+    }
+
     private void AnimateMove(GridMove move)
     {
         var target = GridToGlobalPosition(move.To);
 
         _moveTween?.Kill();
 
-        if (MoveDuration <= 0)
+        var moveDuration = MapMovementLogic.Data.MoveDuration;
+        if (moveDuration <= 0)
         {
-            Position = target;
+            GlobalPosition = target;
             FinishMove();
             return;
         }
 
         _moveTween = CreateTween();
-        _moveTween.TweenProperty(this, "position", target, MoveDuration);
+        _moveTween.TweenProperty(
+            this,
+            "global_position",
+            target + new Vector3(0, 0.5f * GridMap.Scale.Y, 0),
+            moveDuration
+        );
         _moveTween.Finished += FinishMove;
     }
 
     private Vector3 GridToGlobalPosition(Vector2I gridPosition) =>
-        ToGlobal(GridMap.MapToLocal(GridToMapCell(gridPosition)));
+        GridMap.ToGlobal(GridMap.MapToLocal(GridToMapCell(gridPosition)));
+
+    private void ApplyStartPosition()
+    {
+        if (!_isInitialized)
+        {
+            return;
+        }
+
+        GlobalPosition = GridToGlobalPosition(_startPosition);
+
+        if (MapRepo.TryGetEntityPose(EntityId, out var pose))
+        {
+            Rotation = Rotation with
+            {
+                Y = FacingDirectionToYaw(pose.FacingDirection),
+            };
+        }
+    }
 
     private void FinishMove()
     {
         _moveTween = null;
-        _isMoving = false;
 
-        MapMovementLogic.Input(new MapMovementLogicState.Input.Arrived());
+        MapMovementLogic.Input(new MapMovementLogicState.Input.MoveFinished());
+    }
+
+    private void SpawnPlayerCamera()
+    {
+        var playerCamera = _playerCameraScene.Instantiate<Camera3D>();
+        AddChild(playerCamera);
+    }
+
+    private void SpawnPlayerMovementController()
+    {
+        var controller = _playerMovementController.Instantiate<PlayerMovementController>();
+        AddChild(controller);
+    }
+
+    private void AnimateTurn(Vector2I turnTo)
+    {
+        var targetYaw = GetNearestYaw(
+            Rotation.Y,
+            FacingDirectionToYaw(turnTo)
+        );
+
+        _turnTween?.Kill();
+
+        var turnDuration = MapMovementLogic.Data.MoveDuration;
+        if (turnDuration <= 0)
+        {
+            Rotation = Rotation with { Y = targetYaw };
+            FinishTurn();
+            return;
+        }
+
+        _turnTween = CreateTween();
+        _turnTween.TweenProperty(this, "rotation:y", targetYaw, turnDuration);
+        _turnTween.Finished += FinishTurn;
+    }
+
+    private void FinishTurn()
+    {
+        _turnTween = null;
+
+        MapMovementLogic.Input(new MapMovementLogicState.Input.TurnFinished());
     }
 
     public void OnExitTree()
     {
         _moveTween?.Kill();
         _moveTween = null;
+        _turnTween?.Kill();
+        _turnTween = null;
 
-        MapRepoBinding.Dispose();
+        _mapMovementBinding?.Dispose();
+        _mapRepoBinding?.Dispose();
+        _mapMoveDurationBinding?.Dispose();
         MapMovementLogic.Dispose();
+    }
+
+    private static float GetNearestYaw(float currentYaw, float targetYaw)
+    {
+        var difference = Mathf.Wrap(
+            targetYaw - currentYaw,
+            -Mathf.Pi,
+            Mathf.Pi
+        );
+
+        return currentYaw + difference;
+    }
+
+    public void StartCooldownTimer()
+    {
+        CooldownTimer.WaitTime = MapMovementLogic.Data.MoveCooldown;
+        CooldownTimer.OneShot = true;
+        CooldownTimer.Timeout += CooldownTimerFinished;
+        CooldownTimer.Start();
+    }
+
+    public void CooldownTimerFinished()
+    {
+        CooldownTimer.Timeout -= CooldownTimerFinished;
+        MapMovementLogic.Input(new MapMovementLogicState.Input.CooldownFinished());
     }
 }

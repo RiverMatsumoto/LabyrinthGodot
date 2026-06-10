@@ -8,6 +8,9 @@ public interface IGameRepo : IDisposable
 {
     IAutoValue<GameMode> CurrentGameState { get; }
     IAutoValue<MenuOverlay> GameMenuOverlay { get; }
+    #region Settings
+    IAutoValue<double> MapMoveDuration { get; }
+    #endregion
 
     void EnterMainMenu();
     void EnterTown();
@@ -25,6 +28,9 @@ public partial class GameRepo : IGameRepo
     public IAutoValue<GameMode> CurrentGameState => _currentGameMode;
     private readonly AutoValue<GameMode> _currentGameMode;
 
+    public IAutoValue<double> MapMoveDuration => _mapMoveSpeed;
+    private readonly AutoValue<double> _mapMoveSpeed;
+
     public IAutoValue<MenuOverlay> GameMenuOverlay => _menuOverlay;
     private readonly AutoValue<MenuOverlay> _menuOverlay;
 
@@ -34,6 +40,7 @@ public partial class GameRepo : IGameRepo
     {
         _menuOverlay = new AutoValue<MenuOverlay>(MenuOverlay.None);
         _currentGameMode = new AutoValue<GameMode>(GameMode.MainMenu);
+        _mapMoveSpeed = new AutoValue<double>(0.18);
     }
 
     public void EnterMainMenu()

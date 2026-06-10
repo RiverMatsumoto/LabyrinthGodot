@@ -1,16 +1,24 @@
 @startuml MapMovementLogicState
 state "MapMovementLogicState" as Labyrinth_MapMovementLogicState {
+  state "Disabled" as Labyrinth_MapMovementLogicState_Disabled
   state "Idle" as Labyrinth_MapMovementLogicState_Idle
+  state "MoveCooldown" as Labyrinth_MapMovementLogicState_MoveCooldown
   state "Moving" as Labyrinth_MapMovementLogicState_Moving
+  state "Turning" as Labyrinth_MapMovementLogicState_Turning
 }
 
-Labyrinth_MapMovementLogicState_Idle --> Labyrinth_MapMovementLogicState_Idle : MoveBlocked
-Labyrinth_MapMovementLogicState_Idle --> Labyrinth_MapMovementLogicState_Moving : MoveAccepted
-Labyrinth_MapMovementLogicState_Moving --> Labyrinth_MapMovementLogicState_Idle : Arrived
-Labyrinth_MapMovementLogicState_Moving --> Labyrinth_MapMovementLogicState_Moving : MoveAccepted
-Labyrinth_MapMovementLogicState_Moving --> Labyrinth_MapMovementLogicState_Moving : MoveBlocked
+Labyrinth_MapMovementLogicState_Disabled --> Labyrinth_MapMovementLogicState_Idle : Enable
+Labyrinth_MapMovementLogicState_Idle --> Labyrinth_MapMovementLogicState_Disabled : Disable
+Labyrinth_MapMovementLogicState_Idle --> Labyrinth_MapMovementLogicState_Idle : RelativeMoveRequested
+Labyrinth_MapMovementLogicState_Idle --> Labyrinth_MapMovementLogicState_Idle : TurnRequested
+Labyrinth_MapMovementLogicState_Idle --> Labyrinth_MapMovementLogicState_Turning : TurnRequested
+Labyrinth_MapMovementLogicState_MoveCooldown --> Labyrinth_MapMovementLogicState_Idle : CooldownFinished
+Labyrinth_MapMovementLogicState_Moving --> Labyrinth_MapMovementLogicState_MoveCooldown : MoveFinished
+Labyrinth_MapMovementLogicState_Turning --> Labyrinth_MapMovementLogicState_MoveCooldown : TurnFinished
 
-Labyrinth_MapMovementLogicState_Idle : OnMoveAccepted → MoveStarted
-Labyrinth_MapMovementLogicState_Idle : OnMoveBlocked → MoveBlocked
-Labyrinth_MapMovementLogicState_Moving : OnArrived → MoveFinished
+Labyrinth_MapMovementLogicState_Idle : OnTurnRequested → TurnStarted
+Labyrinth_MapMovementLogicState_Idle : TryStartMove() → MoveBlocked, MoveStarted
+Labyrinth_MapMovementLogicState_Idle : TryStartMovePreservingFacing() → MoveBlocked, MoveStarted
+Labyrinth_MapMovementLogicState_Moving : OnMoveFinished → MoveFinished
+Labyrinth_MapMovementLogicState_Turning : OnTurnFinished → TurnFinished
 @enduml

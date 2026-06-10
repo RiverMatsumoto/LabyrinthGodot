@@ -18,6 +18,8 @@ public class MapRepoTest : TestClass
         repo.TryRegisterEntity(id, position).ShouldBeTrue();
         repo.TryGetEntityPosition(id, out var actual).ShouldBeTrue();
         actual.ShouldBe(position);
+        repo.TryGetEntityPose(id, out var pose).ShouldBeTrue();
+        pose.ShouldBe(new MapEntityPose(position, GridDirection.North));
         repo.IsOccupied(position).ShouldBeTrue();
     }
 
@@ -42,8 +44,8 @@ public class MapRepoTest : TestClass
 
         repo.TryRegisterEntity(id, new Vector2I(55, 55)).ShouldBeTrue();
 
-        repo.CanEntityMove(id, new Vector2I(1, 0)).ShouldBeFalse();
-        repo.TryMoveEntity(id, new Vector2I(1, 0), out _).ShouldBeFalse();
+        repo.CanEntityMove(id, GridDirection.East).ShouldBeFalse();
+        repo.TryMoveEntity(id, GridDirection.East, out _).ShouldBeFalse();
     }
 
     [Test]
@@ -59,8 +61,8 @@ public class MapRepoTest : TestClass
 
         repo.TryRegisterEntity(id, position).ShouldBeTrue();
 
-        repo.CanEntityMove(id, new Vector2I(1, 0)).ShouldBeFalse();
-        repo.TryMoveEntity(id, new Vector2I(1, 0), out _).ShouldBeFalse();
+        repo.CanEntityMove(id, GridDirection.East).ShouldBeFalse();
+        repo.TryMoveEntity(id, GridDirection.East, out _).ShouldBeFalse();
     }
 
     [Test]
@@ -75,7 +77,7 @@ public class MapRepoTest : TestClass
 
         repo.TryMoveEntity(
                 new MapEntityId("a"),
-                new Vector2I(1, 0),
+                GridDirection.East,
                 out _
             )
             .ShouldBeFalse();
@@ -91,14 +93,63 @@ public class MapRepoTest : TestClass
 
         repo.TryRegisterEntity(id, from).ShouldBeTrue();
 
-        var offset = new Vector2I(1, 0);
+        var direction = GridDirection.East;
 
-        repo.TryMoveEntity(id, offset, out var move).ShouldBeTrue();
+        repo.TryMoveEntity(id, direction, out var move).ShouldBeTrue();
 
-        move.ShouldBe(new GridMove(id, from, to, offset));
+        move.ShouldBe(new GridMove(id, from, direction));
+        move.Offset.ShouldBe(direction);
+        move.To.ShouldBe(to);
         repo.TryGetEntityPosition(id, out var actual).ShouldBeTrue();
         actual.ShouldBe(to);
+        repo.TryGetEntityPose(id, out var pose).ShouldBeTrue();
+        pose.ShouldBe(new MapEntityPose(to, GridDirection.East));
         repo.IsOccupied(from).ShouldBeFalse();
         repo.IsOccupied(to).ShouldBeTrue();
+    }
+
+    [Test]
+    public void CommitsAcceptedMoveWithoutChangingFacing()
+    {
+        using var repo = new MapRepo();
+        var id = new MapEntityId("mover");
+        var from = new Vector2I(1, 1);
+        var to = new Vector2I(1, 2);
+
+        repo.TryRegisterEntity(id, from, GridDirection.North)
+            .ShouldBeTrue();
+
+        repo.TryMoveEntityPreservingFacing(
+                id,
+                GridDirection.South,
+                out var move
+            )
+            .ShouldBeTrue();
+
+        move.ShouldBe(new GridMove(id, from, GridDirection.South));
+        move.To.ShouldBe(to);
+        repo.TryGetEntityPose(id, out var pose).ShouldBeTrue();
+        pose.ShouldBe(new MapEntityPose(to, GridDirection.North));
+        repo.IsOccupied(from).ShouldBeFalse();
+        repo.IsOccupied(to).ShouldBeTrue();
+    }
+
+    [Test]
+    public void TurnsEntityWithoutMoving()
+    {
+        using var repo = new MapRepo();
+        var id = new MapEntityId("turner");
+        var position = new Vector2I(1, 1);
+
+        repo.TryRegisterEntity(id, position, GridDirection.North)
+            .ShouldBeTrue();
+
+        repo.TryTurnEntity(id, TurnDirection.Right, out var pose)
+            .ShouldBeTrue();
+
+        pose.ShouldBe(new MapEntityPose(position, GridDirection.East));
+        repo.TryGetEntityPose(id, out var actual).ShouldBeTrue();
+        actual.ShouldBe(pose);
+        repo.IsOccupied(position).ShouldBeTrue();
     }
 }
