@@ -8,9 +8,7 @@ public interface IGameRepo : IDisposable
 {
     IAutoValue<GameMode> CurrentGameState { get; }
     IAutoValue<MenuOverlay> GameMenuOverlay { get; }
-    #region Settings
-    IAutoValue<double> MapMoveDuration { get; }
-    #endregion
+    IAutoValue<MapMovementSettings> MapMovementSettings { get; }
 
     void EnterMainMenu();
     void EnterTown();
@@ -21,6 +19,7 @@ public interface IGameRepo : IDisposable
     void CloseMenuHub();
     void OpenSettings();
     void CloseSettings();
+    void SetMapMovementSettings(MapMovementSettings settings);
 }
 
 public partial class GameRepo : IGameRepo
@@ -28,11 +27,12 @@ public partial class GameRepo : IGameRepo
     public IAutoValue<GameMode> CurrentGameState => _currentGameMode;
     private readonly AutoValue<GameMode> _currentGameMode;
 
-    public IAutoValue<double> MapMoveDuration => _mapMoveSpeed;
-    private readonly AutoValue<double> _mapMoveSpeed;
-
     public IAutoValue<MenuOverlay> GameMenuOverlay => _menuOverlay;
     private readonly AutoValue<MenuOverlay> _menuOverlay;
+
+    public IAutoValue<MapMovementSettings> MapMovementSettings =>
+        _mapMovementSettings;
+    private readonly AutoValue<MapMovementSettings> _mapMovementSettings;
 
     private bool _disposedValue;
 
@@ -40,7 +40,9 @@ public partial class GameRepo : IGameRepo
     {
         _menuOverlay = new AutoValue<MenuOverlay>(MenuOverlay.None);
         _currentGameMode = new AutoValue<GameMode>(GameMode.MainMenu);
-        _mapMoveSpeed = new AutoValue<double>(0.18);
+        _mapMovementSettings = new AutoValue<MapMovementSettings>(
+            Labyrinth.MapMovementSettings.Default
+        );
     }
 
     public void EnterMainMenu()
@@ -90,6 +92,14 @@ public partial class GameRepo : IGameRepo
         _menuOverlay.Value = MenuOverlay.None;
     }
 
+    public void SetMapMovementSettings(MapMovementSettings settings)
+    {
+        ArgumentOutOfRangeException.ThrowIfNegative(settings.MoveDuration);
+        ArgumentOutOfRangeException.ThrowIfNegative(settings.MoveCooldown);
+
+        _mapMovementSettings.Value = settings;
+    }
+
     #region Internals
 
     public void Dispose(bool disposing)
@@ -100,6 +110,7 @@ public partial class GameRepo : IGameRepo
             {
                 _menuOverlay.Dispose();
                 _currentGameMode.Dispose();
+                _mapMovementSettings.Dispose();
             }
             _disposedValue = true;
         }

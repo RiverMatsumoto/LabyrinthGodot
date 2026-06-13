@@ -18,10 +18,9 @@ public partial record MapMovementLogicState
 
         public Type On(in Input.RelativeMoveRequested input)
         {
-            var data = Get<MapMovementLogic.Data>();
             var mapRepo = Get<IMapRepo>();
 
-            if (!mapRepo.TryGetEntityPose(data.EntityId, out var pose))
+            if (!mapRepo.TryGetEntityPose(Data.EntityId, out var pose))
             {
                 return To<Idle>();
             }
@@ -35,10 +34,8 @@ public partial record MapMovementLogicState
 
         public Type On(in Input.TurnRequested input)
         {
-            var data = Get<MapMovementLogic.Data>();
-
             if (Get<IMapRepo>().TryTurnEntity(
-                    data.EntityId,
+                    Data.EntityId,
                     input.Direction,
                     out var pose
                 ))
@@ -52,10 +49,8 @@ public partial record MapMovementLogicState
 
         private Type TryStartMove(Vector2I direction)
         {
-            var data = Get<MapMovementLogic.Data>();
-
             if (!Get<IMapRepo>().TryMoveEntity(
-                    data.EntityId,
+                    Data.EntityId,
                     direction,
                     out var move
                 ))
@@ -70,10 +65,8 @@ public partial record MapMovementLogicState
 
         private Type TryStartMovePreservingFacing(Vector2I direction)
         {
-            var data = Get<MapMovementLogic.Data>();
-
             if (!Get<IMapRepo>().TryMoveEntityPreservingFacing(
-                    data.EntityId,
+                    Data.EntityId,
                     direction,
                     out var move
                 ))

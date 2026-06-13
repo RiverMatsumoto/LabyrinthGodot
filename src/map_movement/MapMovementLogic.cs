@@ -22,19 +22,28 @@ public partial class MapMovementLogic : AutoBlock, IMapMovementLogic
 {
     public MapMovementLogic()
     {
-        Set(new Data()
-        {
-            EntityId = new MapEntityId("default_entity"),
-            MoveDuration = 0.3,
-            MoveCooldown = 0.08,
-        });
         Preallocate<MapMovementLogicState>();
+        Set(new Data());
     }
 
     Data IMapMovementLogic.Data => Get<Data>();
 
-    public override void OnStart()
+    public override IEnumerable<IDisposable> OnStartSubscriptions()
     {
+        yield return Get<IGameRepo>().CurrentGameState.Bind()
+            .OnValue(gameState =>
+            {
+                switch (gameState)
+                {
+                    case GameMode.DungeonExploration:
+                        Input(new MapMovementLogicState.Input.Enable());
+                        break;
+                    default:
+                        Input(new MapMovementLogicState.Input.Disable());
+                        break;
+                }
+
+            });
     }
 
     public void RequestMove(Vector2I direction) =>

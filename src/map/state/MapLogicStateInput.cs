@@ -4,7 +4,6 @@ public partial record MapLogicState
 {
     public static class Input
     {
-        public readonly record struct MyInput;
-
+        public readonly record struct PlayerEnteredLabyrinth;
     }
 }

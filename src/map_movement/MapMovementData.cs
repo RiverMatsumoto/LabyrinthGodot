@@ -1,11 +1,13 @@
 namespace Labyrinth;
 
-public partial class MapMovementLogic
+using Chickensoft.Introspection;
+using Chickensoft.Serialization;
+
+[Meta, Id("map_movement_data")]
+public partial record MapMovementData
 {
-    public sealed class Data
-    {
-        public MapEntityId EntityId { get; set; }
-        public double MoveDuration { get; set; }
-        public double MoveCooldown { get; set; }
-    }
+    [Save("move_duration")]
+    public required double MoveDuration { get; init; }
+    [Save("move_cooldown")]
+    public required double MoveCooldown { get; init; }
 }

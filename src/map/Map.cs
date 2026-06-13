@@ -27,7 +27,8 @@ public partial class Map : Node3D, IMap
     public IGridMap Value() => GridMap;
     [Node] public INode3D Entities { get; private set; } = default!;
 
-    private bool _isPlayerRegistered => MapRepo.ContainsEntity(new MapEntityId("player"));
+    private bool _isPlayerRegistered =>
+        MapRepo.ContainsEntity(MapRepo.PlayerId);
 
     public static PackedScene MapMovementScene =>
         GD.Load<PackedScene>(
@@ -44,9 +45,13 @@ public partial class Map : Node3D, IMap
 
     public void OnResolved()
     {
+        MapRepo.LoadTerrainFromGridMap(GridMap);
+        // later other data to determine floor start and floorend
+
         _mapBinding = MapRepo.AutoChannel.Bind()
             .On((in IMapRepo.MapEntityWasRegistered message)
             => OnMapEntityRegistered(message.Id, message.InitialPosition));
+        MapRepo.TryRegisterEntity(MapRepo.PlayerId, new Vector2I(1, 1));
 
         // GD.Print(GridMap);
         // MapLogic.Start();
@@ -55,26 +60,18 @@ public partial class Map : Node3D, IMap
         MapLogic.Start<MapLogicState.Idle>();
     }
 
-    public void OnReady()
-    {
-    }
-
     public override void _UnhandledInput(InputEvent @event)
     {
         if (Input.IsActionJustPressed(GameInputs.UiAccept))
         {
-            MapRepo.TryRegisterEntity("player", new Vector2I(1, 1));
+            var _ = MapRepo.TryRegisterEntity("player", new Vector2I(1, 1));
         }
 
-        if (Input.IsActionJustPressed(GameInputs.UiCancel))
-        {
-            MapRepo.TryUnregisterEntity(new MapEntityId("player"));
-        }
     }
 
     public void OnMapEntityRegistered(MapEntityId id, Vector2I initialPosition)
     {
-        if (id.Value == "player")
+        if (id == MapRepo.PlayerId)
         {
             var player =
                 MapMovementScene.Instantiate<MapMovement>();

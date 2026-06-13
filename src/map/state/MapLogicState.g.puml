@@ -2,4 +2,6 @@
 state "MapLogicState" as Labyrinth_MapLogicState {
   state "Idle" as Labyrinth_MapLogicState_Idle
 }
+
+Labyrinth_MapLogicState_Idle --> Labyrinth_MapLogicState_Idle : PlayerEnteredLabyrinth
 @enduml

@@ -4,12 +4,14 @@ using System;
 using Chickensoft.AutoInject;
 using Chickensoft.GodotNodeInterfaces;
 using Chickensoft.Introspection;
+using Chickensoft.SaveFileBuilder;
 using Chickensoft.Sync.Primitives;
 using Godot;
 
 public interface IMapMovement : INode3D,
     IProvide<IMapMovementLogic>,
-    IProvide<IMapMovement>
+    IProvide<IMapMovement>,
+    IProvide<ISaveChunk<MapMovementData>>
 {
     MapEntityId EntityId { get; }
     IMapMovementLogic MapMovementLogic { get; }
@@ -45,10 +47,22 @@ public partial class MapMovement : Node3D, IMapMovement
     [Dependency]
     public IGridMap GridMap => this.DependOn<IGridMap>();
 
+    #region State
     [Dependency] public IGameRepo GameRepo => this.DependOn<IGameRepo>();
     [Dependency] public IMapRepo MapRepo => this.DependOn<IMapRepo>();
     private AutoChannel.Binding? _mapRepoBinding;
-    private AutoValue<double>.Binding? _mapMoveDurationBinding;
+    private AutoValue<MapMovementSettings>.Binding? _movementSettingsBinding;
+    #endregion State
+
+    #region Save
+    [Dependency]
+    public ISaveChunk<GameData> GameChunk =>
+        this.DependOn<ISaveChunk<GameData>>();
+    public ISaveChunk<MapMovementData> MapMovementChunk { get; set; } =
+        default!;
+    ISaveChunk<MapMovementData>
+        IProvide<ISaveChunk<MapMovementData>>.Value() => MapMovementChunk;
+    #endregion Save
 
     private Camera3D _playerCamera { get; set; } = default!;
     private PlayerMovementController _playerMovementController { get; set; } = default!;
@@ -63,6 +77,22 @@ public partial class MapMovement : Node3D, IMapMovement
 
     public void Setup()
     {
+        MapMovementChunk = new SaveChunk<MapMovementData>(
+            onSave: (_) =>
+            {
+                var data = MapMovementLogic.Data;
+                return new MapMovementData
+                {
+                    MoveDuration = data.MoveDuration,
+                    MoveCooldown = data.MoveCooldown,
+                };
+            },
+            onLoad: (_, data) =>
+                GameRepo.SetMapMovementSettings(new MapMovementSettings(
+                    MoveDuration: data.MoveDuration,
+                    MoveCooldown: data.MoveCooldown
+                ))
+        );
     }
 
     public void OnResolved()
@@ -70,9 +100,12 @@ public partial class MapMovement : Node3D, IMapMovement
         MapMovementLogic.Set(MapRepo);
         MapMovementLogic.Set(this as IMapMovement);
 
-        _mapMoveDurationBinding = GameRepo.MapMoveDuration.Bind()
-            .OnValue(moveDuration =>
-                MapMovementLogic.Data.MoveDuration = moveDuration);
+        _movementSettingsBinding = GameRepo.MapMovementSettings.Bind()
+            .OnValue(settings =>
+            {
+                MapMovementLogic.Data.MoveDuration = settings.MoveDuration;
+                MapMovementLogic.Data.MoveCooldown = settings.MoveCooldown;
+            });
 
         _mapMovementBinding = MapMovementLogic.Bind()
             .OnOutput((in MapMovementLogicState.Output.MoveStarted output) =>
@@ -85,15 +118,28 @@ public partial class MapMovement : Node3D, IMapMovement
         {
             if (message.Id == EntityId)
             {
+                if (EntityId == MapRepo.PlayerId)
+                {
+                    GD.PrintErr(
+                        "MapMovement: refusing to free the persistent player."
+                    );
+                    return;
+                }
+
                 QueueFree();
             }
         });
+
+        if (EntityId == MapRepo.PlayerId)
+        {
+            GameChunk.AddChunk(MapMovementChunk);
+        }
 
         ApplyStartPosition();
 
         this.Provide();
 
-        MapMovementLogic.Start<MapMovementLogicState.Idle>();
+        MapMovementLogic.Start<MapMovementLogicState.Disabled>();
     }
 
     public void Initialize(MapEntityId id, Vector2I startPosition)
@@ -111,7 +157,7 @@ public partial class MapMovement : Node3D, IMapMovement
         _isInitialized = true;
         Name = id.Value;
 
-        if (id.Value == "player")
+        if (id == MapRepo.PlayerId)
         {
             SpawnPlayerNodes();
         }
@@ -254,7 +300,7 @@ public partial class MapMovement : Node3D, IMapMovement
 
         _mapMovementBinding?.Dispose();
         _mapRepoBinding?.Dispose();
-        _mapMoveDurationBinding?.Dispose();
+        _movementSettingsBinding?.Dispose();
         MapMovementLogic.Dispose();
     }
 
