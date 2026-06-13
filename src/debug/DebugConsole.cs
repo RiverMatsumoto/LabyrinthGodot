@@ -5,7 +5,7 @@ using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Text;
-using Chickensoft.Sync.Primitives;
+using Chickensoft.LogicBlocks;
 using Godot;
 
 public partial class DebugConsole : CanvasLayer
@@ -18,16 +18,14 @@ public partial class DebugConsole : CanvasLayer
     private readonly List<string> _outputLines = [];
     private readonly List<string> _commandHistory = [];
 
-    private IGameRepo _gameRepo = default!;
-    private IMapRepo _mapRepo = default!;
+    private IGameLogic _gameLogic = default!;
+    private IMapLogic _mapLogic = default!;
     private PanelContainer _panel = default!;
     private RichTextLabel _output = default!;
     private LineEdit _commandInput = default!;
 
-    private AutoChannel.Binding? _mapBinding;
-    private AutoValue<GameMode>.Binding? _gameModeBinding;
-    private AutoValue<MenuOverlay>.Binding? _overlayBinding;
-    private AutoValue<MapMovementSettings>.Binding? _settingsBinding;
+    private LogicBlock.Binding? _mapBinding;
+    private LogicBlock.Binding? _gameBinding;
 
     private int _historyIndex;
     private bool _isInitialized;
@@ -36,7 +34,7 @@ public partial class DebugConsole : CanvasLayer
     private bool _isShutdown;
     private Input.MouseModeEnum _previousMouseMode;
 
-    public void Initialize(IGameRepo gameRepo, IMapRepo mapRepo)
+    public void Initialize(IGameLogic gameLogic, IMapLogic mapLogic)
     {
         if (_isInitialized)
         {
@@ -45,8 +43,8 @@ public partial class DebugConsole : CanvasLayer
             );
         }
 
-        _gameRepo = gameRepo;
-        _mapRepo = mapRepo;
+        _gameLogic = gameLogic;
+        _mapLogic = mapLogic;
         _isInitialized = true;
     }
 
@@ -66,7 +64,7 @@ public partial class DebugConsole : CanvasLayer
 
         BuildUi();
         Append("Labyrinth debug console. Type 'help' for commands.");
-        BindRepos();
+        BindLogic();
     }
 
     public override void _Input(InputEvent @event)
@@ -129,9 +127,7 @@ public partial class DebugConsole : CanvasLayer
         }
 
         _mapBinding?.Dispose();
-        _gameModeBinding?.Dispose();
-        _overlayBinding?.Dispose();
-        _settingsBinding?.Dispose();
+        _gameBinding?.Dispose();
     }
 
     private void BuildUi()
@@ -199,28 +195,39 @@ public partial class DebugConsole : CanvasLayer
         inputRow.AddChild(_commandInput);
     }
 
-    private void BindRepos()
+    private void BindLogic()
     {
-        _mapBinding = _mapRepo.AutoChannel.Bind()
-            .On((in IMapRepo.MapEntityWasRegistered message) =>
+        _mapBinding = _mapLogic.Bind()
+            .OnOutput((in MapLogicState.Output.SpawnPlayer output) =>
                 Append(
-                    $"event map.registered id={message.Id} "
-                        + $"position={message.InitialPosition}"
+                    $"event map.registered id={output.Id} "
+                        + $"position={output.Pose.Position}"
                 ))
-            .On((in IMapRepo.MapEntityWasUnregistered message) =>
-                Append($"event map.unregistered id={message.Id}"));
+            .OnOutput((in MapLogicState.Output.SpawnEnemy output) =>
+                Append(
+                    $"event map.registered id={output.Id} "
+                        + $"position={output.Pose.Position}"
+                ))
+            .OnOutput((in MapLogicState.Output.DespawnEntity output) =>
+                Append($"event map.unregistered id={output.Id}"));
 
-        _gameModeBinding = _gameRepo.CurrentGameState.Bind()
-            .OnValue(mode => Append($"state game.mode={mode}"));
-
-        _overlayBinding = _gameRepo.GameMenuOverlay.Bind()
-            .OnValue(overlay => Append($"state game.overlay={overlay}"));
-
-        _settingsBinding = _gameRepo.MapMovementSettings.Bind()
-            .OnValue(settings => Append(
+        _gameBinding = _gameLogic.Bind()
+            .OnOutput((in GameLogicState.Output.EnteredMainMenu _) =>
+                Append($"state game.mode={GameMode.MainMenu}"))
+            .OnOutput((in GameLogicState.Output.EnteredTown _) =>
+                Append($"state game.mode={GameMode.Town}"))
+            .OnOutput((in GameLogicState.Output.EnteredLabyrinth _) =>
+                Append($"state game.mode={GameMode.Labyrinth}"))
+            .OnOutput((in GameLogicState.Output.EnteredBattle _) =>
+                Append($"state game.mode={GameMode.Battle}"))
+            .OnOutput((in GameLogicState.Output.OverlayChanged output) =>
+                Append($"state game.overlay={output.Overlay}"))
+            .OnOutput((
+                in GameLogicState.Output.MovementSettingsChanged output
+            ) => Append(
                 "state settings.movement "
-                    + $"duration={Format(settings.MoveDuration)} "
-                    + $"cooldown={Format(settings.MoveCooldown)}"
+                    + $"duration={Format(output.Settings.MoveDuration)} "
+                    + $"cooldown={Format(output.Settings.MoveCooldown)}"
             ));
     }
 
@@ -345,15 +352,15 @@ public partial class DebugConsole : CanvasLayer
 
     private string Status()
     {
-        var settings = _gameRepo.MapMovementSettings.Value;
+        var settings = _gameLogic.MovementSettings;
         var lines = new List<string>
         {
-            $"game.mode={_gameRepo.CurrentGameState.Value}",
-            $"game.overlay={_gameRepo.GameMenuOverlay.Value}",
+            $"game.mode={_gameLogic.CurrentMode}",
+            $"game.overlay={_gameLogic.CurrentOverlay}",
             "settings.movement="
                 + $"{Format(settings.MoveDuration)},"
                 + $"{Format(settings.MoveCooldown)}",
-            $"map.player_registered={_mapRepo.PlayerIsRegistered}",
+            $"map.player_registered={_mapLogic.PlayerIsRegistered}",
         };
 
         var movements = GetTree().GetNodesInGroup(MapMovementGroup);
@@ -413,10 +420,9 @@ public partial class DebugConsole : CanvasLayer
 
         var id = new MapEntityId(args[2]);
         var position = new Vector2I(x, y);
-        var registered = _mapRepo.TryRegisterEntity(
+        var registered = _mapLogic.TryRegisterEntity(
             id,
-            position,
-            direction
+            new MapEntityPose(position, direction)
         );
 
         return registered
@@ -432,7 +438,7 @@ public partial class DebugConsole : CanvasLayer
         }
 
         var id = new MapEntityId(args[2]);
-        return _mapRepo.TryUnregisterEntity(id)
+        return _mapLogic.TryUnregisterEntity(id)
             ? $"ok: unregistered {id}."
             : $"rejected: could not unregister {id}.";
     }
@@ -445,7 +451,7 @@ public partial class DebugConsole : CanvasLayer
         }
 
         var id = new MapEntityId(args[2]);
-        return _mapRepo.TryGetEntityPose(id, out var pose)
+        return _mapLogic.TryGetEntityPose(id, out var pose)
             ? $"pose {id}: position={pose.Position} "
                 + $"facing={DirectionName(pose.FacingDirection)}"
             : $"error: entity '{id}' was not found.";
@@ -465,7 +471,7 @@ public partial class DebugConsole : CanvasLayer
         }
 
         var id = new MapEntityId(args[2]);
-        if (!TryGetIdleMovement(id, out var movement, out var error))
+        if (!TryGetMovement(id, out var movement, out var error))
         {
             return error;
         }
@@ -487,7 +493,7 @@ public partial class DebugConsole : CanvasLayer
         }
 
         var id = new MapEntityId(args[2]);
-        if (!TryGetIdleMovement(id, out var movement, out var error))
+        if (!TryGetMovement(id, out var movement, out var error))
         {
             return error;
         }
@@ -518,23 +524,23 @@ public partial class DebugConsole : CanvasLayer
         {
             case "main-menu":
             case "mainmenu":
-                _gameRepo.EnterMainMenu();
+                _gameLogic.RequestMode(GameMode.MainMenu);
                 break;
             case "town":
-                _gameRepo.EnterTown();
+                _gameLogic.RequestMode(GameMode.Town);
                 break;
             case "labyrinth":
-                _gameRepo.EnterLabyrinth();
+                _gameLogic.RequestMode(GameMode.Labyrinth);
                 break;
             case "battle":
-                _gameRepo.EnterBattle();
+                _gameLogic.RequestMode(GameMode.Battle);
                 break;
             default:
                 return "error: mode must be main-menu, town, labyrinth, "
                     + "or battle.";
         }
 
-        return $"ok: game mode is {_gameRepo.CurrentGameState.Value}.";
+        return $"ok: game mode is {_gameLogic.CurrentMode}.";
     }
 
     private string SetGameOverlay(string value)
@@ -542,22 +548,20 @@ public partial class DebugConsole : CanvasLayer
         switch (value.ToLowerInvariant())
         {
             case "none":
-                _gameRepo.CloseMenuHub();
+                _gameLogic.RequestOverlay(MenuOverlay.None);
                 break;
             case "menu":
             case "menu-hub":
-                _gameRepo.CloseMenuHub();
-                _gameRepo.OpenMenuHub();
+                _gameLogic.RequestOverlay(MenuOverlay.MenuHub);
                 break;
             case "settings":
-                _gameRepo.CloseMenuHub();
-                _gameRepo.OpenSettings();
+                _gameLogic.RequestOverlay(MenuOverlay.Settings);
                 break;
             default:
                 return "error: overlay must be none, menu, or settings.";
         }
 
-        return $"ok: game overlay is {_gameRepo.GameMenuOverlay.Value}.";
+        return $"ok: game overlay is {_gameLogic.CurrentOverlay}.";
     }
 
     private string SettingsCommand(IReadOnlyList<string> args)
@@ -582,7 +586,7 @@ public partial class DebugConsole : CanvasLayer
             return "error: duration and cooldown cannot be negative.";
         }
 
-        _gameRepo.SetMapMovementSettings(new MapMovementSettings(
+        _gameLogic.RequestMovementSettings(new MapMovementSettings(
             MoveDuration: duration,
             MoveCooldown: cooldown
         ));
@@ -590,7 +594,7 @@ public partial class DebugConsole : CanvasLayer
         return "ok: movement settings updated.";
     }
 
-    private bool TryGetIdleMovement(
+    private bool TryGetMovement(
         MapEntityId id,
         out MapMovement movement,
         out string error
@@ -600,14 +604,6 @@ public partial class DebugConsole : CanvasLayer
         if (movement is null)
         {
             error = $"error: movement node for '{id}' was not found.";
-            return false;
-        }
-
-        var state = movement.MapMovementLogic.State;
-        if (state is not MapMovementLogicState.Idle)
-        {
-            error = $"rejected: '{id}' movement state is "
-                + $"{state?.GetType().Name ?? "NotStarted"}.";
             return false;
         }
 
@@ -632,7 +628,7 @@ public partial class DebugConsole : CanvasLayer
     {
         var state = movement.MapMovementLogic.State?.GetType().Name
             ?? "NotStarted";
-        if (!_mapRepo.TryGetEntityPose(movement.EntityId, out var pose))
+        if (!_mapLogic.TryGetEntityPose(movement.EntityId, out var pose))
         {
             return $"{movement.EntityId}: state={state}, pose=missing";
         }

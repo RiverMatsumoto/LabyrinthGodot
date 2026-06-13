@@ -6,6 +6,8 @@ state "GameLogicState" as Labyrinth_GameLogicState {
   state "Town" as Labyrinth_GameLogicState_Town
 }
 
+Labyrinth_GameLogicState --> Labyrinth_GameLogicState : SetMovementSettings
+Labyrinth_GameLogicState --> Labyrinth_GameLogicState : SetOverlay
 Labyrinth_GameLogicState_Battle --> Labyrinth_GameLogicState_Labyrinth : EnterLabyrinth
 Labyrinth_GameLogicState_Battle --> Labyrinth_GameLogicState_MainMenu : EnterMainMenu
 Labyrinth_GameLogicState_Battle --> Labyrinth_GameLogicState_Town : EnterTown
@@ -19,6 +21,8 @@ Labyrinth_GameLogicState_Town --> Labyrinth_GameLogicState_Battle : EnterBattle
 Labyrinth_GameLogicState_Town --> Labyrinth_GameLogicState_Labyrinth : EnterLabyrinth
 Labyrinth_GameLogicState_Town --> Labyrinth_GameLogicState_MainMenu : EnterMainMenu
 
+Labyrinth_GameLogicState : OnSetMovementSettings → MovementSettingsChanged
+Labyrinth_GameLogicState : OnSetOverlay → OverlayChanged
 Labyrinth_GameLogicState_Battle : OnEnter → EnteredBattle
 Labyrinth_GameLogicState_Labyrinth : OnEnter → EnteredLabyrinth
 Labyrinth_GameLogicState_MainMenu : OnEnter → EnteredMainMenu

@@ -5,12 +5,10 @@ using Chickensoft.AutoInject;
 using Chickensoft.GodotNodeInterfaces;
 using Chickensoft.Introspection;
 using Chickensoft.SaveFileBuilder;
-using Chickensoft.Sync.Primitives;
 using Godot;
 
 public interface IMapMovement : INode3D,
     IProvide<IMapMovementLogic>,
-    IProvide<IMapMovement>,
     IProvide<ISaveChunk<MapMovementData>>
 {
     MapEntityId EntityId { get; }
@@ -18,8 +16,7 @@ public interface IMapMovement : INode3D,
     bool IsEnabled { get; }
     bool IsMoving { get; }
 
-    void StartCooldownTimer();
-    void Initialize(MapEntityId id, Vector2I startPosition);
+    void Initialize(MapEntityId id, MapEntityPose startPose, bool isPlayer);
 }
 
 [Meta(typeof(IAutoNode))]
@@ -30,13 +27,11 @@ public partial class MapMovement : Node3D, IMapMovement
     private bool _isInitialized;
     private Tween? _moveTween;
     private Tween? _turnTween;
-    private Vector2I _startPosition;
+    private MapEntityPose _startPose;
 
     public IMapMovementLogic MapMovementLogic { get; } = new MapMovementLogic();
     IMapMovementLogic IProvide<IMapMovementLogic>.Value() => MapMovementLogic;
     private MapMovementLogic.Binding? _mapMovementBinding;
-
-    IMapMovement IProvide<IMapMovement>.Value() => this;
 
     public MapEntityId EntityId => MapMovementLogic.Data.EntityId;
     public bool IsEnabled =>
@@ -50,8 +45,6 @@ public partial class MapMovement : Node3D, IMapMovement
     #region State
     [Dependency] public IGameRepo GameRepo => this.DependOn<IGameRepo>();
     [Dependency] public IMapRepo MapRepo => this.DependOn<IMapRepo>();
-    private AutoChannel.Binding? _mapRepoBinding;
-    private AutoValue<MapMovementSettings>.Binding? _movementSettingsBinding;
     #endregion State
 
     #region Save
@@ -88,7 +81,7 @@ public partial class MapMovement : Node3D, IMapMovement
                 };
             },
             onLoad: (_, data) =>
-                GameRepo.SetMapMovementSettings(new MapMovementSettings(
+                MapMovementLogic.ApplyLoadedSettings(new MapMovementSettings(
                     MoveDuration: data.MoveDuration,
                     MoveCooldown: data.MoveCooldown
                 ))
@@ -99,43 +92,20 @@ public partial class MapMovement : Node3D, IMapMovement
     {
         MapMovementLogic.Set(MapRepo);
         MapMovementLogic.Set(GameRepo);
-        MapMovementLogic.Set(this as IMapMovement);
 
 #if DEBUG
         AddToGroup(DebugConsole.MapMovementGroup);
 #endif
 
-        _movementSettingsBinding = GameRepo.MapMovementSettings.Bind()
-            .OnValue(settings =>
-            {
-                MapMovementLogic.Data.MoveDuration = settings.MoveDuration;
-                MapMovementLogic.Data.MoveCooldown = settings.MoveCooldown;
-            });
-
         _mapMovementBinding = MapMovementLogic.Bind()
             .OnOutput((in MapMovementLogicState.Output.MoveStarted output) =>
-                AnimateMove(output.Move))
+                AnimateMove(output.Move, output.Duration))
             .OnOutput((in MapMovementLogicState.Output.TurnStarted output) =>
-                AnimateTurn(output.FacingDirection));
+                AnimateTurn(output.FacingDirection, output.Duration))
+            .OnOutput((in MapMovementLogicState.Output.CooldownStarted output) =>
+                StartCooldownTimer(output.Duration));
 
-        _mapRepoBinding = MapRepo.AutoChannel.Bind();
-        _mapRepoBinding.On((in IMapRepo.MapEntityWasUnregistered message) =>
-        {
-            if (message.Id == EntityId)
-            {
-                if (EntityId == Labyrinth.MapRepo.PlayerId)
-                {
-                    GD.PrintErr(
-                        "MapMovement: refusing to free the persistent player."
-                    );
-                    return;
-                }
-
-                QueueFree();
-            }
-        });
-
-        if (EntityId == Labyrinth.MapRepo.PlayerId)
+        if (MapMovementLogic.Data.IsPlayer)
         {
             GameChunk.AddChunk(MapMovementChunk);
         }
@@ -147,7 +117,11 @@ public partial class MapMovement : Node3D, IMapMovement
         MapMovementLogic.Start<MapMovementLogicState.Disabled>();
     }
 
-    public void Initialize(MapEntityId id, Vector2I startPosition)
+    public void Initialize(
+        MapEntityId id,
+        MapEntityPose startPose,
+        bool isPlayer
+    )
     {
         if (_isInitialized || id.IsEmpty)
         {
@@ -155,14 +129,12 @@ public partial class MapMovement : Node3D, IMapMovement
             return;
         }
 
-        var data = MapMovementLogic.Data;
-        data.EntityId = id;
-
-        _startPosition = startPosition;
+        MapMovementLogic.Initialize(id, isPlayer);
+        _startPose = startPose;
         _isInitialized = true;
         Name = id.Value;
 
-        if (id == Labyrinth.MapRepo.PlayerId)
+        if (isPlayer)
         {
             SpawnPlayerNodes();
         }
@@ -203,14 +175,13 @@ public partial class MapMovement : Node3D, IMapMovement
         );
     }
 
-    private void AnimateMove(GridMove move)
+    private void AnimateMove(GridMove move, double duration)
     {
         var target = GridToGlobalPosition(move.To);
 
         _moveTween?.Kill();
 
-        var moveDuration = MapMovementLogic.Data.MoveDuration;
-        if (moveDuration <= 0)
+        if (duration <= 0)
         {
             GlobalPosition = target;
             FinishMove();
@@ -222,7 +193,7 @@ public partial class MapMovement : Node3D, IMapMovement
             this,
             "global_position",
             target + new Vector3(0, PlayerPositionGridOffset(), 0),
-            moveDuration
+            duration
         );
         _moveTween.Finished += FinishMove;
     }
@@ -239,16 +210,13 @@ public partial class MapMovement : Node3D, IMapMovement
             return;
         }
 
-        GlobalPosition = GridToGlobalPosition(_startPosition)
+        GlobalPosition = GridToGlobalPosition(_startPose.Position)
             + new Vector3(0, PlayerPositionGridOffset(), 0);
 
-        if (MapRepo.TryGetEntityPose(EntityId, out var pose))
+        Rotation = Rotation with
         {
-            Rotation = Rotation with
-            {
-                Y = FacingDirectionToYaw(pose.FacingDirection),
-            };
-        }
+            Y = FacingDirectionToYaw(_startPose.FacingDirection),
+        };
     }
 
     private void FinishMove()
@@ -267,7 +235,7 @@ public partial class MapMovement : Node3D, IMapMovement
         AddChild(_playerMovementController);
     }
 
-    private void AnimateTurn(Vector2I turnTo)
+    private void AnimateTurn(Vector2I turnTo, double duration)
     {
         var targetYaw = GetNearestYaw(
             Rotation.Y,
@@ -276,8 +244,7 @@ public partial class MapMovement : Node3D, IMapMovement
 
         _turnTween?.Kill();
 
-        var turnDuration = MapMovementLogic.Data.MoveDuration;
-        if (turnDuration <= 0)
+        if (duration <= 0)
         {
             Rotation = Rotation with { Y = targetYaw };
             FinishTurn();
@@ -285,7 +252,7 @@ public partial class MapMovement : Node3D, IMapMovement
         }
 
         _turnTween = CreateTween();
-        _turnTween.TweenProperty(this, "rotation:y", targetYaw, turnDuration);
+        _turnTween.TweenProperty(this, "rotation:y", targetYaw, duration);
         _turnTween.Finished += FinishTurn;
     }
 
@@ -302,10 +269,10 @@ public partial class MapMovement : Node3D, IMapMovement
         _moveTween = null;
         _turnTween?.Kill();
         _turnTween = null;
+        CooldownTimer.Stop();
+        CooldownTimer.Timeout -= CooldownTimerFinished;
 
         _mapMovementBinding?.Dispose();
-        _mapRepoBinding?.Dispose();
-        _movementSettingsBinding?.Dispose();
         MapMovementLogic.Dispose();
     }
 
@@ -320,9 +287,9 @@ public partial class MapMovement : Node3D, IMapMovement
         return currentYaw + difference;
     }
 
-    public void StartCooldownTimer()
+    private void StartCooldownTimer(double duration)
     {
-        CooldownTimer.WaitTime = MapMovementLogic.Data.MoveCooldown;
+        CooldownTimer.WaitTime = duration;
         CooldownTimer.OneShot = true;
         CooldownTimer.Timeout += CooldownTimerFinished;
         CooldownTimer.Start();

@@ -7,6 +7,7 @@ state "MapMovementLogicState" as Labyrinth_MapMovementLogicState {
   state "Turning" as Labyrinth_MapMovementLogicState_Turning
 }
 
+Labyrinth_MapMovementLogicState --> Labyrinth_MapMovementLogicState : SettingsLoaded
 Labyrinth_MapMovementLogicState_Disabled --> Labyrinth_MapMovementLogicState_Idle : Enable
 Labyrinth_MapMovementLogicState_Idle --> Labyrinth_MapMovementLogicState_Disabled : Disable
 Labyrinth_MapMovementLogicState_Idle --> Labyrinth_MapMovementLogicState_Idle : RelativeMoveRequested
@@ -23,6 +24,7 @@ Labyrinth_MapMovementLogicState_Turning --> Labyrinth_MapMovementLogicState_Turn
 Labyrinth_MapMovementLogicState_Idle : OnTurnRequested → TurnStarted
 Labyrinth_MapMovementLogicState_Idle : TryStartMove() → MoveBlocked, MoveStarted
 Labyrinth_MapMovementLogicState_Idle : TryStartMovePreservingFacing() → MoveBlocked, MoveStarted
+Labyrinth_MapMovementLogicState_MoveCooldown : OnEnter → CooldownStarted
 Labyrinth_MapMovementLogicState_Moving : OnMoveFinished → MoveFinished
 Labyrinth_MapMovementLogicState_Turning : OnTurnFinished → TurnFinished
 @enduml

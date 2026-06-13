@@ -40,7 +40,10 @@ public partial record MapMovementLogicState
                     out var pose
                 ))
             {
-                Output(new Output.TurnStarted(pose.FacingDirection));
+                Output(new Output.TurnStarted(
+                    pose.FacingDirection,
+                    Data.MoveDuration
+                ));
                 return To<Turning>();
             }
 
@@ -59,7 +62,7 @@ public partial record MapMovementLogicState
                 return To<Idle>();
             }
 
-            Output(new Output.MoveStarted(move));
+            Output(new Output.MoveStarted(move, Data.MoveDuration));
             return To<Moving>();
         }
 
@@ -75,7 +78,7 @@ public partial record MapMovementLogicState
                 return To<Idle>();
             }
 
-            Output(new Output.MoveStarted(move));
+            Output(new Output.MoveStarted(move, Data.MoveDuration));
             return To<Moving>();
         }
 

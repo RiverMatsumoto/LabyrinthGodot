@@ -19,10 +19,9 @@ using Godot;
 public interface IGame : INode,
     IProvide<IGameRepo>,
     IProvide<IMapRepo>,
+    IProvide<IGameLogic>,
     IProvide<ISaveChunk<GameData>>
 {
-    Node AreaRoot { get; }
-    Node UiRoot { get; }
     bool IsSaveReady { get; }
     Task<bool> SaveGame(int id);
     Task<bool> LoadGame(int id);
@@ -79,8 +78,9 @@ public partial class Game : Node, IGame
     #endregion State
 
     public IGameLogic GameLogic { get; set; } = default!;
-    public Node AreaRoot { get; private set; } = default!;
-    public Node UiRoot { get; private set; } = default!;
+    IGameLogic IProvide<IGameLogic>.Value() => GameLogic;
+    [Node] public INode AreaRoot { get; private set; } = default!;
+    [Node] public INode UiRoot { get; private set; } = default!;
 
     public void Setup()
     {
@@ -90,6 +90,7 @@ public partial class Game : Node, IGame
         GameRepo = new GameRepo();
         MapRepo = new MapRepo();
         GameLogic = new GameLogic();
+        GameLogic.Set(GameRepo);
 
         GodotSerialization.Setup();
         LogicBlockSerialization.Setup();
@@ -141,20 +142,8 @@ public partial class Game : Node, IGame
         );
     }
 
-    public void OnReady()
-    {
-        AreaRoot = GetNodeOrNull<Node>("AreaRoot") ?? this;
-        UiRoot = GetNodeOrNull<Node>("UiRoot") ?? this;
-    }
-
     public void OnResolved()
     {
-#if DEBUG
-        _debugConsole = new DebugConsole();
-        _debugConsole.Initialize(GameRepo, MapRepo);
-        UiRoot.AddChild(_debugConsole);
-#endif
-
         SaveFile = new SaveFile<GameData>(
             root: GameChunk,
             onSave: async data =>
@@ -175,8 +164,15 @@ public partial class Game : Node, IGame
                 return JsonSerializer.Deserialize<GameData>(json, JsonOptions);
             }
         );
-        GameLogic.Start<GameLogicState.MainMenu>();
         this.Provide();
+        GameLogic.Start<GameLogicState.MainMenu>();
+
+#if DEBUG
+        var map = GetNode<Map>("AreaRoot/Map");
+        _debugConsole = new DebugConsole();
+        _debugConsole.Initialize(GameLogic, map.MapLogic);
+        UiRoot.AddChild(_debugConsole);
+#endif
     }
 
     public void OnExitTree()
@@ -185,6 +181,7 @@ public partial class Game : Node, IGame
         _debugConsole?.Shutdown();
 #endif
 
+        GameLogic.Dispose();
         GameRepo.Dispose();
         MapRepo.Dispose();
     }

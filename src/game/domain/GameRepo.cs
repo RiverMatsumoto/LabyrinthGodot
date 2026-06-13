@@ -19,6 +19,7 @@ public interface IGameRepo : IDisposable
     void CloseMenuHub();
     void OpenSettings();
     void CloseSettings();
+    void SetMenuOverlay(MenuOverlay overlay);
     void SetMapMovementSettings(MapMovementSettings settings);
 }
 
@@ -92,6 +93,16 @@ public partial class GameRepo : IGameRepo
         _menuOverlay.Value = MenuOverlay.None;
     }
 
+    public void SetMenuOverlay(MenuOverlay overlay)
+    {
+        if (!Enum.IsDefined(overlay))
+        {
+            throw new ArgumentOutOfRangeException(nameof(overlay));
+        }
+
+        _menuOverlay.Value = overlay;
+    }
+
     public void SetMapMovementSettings(MapMovementSettings settings)
     {
         ArgumentOutOfRangeException.ThrowIfNegative(settings.MoveDuration);
@@ -118,6 +129,7 @@ public partial class GameRepo : IGameRepo
 
     public void Dispose()
     {
+        Dispose(disposing: true);
         GC.SuppressFinalize(this);
     }
 

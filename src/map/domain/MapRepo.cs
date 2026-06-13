@@ -50,7 +50,10 @@ public interface IMapRepo : IDisposable
     bool PlayerIsRegistered { get; }
 
     #region Events
-    readonly record struct MapEntityWasRegistered(MapEntityId Id, Vector2I InitialPosition);
+    readonly record struct MapEntityWasRegistered(
+        MapEntityId Id,
+        MapEntityPose Pose
+    );
     readonly record struct MapEntityWasUnregistered(MapEntityId Id);
     #endregion
 
@@ -178,7 +181,10 @@ public class MapRepo : IMapRepo
 
         _entityPoses[id] = new MapEntityPose(position, facingDirection);
         _occupants[position] = id;
-        _autoChannel.Send(new IMapRepo.MapEntityWasRegistered(id, position));
+        _autoChannel.Send(new IMapRepo.MapEntityWasRegistered(
+            id,
+            _entityPoses[id]
+        ));
         return true;
     }
 

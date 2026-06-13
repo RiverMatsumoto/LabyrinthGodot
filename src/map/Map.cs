@@ -1,12 +1,12 @@
 namespace Labyrinth;
 
+using System.Collections.Generic;
 using Chickensoft.AutoInject;
 using Chickensoft.GodotNodeInterfaces;
 using Chickensoft.Introspection;
-using Chickensoft.Sync.Primitives;
 using Godot;
 
-public interface IMap : INode3D, IProvide<IGridMap>
+public interface IMap : INode3D, IProvide<IGridMap>, IProvide<IMapLogic>
 {
     IMapLogic MapLogic { get; }
     IGridMap GridMap { get; }
@@ -18,17 +18,15 @@ public partial class Map : Node3D, IMap
 {
     public override void _Notification(int what) => this.Notify(what);
 
-    [Dependency] public IGameRepo GameRepo => this.DependOn<IGameRepo>();
     [Dependency] public IMapRepo MapRepo => this.DependOn<IMapRepo>();
-    private AutoChannel.Binding _mapBinding { get; set; } = default!;
 
     public IMapLogic MapLogic { get; private set; } = default!;
+    IMapLogic IProvide<IMapLogic>.Value() => MapLogic;
+    private MapLogic.Binding? _mapBinding;
+    private readonly Dictionary<MapEntityId, Node> _entityNodes = [];
     [Node] public IGridMap GridMap { get; private set; } = default!;
     public IGridMap Value() => GridMap;
     [Node] public INode3D Entities { get; private set; } = default!;
-
-    private bool _isPlayerRegistered =>
-        MapRepo.ContainsEntity(global::Labyrinth.MapRepo.PlayerId);
 
     public static PackedScene MapMovementScene =>
         GD.Load<PackedScene>(
@@ -45,22 +43,26 @@ public partial class Map : Node3D, IMap
 
     public void OnResolved()
     {
+        MapLogic.Set(MapRepo);
+
+        _mapBinding = MapLogic.Bind()
+            .OnOutput((in MapLogicState.Output.SpawnPlayer output) =>
+                SpawnPlayer(output.Id, output.Pose))
+            .OnOutput((in MapLogicState.Output.SpawnEnemy output) =>
+                SpawnEnemy(output.Id, output.Pose))
+            .OnOutput((in MapLogicState.Output.DespawnEntity output) =>
+                DespawnEntity(output.Id));
+
+        // Intentional boundary exception: maps are authored with Godot GridMap.
         MapRepo.LoadTerrainFromGridMap(GridMap);
-        // later other data to determine floor start and floorend
-
-        _mapBinding = MapRepo.AutoChannel.Bind()
-            .On((in IMapRepo.MapEntityWasRegistered message)
-            => OnMapEntityRegistered(message.Id, message.InitialPosition));
-
-        // GD.Print(GridMap);
-        // MapLogic.Start();
-        this.Provide();
 
         MapLogic.Start<MapLogicState.Idle>();
 
-        MapRepo.TryRegisterEntity(
+        this.Provide();
+
+        MapLogic.TryRegisterEntity(
             global::Labyrinth.MapRepo.PlayerId,
-            new Vector2I(1, 1)
+            new MapEntityPose(new Vector2I(1, 1), GridDirection.North)
         );
     }
 
@@ -68,30 +70,42 @@ public partial class Map : Node3D, IMap
     {
         if (Input.IsActionJustPressed(GameInputs.UiAccept))
         {
-            var _ = MapRepo.TryRegisterEntity("player", new Vector2I(1, 1));
+            _ = MapLogic.TryRegisterEntity(
+                global::Labyrinth.MapRepo.PlayerId,
+                new MapEntityPose(new Vector2I(1, 1), GridDirection.North)
+            );
         }
-
     }
 
-    public void OnMapEntityRegistered(MapEntityId id, Vector2I initialPosition)
+    private void SpawnPlayer(MapEntityId id, MapEntityPose pose)
     {
-        if (id == global::Labyrinth.MapRepo.PlayerId)
+        var player = MapMovementScene.Instantiate<MapMovement>();
+        player.Initialize(id, pose, isPlayer: true);
+        _entityNodes[id] = player;
+        Entities.AddChild(player);
+    }
+
+    private void SpawnEnemy(MapEntityId id, MapEntityPose pose)
+    {
+        var enemy = EnemyMapEntityScene.Instantiate<EnemyMapEntity>();
+        enemy.Initialize(id, pose);
+        _entityNodes[id] = enemy;
+        Entities.AddChild(enemy);
+    }
+
+    private void DespawnEntity(MapEntityId id)
+    {
+        if (!_entityNodes.Remove(id, out var entity))
         {
-            var player =
-                MapMovementScene.Instantiate<MapMovement>();
-            player.Initialize(id, initialPosition);
-            Entities.AddChild(player);
             return;
         }
 
-        var enemy = EnemyMapEntityScene.Instantiate<EnemyMapEntity>();
-        enemy.Initialize(id, initialPosition);
-        Entities.AddChild(enemy);
+        entity.QueueFree();
     }
 
     public void OnExitTree()
     {
-        _mapBinding.Dispose();
+        _mapBinding?.Dispose();
         MapLogic.Dispose();
     }
 }

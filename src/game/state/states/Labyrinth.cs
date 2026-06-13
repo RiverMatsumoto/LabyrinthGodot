@@ -13,7 +13,11 @@ public partial record GameLogicState
     {
         public Labyrinth()
         {
-            this.OnEnter(() => Output(new Output.EnteredLabyrinth()));
+            this.OnEnter(() =>
+            {
+                Get<IGameRepo>().EnterLabyrinth();
+                Output(new Output.EnteredLabyrinth());
+            });
         }
 
         public Type On(in Input.EnterMainMenu input) => To<MainMenu>();

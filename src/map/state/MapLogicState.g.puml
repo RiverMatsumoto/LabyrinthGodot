@@ -3,5 +3,11 @@ state "MapLogicState" as Labyrinth_MapLogicState {
   state "Idle" as Labyrinth_MapLogicState_Idle
 }
 
-Labyrinth_MapLogicState_Idle --> Labyrinth_MapLogicState_Idle : PlayerEnteredLabyrinth
+Labyrinth_MapLogicState_Idle --> Labyrinth_MapLogicState_Idle : EntityRegistered
+Labyrinth_MapLogicState_Idle --> Labyrinth_MapLogicState_Idle : EntityUnregistered
+Labyrinth_MapLogicState_Idle --> Labyrinth_MapLogicState_Idle : RegisterEntity
+Labyrinth_MapLogicState_Idle --> Labyrinth_MapLogicState_Idle : UnregisterEntity
+
+Labyrinth_MapLogicState_Idle : OnEntityRegistered → SpawnEnemy, SpawnPlayer
+Labyrinth_MapLogicState_Idle : OnEntityUnregistered → DespawnEntity
 @enduml

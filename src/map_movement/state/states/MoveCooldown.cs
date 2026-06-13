@@ -11,7 +11,8 @@ public partial record MapMovementLogicState
     {
         public MoveCooldown()
         {
-            this.OnEnter(() => Get<IMapMovement>().StartCooldownTimer());
+            this.OnEnter(() =>
+                Output(new Output.CooldownStarted(Data.MoveCooldown)));
         }
         public Type On(in Input.CooldownFinished input)
         {

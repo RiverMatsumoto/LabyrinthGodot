@@ -1,13 +1,11 @@
 namespace Labyrinth;
 
-using Godot;
-
 public partial class MapMovementLogic
 {
     public sealed class Data
     {
-        public Vector3 Position { get; set; }
         public MapEntityId EntityId { get; set; }
+        public bool IsPlayer { get; set; }
         public double MoveDuration { get; set; } =
             MapMovementSettings.Default.MoveDuration;
         public double MoveCooldown { get; set; } =

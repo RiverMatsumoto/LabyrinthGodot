@@ -16,5 +16,8 @@ public partial record MapMovementLogicState
         public readonly record struct TurnRequested(TurnDirection Direction);
         public readonly record struct TurnFinished;
         public readonly record struct CooldownFinished;
+        public readonly record struct SettingsLoaded(
+            MapMovementSettings Settings
+        );
     }
 }

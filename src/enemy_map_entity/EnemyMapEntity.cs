@@ -11,7 +11,7 @@ public interface IEnemyMapEntity : INode3D
     IMapMovement MapMovement { get; }
     IEnemyMapMovementController MovementController { get; }
 
-    void Initialize(MapEntityId id, Vector2I startPosition);
+    void Initialize(MapEntityId id, MapEntityPose startPose);
 }
 
 [Meta(typeof(IAutoNode))]
@@ -21,7 +21,7 @@ public partial class EnemyMapEntity : Node3D, IEnemyMapEntity
 
     private bool _isInitialized;
     private MapEntityId _entityId;
-    private Vector2I _startPosition;
+    private MapEntityPose _startPose;
 
     [Node] public IMapMovement MapMovement { get; private set; } = default!;
     [Node]
@@ -33,7 +33,7 @@ public partial class EnemyMapEntity : Node3D, IEnemyMapEntity
 
     public MapEntityId EntityId => _entityId;
 
-    public void Initialize(MapEntityId id, Vector2I startPosition)
+    public void Initialize(MapEntityId id, MapEntityPose startPose)
     {
         if (_isInitialized || id.IsEmpty)
         {
@@ -42,9 +42,12 @@ public partial class EnemyMapEntity : Node3D, IEnemyMapEntity
         }
 
         _entityId = id;
-        _startPosition = startPosition;
+        _startPose = startPose;
         _isInitialized = true;
         Name = id.Value;
+
+        GetNode<MapMovement>("MapMovement")
+            .Initialize(_entityId, _startPose, isPlayer: false);
     }
 
     public void OnResolved()
@@ -54,7 +57,5 @@ public partial class EnemyMapEntity : Node3D, IEnemyMapEntity
             GD.PrintErr("EnemyMapEntity: resolved before initialization");
             return;
         }
-
-        MapMovement.Initialize(_entityId, _startPosition);
     }
 }

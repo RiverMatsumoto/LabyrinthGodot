@@ -13,7 +13,11 @@ public partial record GameLogicState
     {
         public MainMenu()
         {
-            this.OnEnter(() => Output(new Output.EnteredMainMenu()));
+            this.OnEnter(() =>
+            {
+                Get<IGameRepo>().EnterMainMenu();
+                Output(new Output.EnteredMainMenu());
+            });
         }
 
         public Type On(in Input.EnterTown input) => To<Town>();

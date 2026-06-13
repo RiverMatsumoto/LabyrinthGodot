@@ -8,5 +8,9 @@ public partial record GameLogicState
         public readonly record struct EnteredTown;
         public readonly record struct EnteredLabyrinth;
         public readonly record struct EnteredBattle;
+        public readonly record struct OverlayChanged(MenuOverlay Overlay);
+        public readonly record struct MovementSettingsChanged(
+            MapMovementSettings Settings
+        );
     }
 }
