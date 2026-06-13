@@ -34,6 +34,10 @@ public partial class Game : Node, IGame
 {
     public override void _Notification(int what) => this.Notify(what);
 
+#if DEBUG
+    private DebugConsole? _debugConsole;
+#endif
+
     #region Save
     [Signal]
     public delegate void SaveFileLoadedEventHandler(int id);
@@ -145,6 +149,12 @@ public partial class Game : Node, IGame
 
     public void OnResolved()
     {
+#if DEBUG
+        _debugConsole = new DebugConsole();
+        _debugConsole.Initialize(GameRepo, MapRepo);
+        UiRoot.AddChild(_debugConsole);
+#endif
+
         SaveFile = new SaveFile<GameData>(
             root: GameChunk,
             onSave: async data =>
@@ -171,6 +181,10 @@ public partial class Game : Node, IGame
 
     public void OnExitTree()
     {
+#if DEBUG
+        _debugConsole?.Shutdown();
+#endif
+
         GameRepo.Dispose();
         MapRepo.Dispose();
     }

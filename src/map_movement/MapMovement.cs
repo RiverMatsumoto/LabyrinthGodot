@@ -98,7 +98,12 @@ public partial class MapMovement : Node3D, IMapMovement
     public void OnResolved()
     {
         MapMovementLogic.Set(MapRepo);
+        MapMovementLogic.Set(GameRepo);
         MapMovementLogic.Set(this as IMapMovement);
+
+#if DEBUG
+        AddToGroup(DebugConsole.MapMovementGroup);
+#endif
 
         _movementSettingsBinding = GameRepo.MapMovementSettings.Bind()
             .OnValue(settings =>
@@ -118,7 +123,7 @@ public partial class MapMovement : Node3D, IMapMovement
         {
             if (message.Id == EntityId)
             {
-                if (EntityId == MapRepo.PlayerId)
+                if (EntityId == Labyrinth.MapRepo.PlayerId)
                 {
                     GD.PrintErr(
                         "MapMovement: refusing to free the persistent player."
@@ -130,7 +135,7 @@ public partial class MapMovement : Node3D, IMapMovement
             }
         });
 
-        if (EntityId == MapRepo.PlayerId)
+        if (EntityId == Labyrinth.MapRepo.PlayerId)
         {
             GameChunk.AddChunk(MapMovementChunk);
         }
@@ -157,7 +162,7 @@ public partial class MapMovement : Node3D, IMapMovement
         _isInitialized = true;
         Name = id.Value;
 
-        if (id == MapRepo.PlayerId)
+        if (id == Labyrinth.MapRepo.PlayerId)
         {
             SpawnPlayerNodes();
         }

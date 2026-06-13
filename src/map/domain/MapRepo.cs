@@ -48,7 +48,6 @@ public interface IMapRepo : IDisposable
     );
 
     bool PlayerIsRegistered { get; }
-    MapEntityId PlayerId { get; }
 
     #region Events
     readonly record struct MapEntityWasRegistered(MapEntityId Id, Vector2I InitialPosition);
@@ -61,8 +60,7 @@ public class MapRepo : IMapRepo
 {
     public const int TerrainWidth = 64;
     public const int TerrainHeight = 64;
-    public MapEntityId PlayerId => _mapEntityId;
-    private static MapEntityId _mapEntityId = new MapEntityId("player");
+    public static MapEntityId PlayerId { get; } = new("player");
 
     private readonly AutoChannel _autoChannel = new();
     public IAutoChannel AutoChannel => _autoChannel;

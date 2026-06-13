@@ -12,9 +12,13 @@ Labyrinth_MapMovementLogicState_Idle --> Labyrinth_MapMovementLogicState_Disable
 Labyrinth_MapMovementLogicState_Idle --> Labyrinth_MapMovementLogicState_Idle : RelativeMoveRequested
 Labyrinth_MapMovementLogicState_Idle --> Labyrinth_MapMovementLogicState_Idle : TurnRequested
 Labyrinth_MapMovementLogicState_Idle --> Labyrinth_MapMovementLogicState_Turning : TurnRequested
+Labyrinth_MapMovementLogicState_MoveCooldown --> Labyrinth_MapMovementLogicState_Disabled : CooldownFinished
 Labyrinth_MapMovementLogicState_MoveCooldown --> Labyrinth_MapMovementLogicState_Idle : CooldownFinished
+Labyrinth_MapMovementLogicState_MoveCooldown --> Labyrinth_MapMovementLogicState_MoveCooldown : Disable
 Labyrinth_MapMovementLogicState_Moving --> Labyrinth_MapMovementLogicState_MoveCooldown : MoveFinished
+Labyrinth_MapMovementLogicState_Moving --> Labyrinth_MapMovementLogicState_Moving : Disable
 Labyrinth_MapMovementLogicState_Turning --> Labyrinth_MapMovementLogicState_MoveCooldown : TurnFinished
+Labyrinth_MapMovementLogicState_Turning --> Labyrinth_MapMovementLogicState_Turning : Disable
 
 Labyrinth_MapMovementLogicState_Idle : OnTurnRequested → TurnStarted
 Labyrinth_MapMovementLogicState_Idle : TryStartMove() → MoveBlocked, MoveStarted

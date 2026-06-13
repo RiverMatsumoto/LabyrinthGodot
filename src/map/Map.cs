@@ -28,7 +28,7 @@ public partial class Map : Node3D, IMap
     [Node] public INode3D Entities { get; private set; } = default!;
 
     private bool _isPlayerRegistered =>
-        MapRepo.ContainsEntity(MapRepo.PlayerId);
+        MapRepo.ContainsEntity(global::Labyrinth.MapRepo.PlayerId);
 
     public static PackedScene MapMovementScene =>
         GD.Load<PackedScene>(
@@ -51,13 +51,17 @@ public partial class Map : Node3D, IMap
         _mapBinding = MapRepo.AutoChannel.Bind()
             .On((in IMapRepo.MapEntityWasRegistered message)
             => OnMapEntityRegistered(message.Id, message.InitialPosition));
-        MapRepo.TryRegisterEntity(MapRepo.PlayerId, new Vector2I(1, 1));
 
         // GD.Print(GridMap);
         // MapLogic.Start();
         this.Provide();
 
         MapLogic.Start<MapLogicState.Idle>();
+
+        MapRepo.TryRegisterEntity(
+            global::Labyrinth.MapRepo.PlayerId,
+            new Vector2I(1, 1)
+        );
     }
 
     public override void _UnhandledInput(InputEvent @event)
@@ -71,7 +75,7 @@ public partial class Map : Node3D, IMap
 
     public void OnMapEntityRegistered(MapEntityId id, Vector2I initialPosition)
     {
-        if (id == MapRepo.PlayerId)
+        if (id == global::Labyrinth.MapRepo.PlayerId)
         {
             var player =
                 MapMovementScene.Instantiate<MapMovement>();
