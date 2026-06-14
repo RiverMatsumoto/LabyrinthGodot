@@ -1,0 +1,24 @@
+[gd_resource type="Resource" script_class="BattleEncounterResource" format=3 uid="uid://bw0v5ywg6wuqc"]
+
+[ext_resource type="Script" uid="uid://ut05a8nwsuf6" path="res://src/battle/resources/BattleEnemyResource.cs" id="1_mbsv7"]
+[ext_resource type="Script" uid="uid://bolb43snulv2k" path="res://src/battle/resources/StatusResistanceResource.cs" id="2_3e5pr"]
+[ext_resource type="Script" uid="uid://teltcxejb0pd" path="res://src/battle/resources/BattleStatsResource.cs" id="3_0mpjn"]
+[ext_resource type="Script" uid="uid://66srkle36pij" path="res://src/battle/resources/BattleEncounterResource.cs" id="4_rsm5i"]
+
+[sub_resource type="Resource" id="Resource_mbsv7"]
+script = ExtResource("3_0mpjn")
+
+[sub_resource type="Resource" id="Resource_jrtrm"]
+script = ExtResource("1_mbsv7")
+Id = "squirrel"
+DisplayName = "Squirrel"
+Hp = 25
+ActionIds = Array[String](["basic_attack"])
+metadata/_custom_type_script = "uid://ut05a8nwsuf6"
+
+[resource]
+script = ExtResource("4_rsm5i")
+Id = "floor_1_squirrel"
+Enemies = Array[ExtResource("1_mbsv7")]([SubResource("Resource_jrtrm")])
+Experience = 20
+metadata/_custom_type_script = "uid://66srkle36pij"

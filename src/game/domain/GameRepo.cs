@@ -7,9 +7,11 @@ public interface IGameRepo : IDisposable
 {
     IAutoValue<MapMovementSettings> MapMovementSettings { get; }
     IAutoValue<bool> IsInMenu { get; }
+    BattleRequest CurrentBattleRequest { get; }
 
     void SetMapMovementSettings(MapMovementSettings settings);
     void SetIsInMenu(bool isInMenu);
+    void SetBattleRequest(BattleRequest request);
 }
 
 public partial class GameRepo : IGameRepo
@@ -21,6 +23,8 @@ public partial class GameRepo : IGameRepo
     private readonly AutoValue<bool> _isInMenu;
 
     private readonly AutoValue<MapMovementSettings> _mapMovementSettings;
+    public BattleRequest CurrentBattleRequest { get; private set; } =
+        BattleRequest.Debug;
 
     private bool _disposedValue;
 
@@ -41,6 +45,9 @@ public partial class GameRepo : IGameRepo
     }
 
     public void SetIsInMenu(bool isInMenu) => _isInMenu.Value = isInMenu;
+
+    public void SetBattleRequest(BattleRequest request) =>
+        CurrentBattleRequest = request;
 
     #region Internals
 

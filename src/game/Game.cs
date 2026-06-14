@@ -19,6 +19,7 @@ using Godot;
 public interface IGame : INode,
     IProvide<IGameRepo>,
     IProvide<IMapRepo>,
+    IProvide<IPartyRepo>,
     IProvide<IGameLogic>,
     IProvide<ISaveChunk<GameData>>
 {
@@ -75,6 +76,7 @@ public partial class Game : Node, IGame
     #region State
     public IGameRepo GameRepo { get; set; } = default!;
     public IMapRepo MapRepo { get; set; } = default!;
+    public IPartyRepo PartyRepo { get; set; } = default!;
     #endregion State
 
     public IGameLogic GameLogic { get; set; } = default!;
@@ -89,6 +91,7 @@ public partial class Game : Node, IGame
 
         GameRepo = new GameRepo();
         MapRepo = new MapRepo();
+        PartyRepo = new PartyRepo();
         GameLogic = new GameLogic();
         GameLogic.Set(GameRepo);
 
@@ -110,12 +113,14 @@ public partial class Game : Node, IGame
                 var gameData = new GameData()
                 {
                     MapMovementData = chunk.GetChunkSaveData<MapMovementData>(),
+                    PartyData = PartyRepo.ToData(),
                 };
                 return gameData;
             },
             onLoad: (chunk, data) =>
             {
                 chunk.LoadChunkSaveData(data.MapMovementData);
+                PartyRepo.Load(data.PartyData ?? PartyData.Empty);
             }
         );
 
@@ -187,10 +192,12 @@ public partial class Game : Node, IGame
         GameLogic.Dispose();
         GameRepo.Dispose();
         MapRepo.Dispose();
+        PartyRepo.Dispose();
     }
 
     public IGameRepo Value() => GameRepo;
     IMapRepo IProvide<IMapRepo>.Value() => MapRepo;
+    IPartyRepo IProvide<IPartyRepo>.Value() => PartyRepo;
 
     public string GetSaveFilePath(int id) => FileSystem.Path.Join(
         SaveDirectoryPath,

@@ -1,0 +1,33 @@
+[gd_resource type="Resource" script_class="BattleContentResource" format=3 uid="uid://b6pulfqapkhaa"]
+
+[ext_resource type="Script" uid="uid://2yyrwj4jjjar" path="res://src/battle/resources/BattleContentResource.cs" id="1_n83rk"]
+[ext_resource type="Script" uid="uid://w8j6cwe8vpbk" path="res://src/battle/resources/BattleActionResource.cs" id="1_te633"]
+[ext_resource type="Script" uid="uid://gwug75hcnrr3" path="res://src/battle/resources/BattleEffectResource.cs" id="2_lh0so"]
+[ext_resource type="Script" uid="uid://5fk70j1vvyu2" path="res://src/battle/resources/DamageBattleEffectResource.cs" id="3_vsbrb"]
+[ext_resource type="Script" uid="uid://66srkle36pij" path="res://src/battle/resources/BattleEncounterResource.cs" id="4_xy72y"]
+[ext_resource type="Script" uid="uid://redg1glvpkym" path="res://src/battle/resources/BattleEquipmentResource.cs" id="5_o5vti"]
+[ext_resource type="Resource" uid="uid://bw0v5ywg6wuqc" path="res://src/battle/resources/floor_1_encounters/Floor1Squirrel.tres" id="5_r45ja"]
+[ext_resource type="Script" uid="uid://b3nq66we03b8c" path="res://src/battle/resources/BattleStatusResource.cs" id="6_m5w0c"]
+
+[sub_resource type="Resource" id="Resource_r45ja"]
+script = ExtResource("3_vsbrb")
+DamageType = 7
+CanCrit = true
+CritMultiplier = 2.5
+AnimationId = "from_weapon"
+metadata/_custom_type_script = "uid://5fk70j1vvyu2"
+
+[sub_resource type="Resource" id="Resource_qjmqu"]
+script = ExtResource("1_te633")
+Id = "basic_attack"
+DisplayName = "BasicAttack"
+Range = 1
+RetargetPolicy = 1
+Effects = Array[ExtResource("2_lh0so")]([SubResource("Resource_r45ja")])
+metadata/_custom_type_script = "uid://w8j6cwe8vpbk"
+
+[resource]
+script = ExtResource("1_n83rk")
+Actions = Array[ExtResource("1_te633")]([SubResource("Resource_qjmqu")])
+Encounters = Array[ExtResource("4_xy72y")]([ExtResource("5_r45ja")])
+metadata/_custom_type_script = "uid://2yyrwj4jjjar"

@@ -2,6 +2,8 @@
 
 [ext_resource type="Script" uid="uid://bkvo4rfjdm70n" path="res://src/game/Game.cs" id="1_17mmo"]
 [ext_resource type="PackedScene" uid="uid://bshr5ksopt2gv" path="res://src/menu_hub/MenuHub.tscn" id="2_menu_hub"]
+[ext_resource type="PackedScene" uid="uid://bds5grrhgtmic" path="res://src/battle/Battle.tscn" id="3_battle"]
+[ext_resource type="PackedScene" uid="uid://dgqhv8ahecoso" path="res://src/map/Map.tscn" id="5_map"]
 
 [node name="Game" type="Node" unique_id=1374111390]
 script = ExtResource("1_17mmo")
@@ -9,8 +11,13 @@ script = ExtResource("1_17mmo")
 [node name="AreaRoot" type="Node" parent="." unique_id=408031388]
 unique_name_in_owner = true
 
+[node name="Map" parent="AreaRoot" unique_id=1767971297 instance=ExtResource("5_map")]
+unique_name_in_owner = true
+
 [node name="UiRoot" type="Node" parent="." unique_id=1352889004]
 unique_name_in_owner = true
 
 [node name="MenuHub" parent="UiRoot" unique_id=781361827 instance=ExtResource("2_menu_hub")]
 unique_name_in_owner = true
+
+[node name="Battle" parent="UiRoot" unique_id=1524882212 instance=ExtResource("3_battle")]

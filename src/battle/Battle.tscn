@@ -1,0 +1,108 @@
+[gd_scene format=3 uid="uid://bds5grrhgtmic"]
+
+[ext_resource type="Script" uid="uid://cs40hrsd76ys1" path="res://src/battle/Battle.cs" id="1_battle"]
+[ext_resource type="Script" uid="uid://cueatsxwduceh" path="res://src/battle/presentation/BattlePresenter.cs" id="2_presenter"]
+
+[node name="Battle" type="Control" unique_id=1524882212]
+visible = false
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+script = ExtResource("1_battle")
+
+[node name="Panel" type="Panel" parent="." unique_id=1829091622]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="Margin" type="MarginContainer" parent="Panel" unique_id=2137150719]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 32.0
+offset_top = 32.0
+offset_right = -32.0
+offset_bottom = -32.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="Layout" type="VBoxContainer" parent="Panel/Margin" unique_id=1805578583]
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="Turn" type="Label" parent="Panel/Margin/Layout" unique_id=1449746524]
+layout_mode = 2
+text = "Battle"
+horizontal_alignment = 1
+
+[node name="Teams" type="HBoxContainer" parent="Panel/Margin/Layout" unique_id=551737011]
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="Party" type="Label" parent="Panel/Margin/Layout/Teams" unique_id=770010180]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Party"
+
+[node name="Enemies" type="Label" parent="Panel/Margin/Layout/Teams" unique_id=193654723]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Enemies"
+horizontal_alignment = 2
+
+[node name="Presenter" type="Control" parent="Panel/Margin/Layout" unique_id=273594170]
+custom_minimum_size = Vector2(0, 96)
+layout_mode = 2
+mouse_filter = 2
+script = ExtResource("2_presenter")
+
+[node name="Message" type="Label" parent="Panel/Margin/Layout/Presenter" unique_id=982144203]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="Popups" type="Control" parent="Panel/Margin/Layout/Presenter" unique_id=1136066371]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+
+[node name="Commands" type="HBoxContainer" parent="Panel/Margin/Layout" unique_id=1627912126]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="Action" type="OptionButton" parent="Panel/Margin/Layout/Commands" unique_id=367028249]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="Target" type="OptionButton" parent="Panel/Margin/Layout/Commands" unique_id=855102050]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="Confirm" type="Button" parent="Panel/Margin/Layout/Commands" unique_id=1608523601]
+layout_mode = 2
+text = "CONFIRM"
+
+[node name="Undo" type="Button" parent="Panel/Margin/Layout/Commands" unique_id=1181209201]
+layout_mode = 2
+text = "UNDO"
+
+[node name="Flee" type="Button" parent="Panel/Margin/Layout/Commands" unique_id=961223365]
+layout_mode = 2
+text = "FLEE"

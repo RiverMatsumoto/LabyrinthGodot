@@ -25,6 +25,16 @@ public partial record GameLogicState
 
         public Type On(in Input.EnterTown input) => To<Town>();
 
-        public Type On(in Input.EnterBattle input) => To<Battle>();
+        public Type On(in Input.EnterBattle input)
+        {
+            Get<IGameRepo>().SetBattleRequest(new BattleRequest(
+                input.EncounterId.IsEmpty
+                    ? new EncounterId("debug")
+                    : input.EncounterId,
+                input.Seed,
+                input.ReturnMode
+            ));
+            return To<Battle>();
+        }
     }
 }
