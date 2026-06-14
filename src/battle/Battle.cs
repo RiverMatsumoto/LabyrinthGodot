@@ -118,7 +118,6 @@ public partial class Battle : Control, IBattle
     {
         if (Input.IsActionJustPressed(GameInputs.Debug1))
         {
-            GD.Print("debug1");
             GameLogic.Input(new GameLogicState.Input.EnterBattle(
                 new EncounterId("floor_1_squirrel"),
                 Seed: 1,

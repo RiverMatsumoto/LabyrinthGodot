@@ -21,8 +21,8 @@
   "csharp.debug.justMyCode": false,
   "csharp.debug.suppressJITOptimizations": true,
   "csharp.semanticHighlighting.enabled": true,
-  "dotnet.backgroundAnalysis.analyzerDiagnosticsScope": "fullSolution",
-  "dotnet.backgroundAnalysis.compilerDiagnosticsScope": "fullSolution",
+  "dotnet.backgroundAnalysis.analyzerDiagnosticsScope": "openFiles",
+  "dotnet.backgroundAnalysis.compilerDiagnosticsScope": "openFiles",
   "dotnet.completion.showCompletionItemsFromUnimportedNamespaces": true,
   "dotnet.enableXamlTools": false,
   "dotnet.formatting.organizeImportsOnFormat": true,
@@ -151,6 +151,13 @@
   "explorer.fileNesting.expand": false,
   "explorer.fileNesting.patterns": {
     "*": "$(capture).import, $(capture).uid"
+  },
+  "files.watcherExclude": {
+    "**/.godot/editor/**": true,
+    "**/.godot/imported/**": true,
+    "**/.godot/shader_cache/**": true,
+    "**/.vs/**": true,
+    "**/coverage/**": true
   },
   "markdownlint.config": {
     // Allow non-unique heading names so we don't break the changelog.

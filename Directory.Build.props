@@ -1,0 +1,11 @@
+<Project>
+  <PropertyGroup>
+    <SkipTests Condition="'$(SKIP_TESTS)' != ''">true</SkipTests>
+    <RunTests>false</RunTests>
+    <RunTests Condition="('$(Configuration)' == 'Debug' or '$(Configuration)' == 'ExportDebug') and '$(SkipTests)' != 'true'">true</RunTests>
+
+    <BaseIntermediateOutputPath Condition="'$(RunTests)' != 'true'">$(MSBuildProjectDirectory)\.godot\mono\temp\obj-no-tests\</BaseIntermediateOutputPath>
+    <IntermediateOutputPath Condition="'$(RunTests)' != 'true'">$(BaseIntermediateOutputPath)$(Configuration)\</IntermediateOutputPath>
+    <MSBuildProjectExtensionsPath Condition="'$(RunTests)' != 'true'">$(BaseIntermediateOutputPath)</MSBuildProjectExtensionsPath>
+  </PropertyGroup>
+</Project>
