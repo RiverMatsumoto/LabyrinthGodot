@@ -12,7 +12,11 @@ public partial record MenuHubLogicState
     {
         public Disabled()
         {
-            this.OnEnter(() => Output(new Output.Closed()));
+            this.OnEnter(() =>
+            {
+                Output(new Output.Closed());
+                Get<IGameRepo>().SetIsInMenu(false);
+            });
         }
 
         public Type On(in Input.OpenMenuHub input)

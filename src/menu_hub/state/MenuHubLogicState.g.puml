@@ -1,6 +1,7 @@
 @startuml MenuHubLogicState
 state "MenuHubLogicState" as Labyrinth_MenuHubLogicState {
   state "Disabled" as Labyrinth_MenuHubLogicState_Disabled
+  state "ItemMenu" as Labyrinth_MenuHubLogicState_ItemMenu
   state "MenuHub" as Labyrinth_MenuHubLogicState_MenuHub
   state "Settings" as Labyrinth_MenuHubLogicState_Settings
 }

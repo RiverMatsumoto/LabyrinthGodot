@@ -2,15 +2,26 @@
 
 [ext_resource type="Script" uid="uid://bqa50n8mvcet0" path="res://src/menu_hub/MenuHub.cs" id="1_x01io"]
 
-[node name="MenuHub" type="CanvasLayer" unique_id=2023696928]
+[node name="MenuHub" type="Control" unique_id=614361425]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
 script = ExtResource("1_x01io")
 
 [node name="Buttons" type="VBoxContainer" parent="." unique_id=256241114]
 unique_name_in_owner = true
-offset_left = 68.0
-offset_top = 119.0
-offset_right = 268.0
-offset_bottom = 594.0
+layout_mode = 1
+anchors_preset = 4
+anchor_top = 0.5
+anchor_bottom = 0.5
+offset_left = 109.0
+offset_top = -237.0
+offset_right = 309.0
+offset_bottom = 238.0
+grow_vertical = 2
 theme_override_constants/separation = 8
 
 [node name="ItemButton" type="Button" parent="Buttons" unique_id=1966067561]

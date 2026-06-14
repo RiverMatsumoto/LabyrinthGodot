@@ -1,20 +1,25 @@
 namespace Labyrinth;
 
 using System;
-using Chickensoft.AutoInject;
 using Chickensoft.Sync.Primitives;
 
 public interface IGameRepo : IDisposable
 {
     IAutoValue<MapMovementSettings> MapMovementSettings { get; }
+    IAutoValue<bool> IsInMenu { get; }
 
     void SetMapMovementSettings(MapMovementSettings settings);
+    void SetIsInMenu(bool isInMenu);
 }
 
 public partial class GameRepo : IGameRepo
 {
     public IAutoValue<MapMovementSettings> MapMovementSettings =>
         _mapMovementSettings;
+
+    public IAutoValue<bool> IsInMenu => _isInMenu;
+    private readonly AutoValue<bool> _isInMenu;
+
     private readonly AutoValue<MapMovementSettings> _mapMovementSettings;
 
     private bool _disposedValue;
@@ -24,6 +29,7 @@ public partial class GameRepo : IGameRepo
         _mapMovementSettings = new AutoValue<MapMovementSettings>(
             Labyrinth.MapMovementSettings.Default
         );
+        _isInMenu = new AutoValue<bool>(false);
     }
 
     public void SetMapMovementSettings(MapMovementSettings settings)
@@ -33,6 +39,8 @@ public partial class GameRepo : IGameRepo
 
         _mapMovementSettings.Value = settings;
     }
+
+    public void SetIsInMenu(bool isInMenu) => _isInMenu.Value = isInMenu;
 
     #region Internals
 

@@ -12,7 +12,11 @@ public partial record MenuHubLogicState
     {
         public MenuHub()
         {
-            this.OnEnter(() => Output(new Output.OpenedMenuHub()));
+            this.OnEnter(() =>
+            {
+                Output(new Output.OpenedMenuHub());
+                Get<IGameRepo>().SetIsInMenu(true);
+            });
         }
 
         public Type On(in Input.OpenSettings input) => To<Settings>();

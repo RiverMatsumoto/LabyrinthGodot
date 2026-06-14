@@ -1,30 +1,45 @@
 namespace Labyrinth;
 
+using System.Linq;
 using Chickensoft.AutoInject;
 using Chickensoft.GodotNodeInterfaces;
 using Chickensoft.Introspection;
 using Chickensoft.LogicBlocks;
 using Godot;
 
-public interface IMenuHub : ICanvasLayer
+public interface IMenuHub : IControl,
+    IProvide<IMenuHubLogic>
 {
 
 }
 
 [Meta(typeof(IAutoNode))]
-public partial class MenuHub : CanvasLayer, IMenuHub
+public partial class MenuHub : Control, IMenuHub
 {
     public override void _Notification(int what) => this.Notify(what);
 
     [Dependency]
     public IGameLogic GameLogic => this.DependOn<IGameLogic>();
+    [Dependency]
+    public IGameRepo GameRepo => this.DependOn<IGameRepo>();
 
     public IMenuHubLogic MenuHubLogic { get; set; } = default!;
+    public IMenuHubLogic Value() => MenuHubLogic;
+
     private LogicBlock.Binding? _menuBinding;
     private LogicBlock.Binding? _gameBinding;
 
     [Node]
     protected IVBoxContainer Buttons { get; set; } = default!;
+    [Node] protected IButton ItemButton { get; set; } = default!;
+    [Node] protected IButton SkillButton { get; set; } = default!;
+    [Node] protected IButton StatusButton { get; set; } = default!;
+    [Node] protected IButton EquipButton { get; set; } = default!;
+    [Node] protected IButton CustomButton { get; set; } = default!;
+    [Node] protected IButton PartyButton { get; set; } = default!;
+    [Node] protected IButton QuestButton { get; set; } = default!;
+
+    private IButton _lastFocused { get; set; } = default!;
 
     public void Setup()
     {
@@ -34,6 +49,7 @@ public partial class MenuHub : CanvasLayer, IMenuHub
     public void OnResolved()
     {
         MenuHubLogic.Set(GameLogic);
+        MenuHubLogic.Set(GameRepo);
 
         _menuBinding = MenuHubLogic.Bind()
             .OnEnter<MenuHubLogicState.Disabled>(_ => ShowDisabled())
@@ -51,7 +67,6 @@ public partial class MenuHub : CanvasLayer, IMenuHub
     {
         if (Input.IsActionJustPressed(GameInputs.Menu))
         {
-            GD.Print("menu input");
             MenuHubLogic.Input(new MenuHubLogicState.Input.HandleMenuInput());
         }
     }
@@ -73,6 +88,7 @@ public partial class MenuHub : CanvasLayer, IMenuHub
     {
         Visible = true;
         Buttons.Visible = true;
+        ItemButton.GrabFocus();
     }
 
     private void ShowSettings()

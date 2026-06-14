@@ -6,6 +6,7 @@ using Chickensoft.GodotNodeInterfaces;
 using Chickensoft.Introspection;
 using Chickensoft.LogicBlocks;
 using Chickensoft.SaveFileBuilder;
+using Chickensoft.Sync.Primitives;
 using Godot;
 
 public interface IMapMovement : INode3D,
@@ -34,6 +35,7 @@ public partial class MapMovement : Node3D, IMapMovement
     IMapMovementLogic IProvide<IMapMovementLogic>.Value() => MapMovementLogic;
     private MapMovementLogic.Binding? _mapMovementBinding;
     private LogicBlock.Binding? _gameBinding;
+    private AutoValue<bool>.Binding? _isInMenuBinding;
 
     public MapEntityId EntityId => MapMovementLogic.Data.EntityId;
     public bool IsEnabled =>
@@ -124,6 +126,15 @@ public partial class MapMovement : Node3D, IMapMovement
         this.Provide();
 
         MapMovementLogic.Start<MapMovementLogicState.Disabled>();
+
+        _isInMenuBinding = GameRepo.IsInMenu.Bind()
+            .OnValue((isInMenu) =>
+            {
+                if (isInMenu)
+                    MapMovementLogic.Input(new MapMovementLogicState.Input.Disable());
+                else
+                    MapMovementLogic.Input(new MapMovementLogicState.Input.Enable());
+            });
     }
 
     public void Initialize(
