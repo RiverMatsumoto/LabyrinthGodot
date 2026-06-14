@@ -1,5 +1,23 @@
 @startuml MenuHubLogicState
 state "MenuHubLogicState" as Labyrinth_MenuHubLogicState {
-  state "Idle" as Labyrinth_MenuHubLogicState_Idle
+  state "Disabled" as Labyrinth_MenuHubLogicState_Disabled
+  state "MenuHub" as Labyrinth_MenuHubLogicState_MenuHub
+  state "Settings" as Labyrinth_MenuHubLogicState_Settings
 }
+
+Labyrinth_MenuHubLogicState_Disabled --> Labyrinth_MenuHubLogicState_Disabled : HandleMenuInput
+Labyrinth_MenuHubLogicState_Disabled --> Labyrinth_MenuHubLogicState_Disabled : OpenMenuHub
+Labyrinth_MenuHubLogicState_Disabled --> Labyrinth_MenuHubLogicState_Disabled : OpenSettings
+Labyrinth_MenuHubLogicState_Disabled --> Labyrinth_MenuHubLogicState_MenuHub : HandleMenuInput
+Labyrinth_MenuHubLogicState_Disabled --> Labyrinth_MenuHubLogicState_MenuHub : OpenMenuHub
+Labyrinth_MenuHubLogicState_Disabled --> Labyrinth_MenuHubLogicState_Settings : OpenSettings
+Labyrinth_MenuHubLogicState_MenuHub --> Labyrinth_MenuHubLogicState_Disabled : Close
+Labyrinth_MenuHubLogicState_MenuHub --> Labyrinth_MenuHubLogicState_Disabled : HandleMenuInput
+Labyrinth_MenuHubLogicState_MenuHub --> Labyrinth_MenuHubLogicState_Settings : OpenSettings
+Labyrinth_MenuHubLogicState_Settings --> Labyrinth_MenuHubLogicState_Disabled : Close
+Labyrinth_MenuHubLogicState_Settings --> Labyrinth_MenuHubLogicState_MenuHub : Back
+
+Labyrinth_MenuHubLogicState_Disabled : OnEnter → Closed
+Labyrinth_MenuHubLogicState_MenuHub : OnEnter → OpenedMenuHub
+Labyrinth_MenuHubLogicState_Settings : OnEnter → OpenedSettings
 @enduml

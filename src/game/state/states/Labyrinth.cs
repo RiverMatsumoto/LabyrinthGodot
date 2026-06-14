@@ -2,6 +2,7 @@ namespace Labyrinth;
 
 using System;
 using Chickensoft.LogicBlocks;
+using Godot;
 
 public partial record GameLogicState
 {
@@ -15,8 +16,8 @@ public partial record GameLogicState
         {
             this.OnEnter(() =>
             {
-                Get<IGameRepo>().EnterLabyrinth();
                 Output(new Output.EnteredLabyrinth());
+                Engine.MaxFps = 0;
             });
         }
 

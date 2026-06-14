@@ -32,20 +32,6 @@ public partial class MapMovementLogic : AutoBlock, IMapMovementLogic
 
     public override IEnumerable<IDisposable> OnStartSubscriptions()
     {
-        yield return Get<IGameRepo>().CurrentGameState.Bind()
-            .OnValue(gameState =>
-            {
-                switch (gameState)
-                {
-                    case GameMode.DungeonExploration:
-                        Input(new MapMovementLogicState.Input.Enable());
-                        break;
-                    default:
-                        Input(new MapMovementLogicState.Input.Disable());
-                        break;
-                }
-            });
-
         yield return Get<IGameRepo>().MapMovementSettings.Bind()
             .OnValue(settings =>
             {

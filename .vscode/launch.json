@@ -22,11 +22,28 @@
       "console": "integratedTerminal"
     },
     {
+      "name": "📈 Profile Game",
+      "type": "coreclr",
+      "request": "launch",
+      "preLaunchTask": "build-without-tests",
+      "program": "${env:GODOT}",
+      "args": ["--remote-debug", "tcp://127.0.0.1:6007"],
+      "cwd": "${workspaceFolder}",
+      "stopAtEntry": false,
+      "console": "integratedTerminal",
+      "env": {
+        "DOTNET_EnableDiagnostics": "1",
+        "COMPlus_PerfMapEnabled": "1",
+        "COMPlus_EnableEventLog": "1"
+      }
+    },
+    {
       "name": "Debug Game From Godot Editor",
       "type": "godot-mono",
       "request": "launch",
       "mode": "playInEditor"
     },
+
     {
       "name": "Attach to Running Godot",
       "type": "godot-mono",
@@ -45,9 +62,7 @@
         "debuggerPath": "${extensionInstallFolder:muhammad-sammy.csharp}/.debugger/netcoredbg/netcoredbg",
         "pipeCwd": "${workspaceFolder}",
         "pipeProgram": "${env:GODOT}",
-        "pipeArgs": [
-          "--debug"
-        ]
+        "pipeArgs": ["--debug"]
       },
       "osx": {
         "pipeTransport": {
@@ -70,11 +85,9 @@
           "debuggerPath": "${env:NETCOREDBG}",
           "pipeCwd": "${workspaceFolder}",
           "pipeProgram": "${env:GODOT}",
-          "pipeArgs": [
-            "--debug"
-          ]
+          "pipeArgs": ["--debug"]
         }
-      },
+      }
     },
     // Debug the scene that matches the name of the currently open *.cs file
     // (if there's a scene with the same name in the same directory).
@@ -84,9 +97,7 @@
       "request": "launch",
       "preLaunchTask": "build-without-tests",
       "program": "${env:GODOT}",
-      "args": [
-        "${fileDirname}/${fileBasenameNoExtension}.tscn"
-      ],
+      "args": ["${fileDirname}/${fileBasenameNoExtension}.tscn"],
       "cwd": "${workspaceFolder}",
       "stopAtEntry": false,
       "console": "integratedTerminal"
@@ -120,6 +131,6 @@
       "cwd": "${workspaceFolder}",
       "stopAtEntry": false,
       "console": "integratedTerminal"
-    },
+    }
   ]
 }

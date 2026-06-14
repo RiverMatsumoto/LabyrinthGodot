@@ -2,6 +2,7 @@
 
 [ext_resource type="Script" uid="uid://bkvo4rfjdm70n" path="res://src/game/Game.cs" id="1_4gxt3"]
 [ext_resource type="PackedScene" uid="uid://dgqhv8ahecoso" path="res://src/map/Map.tscn" id="2_hk4rc"]
+[ext_resource type="PackedScene" uid="uid://bshr5ksopt2gv" path="res://src/menu_hub/MenuHub.tscn" id="3_menu_hub"]
 
 [node name="Game" type="Node" unique_id=708336247]
 script = ExtResource("1_4gxt3")
@@ -14,3 +15,5 @@ unique_name_in_owner = true
 
 [node name="UiRoot" type="Node" parent="."]
 unique_name_in_owner = true
+
+[node name="MenuHub" parent="UiRoot" instance=ExtResource("3_menu_hub")]

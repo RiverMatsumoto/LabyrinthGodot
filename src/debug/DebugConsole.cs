@@ -19,6 +19,7 @@ public partial class DebugConsole : CanvasLayer
     private readonly List<string> _commandHistory = [];
 
     private IGameLogic _gameLogic = default!;
+    private IMenuHubLogic _menuHubLogic = default!;
     private IMapLogic _mapLogic = default!;
     private PanelContainer _panel = default!;
     private RichTextLabel _output = default!;
@@ -26,6 +27,7 @@ public partial class DebugConsole : CanvasLayer
 
     private LogicBlock.Binding? _mapBinding;
     private LogicBlock.Binding? _gameBinding;
+    private LogicBlock.Binding? _menuHubBinding;
 
     private int _historyIndex;
     private bool _isInitialized;
@@ -34,7 +36,11 @@ public partial class DebugConsole : CanvasLayer
     private bool _isShutdown;
     private Input.MouseModeEnum _previousMouseMode;
 
-    public void Initialize(IGameLogic gameLogic, IMapLogic mapLogic)
+    public void Initialize(
+        IGameLogic gameLogic,
+        IMenuHubLogic menuHubLogic,
+        IMapLogic mapLogic
+    )
     {
         if (_isInitialized)
         {
@@ -44,6 +50,7 @@ public partial class DebugConsole : CanvasLayer
         }
 
         _gameLogic = gameLogic;
+        _menuHubLogic = menuHubLogic;
         _mapLogic = mapLogic;
         _isInitialized = true;
     }
@@ -128,6 +135,7 @@ public partial class DebugConsole : CanvasLayer
 
         _mapBinding?.Dispose();
         _gameBinding?.Dispose();
+        _menuHubBinding?.Dispose();
     }
 
     private void BuildUi()
@@ -212,16 +220,14 @@ public partial class DebugConsole : CanvasLayer
                 Append($"event map.unregistered id={output.Id}"));
 
         _gameBinding = _gameLogic.Bind()
-            .OnOutput((in GameLogicState.Output.EnteredMainMenu _) =>
-                Append($"state game.mode={GameMode.MainMenu}"))
-            .OnOutput((in GameLogicState.Output.EnteredTown _) =>
-                Append($"state game.mode={GameMode.Town}"))
-            .OnOutput((in GameLogicState.Output.EnteredLabyrinth _) =>
-                Append($"state game.mode={GameMode.Labyrinth}"))
-            .OnOutput((in GameLogicState.Output.EnteredBattle _) =>
-                Append($"state game.mode={GameMode.Battle}"))
-            .OnOutput((in GameLogicState.Output.OverlayChanged output) =>
-                Append($"state game.overlay={output.Overlay}"))
+            .OnEnter<GameLogicState.MainMenu>(_ =>
+                Append("state game.mode=MainMenu"))
+            .OnEnter<GameLogicState.Town>(_ =>
+                Append("state game.mode=Town"))
+            .OnEnter<GameLogicState.Labyrinth>(_ =>
+                Append("state game.mode=Labyrinth"))
+            .OnEnter<GameLogicState.Battle>(_ =>
+                Append("state game.mode=Battle"))
             .OnOutput((
                 in GameLogicState.Output.MovementSettingsChanged output
             ) => Append(
@@ -229,6 +235,14 @@ public partial class DebugConsole : CanvasLayer
                     + $"duration={Format(output.Settings.MoveDuration)} "
                     + $"cooldown={Format(output.Settings.MoveCooldown)}"
             ));
+
+        _menuHubBinding = _menuHubLogic.Bind()
+            .OnEnter<MenuHubLogicState.Disabled>(_ =>
+                Append("state game.overlay=Disabled"))
+            .OnEnter<MenuHubLogicState.MenuHub>(_ =>
+                Append("state game.overlay=MenuHub"))
+            .OnEnter<MenuHubLogicState.Settings>(_ =>
+                Append("state game.overlay=Settings"));
     }
 
     private void SetOpen(bool isOpen)
@@ -355,8 +369,8 @@ public partial class DebugConsole : CanvasLayer
         var settings = _gameLogic.MovementSettings;
         var lines = new List<string>
         {
-            $"game.mode={_gameLogic.CurrentMode}",
-            $"game.overlay={_gameLogic.CurrentOverlay}",
+            $"game.mode={GameModeName()}",
+            $"game.overlay={OverlayName()}",
             "settings.movement="
                 + $"{Format(settings.MoveDuration)},"
                 + $"{Format(settings.MoveCooldown)}",
@@ -524,23 +538,23 @@ public partial class DebugConsole : CanvasLayer
         {
             case "main-menu":
             case "mainmenu":
-                _gameLogic.RequestMode(GameMode.MainMenu);
+                _gameLogic.Input(new GameLogicState.Input.EnterMainMenu());
                 break;
             case "town":
-                _gameLogic.RequestMode(GameMode.Town);
+                _gameLogic.Input(new GameLogicState.Input.EnterTown());
                 break;
             case "labyrinth":
-                _gameLogic.RequestMode(GameMode.Labyrinth);
+                _gameLogic.Input(new GameLogicState.Input.EnterLabyrinth());
                 break;
             case "battle":
-                _gameLogic.RequestMode(GameMode.Battle);
+                _gameLogic.Input(new GameLogicState.Input.EnterBattle());
                 break;
             default:
                 return "error: mode must be main-menu, town, labyrinth, "
                     + "or battle.";
         }
 
-        return $"ok: game mode is {_gameLogic.CurrentMode}.";
+        return $"ok: game mode is {GameModeName()}.";
     }
 
     private string SetGameOverlay(string value)
@@ -548,21 +562,42 @@ public partial class DebugConsole : CanvasLayer
         switch (value.ToLowerInvariant())
         {
             case "none":
-                _gameLogic.RequestOverlay(MenuOverlay.None);
+                _menuHubLogic.Input(new MenuHubLogicState.Input.Close());
                 break;
             case "menu":
             case "menu-hub":
-                _gameLogic.RequestOverlay(MenuOverlay.MenuHub);
+                _menuHubLogic.Input(
+                    new MenuHubLogicState.Input.OpenMenuHub()
+                );
                 break;
             case "settings":
-                _gameLogic.RequestOverlay(MenuOverlay.Settings);
+                _menuHubLogic.Input(
+                    new MenuHubLogicState.Input.OpenSettings()
+                );
                 break;
             default:
                 return "error: overlay must be none, menu, or settings.";
         }
 
-        return $"ok: game overlay is {_gameLogic.CurrentOverlay}.";
+        return $"ok: game overlay is {OverlayName()}.";
     }
+
+    private string GameModeName() => _gameLogic.State switch
+    {
+        GameLogicState.MainMenu => "MainMenu",
+        GameLogicState.Town => "Town",
+        GameLogicState.Labyrinth => "Labyrinth",
+        GameLogicState.Battle => "Battle",
+        _ => _gameLogic.State?.GetType().Name ?? "Uninitialized",
+    };
+
+    private string OverlayName() => _menuHubLogic.State switch
+    {
+        MenuHubLogicState.Disabled => "Disabled",
+        MenuHubLogicState.MenuHub => "MenuHub",
+        MenuHubLogicState.Settings => "Settings",
+        _ => _menuHubLogic.State?.GetType().Name ?? "Uninitialized",
+    };
 
     private string SettingsCommand(IReadOnlyList<string> args)
     {

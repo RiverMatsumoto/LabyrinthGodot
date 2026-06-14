@@ -1,0 +1,56 @@
+[gd_scene format=3 uid="uid://bshr5ksopt2gv"]
+
+[ext_resource type="Script" uid="uid://bqa50n8mvcet0" path="res://src/menu_hub/MenuHub.cs" id="1_x01io"]
+
+[node name="MenuHub" type="CanvasLayer" unique_id=2023696928]
+script = ExtResource("1_x01io")
+
+[node name="Buttons" type="VBoxContainer" parent="." unique_id=256241114]
+unique_name_in_owner = true
+offset_left = 68.0
+offset_top = 119.0
+offset_right = 268.0
+offset_bottom = 594.0
+theme_override_constants/separation = 8
+
+[node name="ItemButton" type="Button" parent="Buttons" unique_id=1966067561]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(200, 48)
+layout_mode = 2
+text = "ITEM"
+
+[node name="SkillButton" type="Button" parent="Buttons" unique_id=310534602]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(200, 48)
+layout_mode = 2
+text = "SKILL"
+
+[node name="StatusButton" type="Button" parent="Buttons" unique_id=265709897]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(200, 48)
+layout_mode = 2
+text = "STATUS"
+
+[node name="EquipButton" type="Button" parent="Buttons" unique_id=195891638]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(200, 48)
+layout_mode = 2
+text = "EQUIP"
+
+[node name="CustomButton" type="Button" parent="Buttons" unique_id=1030607061]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(200, 48)
+layout_mode = 2
+text = "CUSTOM"
+
+[node name="PartyButton" type="Button" parent="Buttons" unique_id=656688058]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(200, 48)
+layout_mode = 2
+text = "PARTY"
+
+[node name="QuestButton" type="Button" parent="Buttons" unique_id=789779762]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(200, 48)
+layout_mode = 2
+text = "QUEST"

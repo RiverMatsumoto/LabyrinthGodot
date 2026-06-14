@@ -4,6 +4,7 @@ using System;
 using Chickensoft.AutoInject;
 using Chickensoft.GodotNodeInterfaces;
 using Chickensoft.Introspection;
+using Chickensoft.LogicBlocks;
 using Chickensoft.SaveFileBuilder;
 using Godot;
 
@@ -32,6 +33,7 @@ public partial class MapMovement : Node3D, IMapMovement
     public IMapMovementLogic MapMovementLogic { get; } = new MapMovementLogic();
     IMapMovementLogic IProvide<IMapMovementLogic>.Value() => MapMovementLogic;
     private MapMovementLogic.Binding? _mapMovementBinding;
+    private LogicBlock.Binding? _gameBinding;
 
     public MapEntityId EntityId => MapMovementLogic.Data.EntityId;
     public bool IsEnabled =>
@@ -43,6 +45,7 @@ public partial class MapMovement : Node3D, IMapMovement
     public IGridMap GridMap => this.DependOn<IGridMap>();
 
     #region State
+    [Dependency] public IGameLogic GameLogic => this.DependOn<IGameLogic>();
     [Dependency] public IGameRepo GameRepo => this.DependOn<IGameRepo>();
     [Dependency] public IMapRepo MapRepo => this.DependOn<IMapRepo>();
     #endregion State
@@ -104,6 +107,12 @@ public partial class MapMovement : Node3D, IMapMovement
                 AnimateTurn(output.FacingDirection, output.Duration))
             .OnOutput((in MapMovementLogicState.Output.CooldownStarted output) =>
                 StartCooldownTimer(output.Duration));
+
+        _gameBinding = GameLogic.Bind()
+            .OnEnter<GameLogicState.Labyrinth>(_ =>
+                MapMovementLogic.Enable())
+            .OnExit<GameLogicState.Labyrinth>(_ =>
+                MapMovementLogic.Disable());
 
         if (MapMovementLogic.Data.IsPlayer)
         {
@@ -270,9 +279,9 @@ public partial class MapMovement : Node3D, IMapMovement
         _turnTween?.Kill();
         _turnTween = null;
         CooldownTimer.Stop();
-        CooldownTimer.Timeout -= CooldownTimerFinished;
 
         _mapMovementBinding?.Dispose();
+        _gameBinding?.Dispose();
         MapMovementLogic.Dispose();
     }
 

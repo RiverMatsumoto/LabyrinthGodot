@@ -15,7 +15,6 @@ public partial record GameLogicState
         {
             this.OnEnter(() =>
             {
-                Get<IGameRepo>().EnterBattle();
                 Output(new Output.EnteredBattle());
             });
         }

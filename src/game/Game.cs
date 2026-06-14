@@ -167,10 +167,13 @@ public partial class Game : Node, IGame
         this.Provide();
         GameLogic.Start<GameLogicState.MainMenu>();
 
+        GameLogic.Input(new GameLogicState.Input.EnterLabyrinth());
+
 #if DEBUG
         var map = GetNode<Map>("AreaRoot/Map");
+        var menuHub = GetNode<MenuHub>("UiRoot/MenuHub");
         _debugConsole = new DebugConsole();
-        _debugConsole.Initialize(GameLogic, map.MapLogic);
+        _debugConsole.Initialize(GameLogic, menuHub.MenuHubLogic, map.MapLogic);
         UiRoot.AddChild(_debugConsole);
 #endif
     }

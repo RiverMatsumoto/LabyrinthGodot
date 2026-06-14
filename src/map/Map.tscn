@@ -2,36 +2,13 @@
 
 [ext_resource type="Script" uid="uid://bydapio56sjxp" path="res://src/map/Map.cs" id="1_g6eui"]
 [ext_resource type="MeshLibrary" uid="uid://cma26mua6aw8u" path="res://src/map/visuals/tileset.meshlib" id="2_00xd7"]
-
-[sub_resource type="ProceduralSkyMaterial" id="ProceduralSkyMaterial_00xd7"]
-sky_horizon_color = Color(0.66224277, 0.6717428, 0.6867428, 1)
-ground_horizon_color = Color(0.66224277, 0.6717428, 0.6867428, 1)
-
-[sub_resource type="Sky" id="Sky_v14r0"]
-sky_material = SubResource("ProceduralSkyMaterial_00xd7")
-
-[sub_resource type="Environment" id="Environment_0qcd2"]
-background_mode = 2
-sky = SubResource("Sky_v14r0")
-tonemap_mode = 2
-ssao_enabled = true
-ssao_radius = 4.65
-glow_enabled = true
-fog_enabled = true
-fog_light_color = Color(0.03197261, 0.14603339, 0.13267584, 1)
-fog_light_energy = 0.15
-fog_sun_scatter = 0.24
-fog_density = 0.0571
-volumetric_fog_enabled = true
-volumetric_fog_density = 0.0753
-volumetric_fog_albedo = Color(0.5893, 0.71, 0.65166163, 1)
-adjustment_enabled = true
+[ext_resource type="Environment" uid="uid://6tc05l1wkcq5" path="res://src/map/visuals/environments/environment_floor_1.tres" id="2_v14r0"]
 
 [node name="Map" type="Node3D" unique_id=858963444]
 script = ExtResource("1_g6eui")
 
 [node name="WorldEnvironment" type="WorldEnvironment" parent="." unique_id=1460052421]
-environment = SubResource("Environment_0qcd2")
+environment = ExtResource("2_v14r0")
 
 [node name="GridMap" type="GridMap" parent="." unique_id=411389091]
 unique_name_in_owner = true
@@ -49,4 +26,4 @@ unique_name_in_owner = true
 [node name="DirectionalLight3D" type="DirectionalLight3D" parent="." unique_id=76200084]
 transform = Transform3D(1, 0, 0, 0, 0.36497432, 0.9310176, 0, -0.9310176, 0.36497432, 0, 21.350933, 0)
 light_color = Color(0.87, 0.811565, 0.6003, 1)
-light_energy = 0.66
+light_energy = 1.891

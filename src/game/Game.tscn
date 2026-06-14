@@ -1,12 +1,16 @@
-[gd_scene format=3]
+[gd_scene format=3 uid="uid://bpk7hwxnxyewi"]
 
 [ext_resource type="Script" uid="uid://bkvo4rfjdm70n" path="res://src/game/Game.cs" id="1_17mmo"]
+[ext_resource type="PackedScene" uid="uid://bshr5ksopt2gv" path="res://src/menu_hub/MenuHub.tscn" id="2_menu_hub"]
 
-[node name="Game" type="Node"]
+[node name="Game" type="Node" unique_id=1374111390]
 script = ExtResource("1_17mmo")
 
-[node name="AreaRoot" type="Node" parent="."]
+[node name="AreaRoot" type="Node" parent="." unique_id=408031388]
 unique_name_in_owner = true
 
-[node name="UiRoot" type="Node" parent="."]
+[node name="UiRoot" type="Node" parent="." unique_id=1352889004]
+unique_name_in_owner = true
+
+[node name="MenuHub" parent="UiRoot" unique_id=781361827 instance=ExtResource("2_menu_hub")]
 unique_name_in_owner = true
