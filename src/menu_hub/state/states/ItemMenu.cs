@@ -1,14 +1,16 @@
 namespace Labyrinth;
 
+using System;
 using Chickensoft.LogicBlocks;
 
 public partial record MenuHubLogicState
 {
-    public record ItemMenu : MenuHubLogicState
+    public record ItemMenu : MenuHubLogicState,
+        IGet<Input.Back>,
+        IGet<Input.Close>
     {
-        public ItemMenu()
-        {
+        public Type On(in Input.Back input) => To<MenuHub>();
 
-        }
+        public Type On(in Input.Close input) => To<Disabled>();
     }
 }

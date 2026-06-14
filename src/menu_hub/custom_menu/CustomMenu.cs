@@ -1,15 +1,10 @@
 namespace Labyrinth;
 
 using Chickensoft.AutoInject;
-using Chickensoft.GodotNodeInterfaces;
 using Chickensoft.Introspection;
 
-public interface IItemMenu : IControl;
-
 [Meta(typeof(IAutoNode))]
-public partial class ItemMenu :
-    MenuSubmenu<MenuHubLogicState.ItemMenu>,
-    IItemMenu
+public partial class CustomMenu : MenuSubmenu<MenuHubLogicState.CustomMenu>
 {
     [Dependency]
     protected override IMenuHubLogic MenuHubLogic =>

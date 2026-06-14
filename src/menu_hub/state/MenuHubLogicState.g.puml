@@ -1,22 +1,49 @@
 @startuml MenuHubLogicState
 state "MenuHubLogicState" as Labyrinth_MenuHubLogicState {
+  state "CustomMenu" as Labyrinth_MenuHubLogicState_CustomMenu
   state "Disabled" as Labyrinth_MenuHubLogicState_Disabled
+  state "EquipMenu" as Labyrinth_MenuHubLogicState_EquipMenu
   state "ItemMenu" as Labyrinth_MenuHubLogicState_ItemMenu
   state "MenuHub" as Labyrinth_MenuHubLogicState_MenuHub
+  state "PartyMenu" as Labyrinth_MenuHubLogicState_PartyMenu
+  state "QuestMenu" as Labyrinth_MenuHubLogicState_QuestMenu
   state "Settings" as Labyrinth_MenuHubLogicState_Settings
+  state "SkillMenu" as Labyrinth_MenuHubLogicState_SkillMenu
+  state "StatusMenu" as Labyrinth_MenuHubLogicState_StatusMenu
 }
 
+Labyrinth_MenuHubLogicState_CustomMenu --> Labyrinth_MenuHubLogicState_Disabled : Close
+Labyrinth_MenuHubLogicState_CustomMenu --> Labyrinth_MenuHubLogicState_MenuHub : Back
 Labyrinth_MenuHubLogicState_Disabled --> Labyrinth_MenuHubLogicState_Disabled : HandleMenuInput
 Labyrinth_MenuHubLogicState_Disabled --> Labyrinth_MenuHubLogicState_Disabled : OpenMenuHub
 Labyrinth_MenuHubLogicState_Disabled --> Labyrinth_MenuHubLogicState_Disabled : OpenSettings
 Labyrinth_MenuHubLogicState_Disabled --> Labyrinth_MenuHubLogicState_MenuHub : HandleMenuInput
 Labyrinth_MenuHubLogicState_Disabled --> Labyrinth_MenuHubLogicState_MenuHub : OpenMenuHub
 Labyrinth_MenuHubLogicState_Disabled --> Labyrinth_MenuHubLogicState_Settings : OpenSettings
+Labyrinth_MenuHubLogicState_EquipMenu --> Labyrinth_MenuHubLogicState_Disabled : Close
+Labyrinth_MenuHubLogicState_EquipMenu --> Labyrinth_MenuHubLogicState_MenuHub : Back
+Labyrinth_MenuHubLogicState_ItemMenu --> Labyrinth_MenuHubLogicState_Disabled : Close
+Labyrinth_MenuHubLogicState_ItemMenu --> Labyrinth_MenuHubLogicState_MenuHub : Back
+Labyrinth_MenuHubLogicState_MenuHub --> Labyrinth_MenuHubLogicState_CustomMenu : OpenCustomMenu
 Labyrinth_MenuHubLogicState_MenuHub --> Labyrinth_MenuHubLogicState_Disabled : Close
 Labyrinth_MenuHubLogicState_MenuHub --> Labyrinth_MenuHubLogicState_Disabled : HandleMenuInput
+Labyrinth_MenuHubLogicState_MenuHub --> Labyrinth_MenuHubLogicState_EquipMenu : OpenEquipMenu
+Labyrinth_MenuHubLogicState_MenuHub --> Labyrinth_MenuHubLogicState_ItemMenu : OpenItemMenu
+Labyrinth_MenuHubLogicState_MenuHub --> Labyrinth_MenuHubLogicState_PartyMenu : OpenPartyMenu
+Labyrinth_MenuHubLogicState_MenuHub --> Labyrinth_MenuHubLogicState_QuestMenu : OpenQuestMenu
 Labyrinth_MenuHubLogicState_MenuHub --> Labyrinth_MenuHubLogicState_Settings : OpenSettings
+Labyrinth_MenuHubLogicState_MenuHub --> Labyrinth_MenuHubLogicState_SkillMenu : OpenSkillMenu
+Labyrinth_MenuHubLogicState_MenuHub --> Labyrinth_MenuHubLogicState_StatusMenu : OpenStatusMenu
+Labyrinth_MenuHubLogicState_PartyMenu --> Labyrinth_MenuHubLogicState_Disabled : Close
+Labyrinth_MenuHubLogicState_PartyMenu --> Labyrinth_MenuHubLogicState_MenuHub : Back
+Labyrinth_MenuHubLogicState_QuestMenu --> Labyrinth_MenuHubLogicState_Disabled : Close
+Labyrinth_MenuHubLogicState_QuestMenu --> Labyrinth_MenuHubLogicState_MenuHub : Back
 Labyrinth_MenuHubLogicState_Settings --> Labyrinth_MenuHubLogicState_Disabled : Close
 Labyrinth_MenuHubLogicState_Settings --> Labyrinth_MenuHubLogicState_MenuHub : Back
+Labyrinth_MenuHubLogicState_SkillMenu --> Labyrinth_MenuHubLogicState_Disabled : Close
+Labyrinth_MenuHubLogicState_SkillMenu --> Labyrinth_MenuHubLogicState_MenuHub : Back
+Labyrinth_MenuHubLogicState_StatusMenu --> Labyrinth_MenuHubLogicState_Disabled : Close
+Labyrinth_MenuHubLogicState_StatusMenu --> Labyrinth_MenuHubLogicState_MenuHub : Back
 
 Labyrinth_MenuHubLogicState_Disabled : OnEnter → Closed
 Labyrinth_MenuHubLogicState_MenuHub : OnEnter → OpenedMenuHub
