@@ -9,6 +9,9 @@ using Chickensoft.Introspection;
 using Chickensoft.LogicBlocks;
 using Godot;
 
+/// <summary>
+/// Exposes the battle scene's domain repository and interaction logic.
+/// </summary>
 public interface IBattle :
     IControl,
     IProvide<IBattleRepo>,
@@ -18,6 +21,10 @@ public interface IBattle :
     IBattleLogic BattleLogic { get; }
 }
 
+/// <summary>
+/// Coordinates the battle UI, game and party state, battle logic, and cue
+/// presenter. Combat rules and runtime state remain in <see cref="IBattleRepo"/>.
+/// </summary>
 [Meta(typeof(IAutoNode))]
 public partial class Battle : Control, IBattle
 {
@@ -56,8 +63,8 @@ public partial class Battle : Control, IBattle
         BattleRepo = new BattleRepo(_compiled.Catalog);
         BattleLogic = new BattleLogic();
         BattleLogic.Set(BattleRepo);
-        BattleLogic.Set<IEnemyIntentProvider>(
-            new BasicEnemyIntentProvider()
+        BattleLogic.Set<IEnemyCommandPlanner>(
+            new BasicEnemyCommandPlanner()
         );
     }
 
@@ -84,20 +91,20 @@ public partial class Battle : Control, IBattle
         );
 
         _actionOption.ItemSelected += OnActionSelected;
-        _confirmButton.Pressed += ConfirmIntent;
-        _undoButton.Pressed += BattleLogic.UndoIntent;
+        _confirmButton.Pressed += ConfirmCommand;
+        _undoButton.Pressed += BattleLogic.UndoCommand;
         _fleeButton.Pressed += BattleLogic.Flee;
 
         _battleBinding = ((BattleLogic)BattleLogic).Bind()
             .OnOutput((
                 in BattleLogicState.Output.CommandRequested output
-            ) => ShowCommand(output.BattlerId))
+            ) => ShowCommand(output.ActorId))
             .OnOutput((
                 in BattleLogicState.Output.CommandRejected output
             ) => _turnLabel.Text = output.Error)
             .OnOutput((
-                in BattleLogicState.Output.PresentationRequested output
-            ) => Present(output.Step))
+                in BattleLogicState.Output.CuePlaybackRequested output
+            ) => PlayCues(output.Advance))
             .OnOutput((
                 in BattleLogicState.Output.BattleCompleted output
             ) => FinishBattle(output.Result))
@@ -112,19 +119,6 @@ public partial class Battle : Control, IBattle
         BattleLogic.Start<BattleLogicState.Disabled>();
         HideBattle();
 
-    }
-
-    public override void _Process(double delta)
-    {
-        if (Input.IsActionJustPressed(GameInputs.Debug1))
-        {
-            GameLogic.Input(new GameLogicState.Input.EnterBattle(
-                new EncounterId("floor_1_squirrel"),
-                Seed: 1,
-                ReturnMode: GameMode.Labyrinth
-            ));
-            GetViewport().SetInputAsHandled();
-        }
     }
 
     public void AdvanceBattleLogic()
@@ -212,12 +206,12 @@ public partial class Battle : Control, IBattle
     {
         _targetIds.Clear();
         _targetOption.Clear();
-        if (_currentBattlerId is not { } sourceId)
+        if (_currentBattlerId is not { } actorId)
         {
             return;
         }
         var snapshot = BattleRepo.Snapshot();
-        foreach (var id in BattleRepo.GetValidTargets(sourceId, actionId))
+        foreach (var id in BattleRepo.GetValidTargets(actorId, actionId))
         {
             var unit = snapshot.Units.First(candidate => candidate.Id == id);
             _targetIds.Add(id);
@@ -227,10 +221,10 @@ public partial class Battle : Control, IBattle
         _confirmButton.Disabled = _targetIds.Count == 0;
     }
 
-    private void ConfirmIntent()
+    private void ConfirmCommand()
     {
         if (
-            _currentBattlerId is not { } sourceId
+            _currentBattlerId is not { } actorId
             || _actionOption.Selected < 0
             || _actionOption.Selected >= _actionIds.Count
         )
@@ -241,20 +235,20 @@ public partial class Battle : Control, IBattle
             && _targetOption.Selected < _targetIds.Count
             ? _targetIds[_targetOption.Selected]
             : (BattlerId?)null;
-        BattleLogic.SubmitIntent(new BattleIntent(
-            sourceId,
+        BattleLogic.SubmitCommand(new BattleCommand(
+            actorId,
             _actionIds[_actionOption.Selected],
             target
         ));
     }
 
-    private void Present(BattleStep step)
+    private void PlayCues(BattleAdvance advance)
     {
         SetCommandControlsEnabled(false);
         RefreshBattleState();
-        _presenter.Present(
-            step,
-            () => BattleLogic.AcknowledgePresentation(step.PresentationId)
+        _presenter.Play(
+            advance,
+            () => BattleLogic.AcknowledgeCuePlayback(advance.CueBatchId)
         );
     }
 

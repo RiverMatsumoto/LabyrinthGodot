@@ -5,14 +5,14 @@ using Chickensoft.LogicBlocks;
 
 public partial record BattleLogicState
 {
-    public record AwaitingPresentation :
+    public record AwaitingCuePlayback :
         BattleLogicState,
-        IGet<Input.PresentationFinished>,
+        IGet<Input.CuePlaybackFinished>,
         IGet<Input.Flee>
     {
-        public Type On(in Input.PresentationFinished input)
+        public Type On(in Input.CuePlaybackFinished input)
         {
-            BattleRepo.AcknowledgePresentation(input.PresentationId);
+            BattleRepo.AcknowledgeCuePlayback(input.CueBatchId);
             return To<ResolvingTurn>();
         }
 

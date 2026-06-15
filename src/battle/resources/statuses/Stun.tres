@@ -1,0 +1,11 @@
+[gd_resource type="Resource" script_class="BattleStatusResource" format=3]
+
+[ext_resource type="Script" uid="uid://b3nq66we03b8c" path="res://src/battle/resources/BattleStatusResource.cs" id="1_status"]
+
+[resource]
+script = ExtResource("1_status")
+Id = "stun"
+DisplayName = "Stun"
+PreventsAction = true
+DefaultDuration = 1
+metadata/_custom_type_script = "uid://b3nq66we03b8c"

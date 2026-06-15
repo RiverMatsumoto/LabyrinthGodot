@@ -8,7 +8,7 @@ public enum BattleDomainPhase
     Disabled,
     SelectingCommands,
     ResolvingTurn,
-    AwaitingPresentation,
+    AwaitingCuePlayback,
     Completed,
 }
 
@@ -19,10 +19,13 @@ public enum BattleOutcome
     Fled,
 }
 
-public enum BattleStepKind
+/// <summary>
+/// Identifies the external boundary reached by battle resolution.
+/// </summary>
+public enum BattleAdvanceKind
 {
-    CommandSelection,
-    Presentation,
+    CommandRequired,
+    CuePlaybackRequired,
     Completed,
 }
 
@@ -33,6 +36,10 @@ public enum BattlePopupKind
     Tp,
 }
 
+/// <summary>
+/// View-facing instruction emitted by domain resolution. Cues describe
+/// presentation but never mutate battle state.
+/// </summary>
 public abstract record BattleCue;
 
 public sealed record AnimationCue(
@@ -69,41 +76,65 @@ public sealed record BattleResult(
     IReadOnlyDictionary<BattlerId, (int Hp, int Tp)> PlayerVitals
 );
 
-public sealed record BattleStep(
-    BattleStepKind Kind,
-    long PresentationId = 0,
-    IReadOnlyList<BattleCue>? CueList = null,
-    BattlerId? RequestedBattlerId = null,
-    BattleResult? Result = null
-)
+/// <summary>
+/// Result of advancing domain resolution to its next external boundary.
+/// Cue batches must be played and acknowledged before resolution continues.
+/// </summary>
+public sealed record BattleAdvance
 {
-    public IReadOnlyList<BattleCue> Cues => CueList ?? [];
+    public required BattleAdvanceKind Kind { get; init; }
 
-    public static BattleStep Select(BattlerId id) =>
-        new(BattleStepKind.CommandSelection, RequestedBattlerId: id);
+    /// <summary>
+    /// Identifier required to acknowledge a cue-playback request.
+    /// </summary>
+    public long CueBatchId { get; init; }
 
-    public static BattleStep Present(
-        long id,
+    /// <summary>
+    /// Ordered view instructions for a cue-playback request.
+    /// </summary>
+    public IReadOnlyList<BattleCue> Cues { get; init; } = [];
+    public BattlerId? RequestedActorId { get; init; }
+    public BattleResult? Result { get; init; }
+
+    public static BattleAdvance RequireCommand(BattlerId actorId) => new()
+    {
+        Kind = BattleAdvanceKind.CommandRequired,
+        RequestedActorId = actorId,
+    };
+
+    public static BattleAdvance RequireCuePlayback(
+        long cueBatchId,
         IReadOnlyList<BattleCue> cues
-    ) => new(BattleStepKind.Presentation, id, cues);
+    ) => new()
+    {
+        Kind = BattleAdvanceKind.CuePlaybackRequired,
+        CueBatchId = cueBatchId,
+        Cues = cues,
+    };
 
-    public static BattleStep Complete(BattleResult result) =>
-        new(BattleStepKind.Completed, Result: result);
+    public static BattleAdvance Complete(BattleResult result) => new()
+    {
+        Kind = BattleAdvanceKind.Completed,
+        Result = result,
+    };
 }
 
-public sealed record BattleIntent(
-    BattlerId SourceId,
+/// <summary>
+/// A player or enemy actor's selected action and optional target for a turn.
+/// </summary>
+public sealed record BattleCommand(
+    BattlerId ActorId,
     ActionId ActionId,
-    BattlerId? SelectedTargetId
+    BattlerId? TargetId
 );
 
-public readonly record struct IntentValidationResult(
+public readonly record struct CommandValidationResult(
     bool IsValid,
     string Error
 )
 {
-    public static IntentValidationResult Valid => new(true, "");
-    public static IntentValidationResult Invalid(string error) =>
+    public static CommandValidationResult Valid => new(true, "");
+    public static CommandValidationResult Invalid(string error) =>
         new(false, error);
 }
 
@@ -143,39 +174,42 @@ public sealed class SeededRandomSource : IRandomSource
     public int Next(int maxExclusive) => _random.Next(maxExclusive);
 }
 
-public interface IEnemyIntentProvider
+/// <summary>
+/// Selects a command for an enemy from a read-only battle snapshot.
+/// </summary>
+public interface IEnemyCommandPlanner
 {
-    BattleIntent? Plan(
+    BattleCommand? Plan(
         BattleSnapshot snapshot,
-        BattlerId enemyId,
+        BattlerId enemyActorId,
         BattleCatalog catalog,
         IRandomSource random
     );
 }
 
-public sealed class BasicEnemyIntentProvider : IEnemyIntentProvider
+public sealed class BasicEnemyCommandPlanner : IEnemyCommandPlanner
 {
-    public BattleIntent? Plan(
+    public BattleCommand? Plan(
         BattleSnapshot snapshot,
-        BattlerId enemyId,
+        BattlerId enemyActorId,
         BattleCatalog catalog,
         IRandomSource random
     )
     {
-        var source = Find(snapshot, enemyId);
-        if (source is null || !source.IsAlive)
+        var actor = Find(snapshot, enemyActorId);
+        if (actor is null || !actor.IsAlive)
         {
             return null;
         }
 
-        foreach (var actionId in source.ActionIds)
+        foreach (var actionId in actor.ActionIds)
         {
             if (!catalog.TryGetAction(actionId, out var action))
             {
                 continue;
             }
 
-            var candidates = TargetCandidates(snapshot, source, action);
+            var candidates = TargetCandidates(snapshot, actor, action);
             if (candidates.Count == 0)
             {
                 continue;
@@ -186,7 +220,7 @@ public sealed class BasicEnemyIntentProvider : IEnemyIntentProvider
                 or BattleTargetRule.AllEnemies
                 ? (BattlerId?)null
                 : candidates[random.Next(candidates.Count)].Id;
-            return new BattleIntent(enemyId, actionId, selected);
+            return new BattleCommand(enemyActorId, actionId, selected);
         }
 
         return null;
@@ -209,17 +243,17 @@ public sealed class BasicEnemyIntentProvider : IEnemyIntentProvider
 
     private static List<BattleUnitView> TargetCandidates(
         BattleSnapshot snapshot,
-        BattleUnitView source,
+        BattleUnitView actor,
         BattleActionDefinition action
     )
     {
         var targetTeam = action.TargetRule switch
         {
-            BattleTargetRule.Self => source.Team,
-            BattleTargetRule.SingleAlly => source.Team,
-            BattleTargetRule.RowAllies => source.Team,
-            BattleTargetRule.AllAllies => source.Team,
-            _ => source.Team == BattleTeam.Player
+            BattleTargetRule.Self => actor.Team,
+            BattleTargetRule.SingleAlly => actor.Team,
+            BattleTargetRule.RowAllies => actor.Team,
+            BattleTargetRule.AllAllies => actor.Team,
+            _ => actor.Team == BattleTeam.Player
                 ? BattleTeam.Enemy
                 : BattleTeam.Player,
         };
@@ -233,7 +267,7 @@ public sealed class BasicEnemyIntentProvider : IEnemyIntentProvider
             }
             if (
                 action.TargetRule == BattleTargetRule.Self
-                && unit.Id != source.Id
+                && unit.Id != actor.Id
             )
             {
                 continue;
@@ -244,6 +278,10 @@ public sealed class BasicEnemyIntentProvider : IEnemyIntentProvider
     }
 }
 
+/// <summary>
+/// Owns authoritative runtime battle state and advances its operation queue.
+/// The repository is independent of Godot controls and frame timing.
+/// </summary>
 public interface IBattleRepo : IDisposable
 {
     BattleDomainPhase Phase { get; }
@@ -253,16 +291,28 @@ public interface IBattleRepo : IDisposable
     BattleResult? Result { get; }
 
     void Start(BattleSetup setup);
-    IntentValidationResult ValidateIntent(BattleIntent intent);
-    bool SubmitIntent(BattleIntent intent);
-    bool UndoLastIntent();
+    CommandValidationResult ValidateCommand(BattleCommand command);
+    bool SubmitCommand(BattleCommand command);
+    bool UndoLastCommand();
     IReadOnlyList<BattlerId> GetValidTargets(
-        BattlerId sourceId,
+        BattlerId actorId,
         ActionId actionId
     );
-    void BeginResolution(IEnemyIntentProvider enemyIntentProvider);
-    BattleStep Advance();
-    void AcknowledgePresentation(long presentationId);
-    BattleStep Flee();
+    void BeginResolution(IEnemyCommandPlanner enemyCommandPlanner);
+
+    /// <summary>
+    /// Executes queued operations until command input, cue playback, or battle
+    /// completion requires the caller to act.
+    /// </summary>
+    BattleAdvance AdvanceResolution();
+
+    /// <summary>
+    /// Resumes resolution after the current cue batch has finished playing.
+    /// </summary>
+    /// <param name="cueBatchId">
+    /// The exact ID returned by the pending cue-playback advance.
+    /// </param>
+    void AcknowledgeCuePlayback(long cueBatchId);
+    BattleAdvance Flee();
     BattleSnapshot Snapshot();
 }

@@ -4,22 +4,34 @@ using System;
 using System.Collections.Generic;
 using Godot;
 
+/// <summary>
+/// Plays an ordered batch of battle cues and reports when the entire batch has
+/// finished.
+/// </summary>
 public interface IBattlePresenter
 {
-    bool IsPresenting { get; }
+    bool IsPlaying { get; }
     double BaseSpeed { get; set; }
     double EffectiveSpeed { get; }
 
-    void Present(BattleStep step, Action finished);
+    /// <summary>
+    /// Plays a cue-playback advance, then invokes <paramref name="finished"/>
+    /// once all cues have completed.
+    /// </summary>
+    void Play(BattleAdvance advance, Action finished);
     void Cancel();
 }
 
+/// <summary>
+/// Godot UI implementation of <see cref="IBattlePresenter"/>. It controls cue
+/// timing and temporary visuals but does not mutate battle state.
+/// </summary>
 public partial class BattlePresenter : Control, IBattlePresenter
 {
     [Export(PropertyHint.Range, "0.25,4,0.25")]
     public double BaseSpeed { get; set; } = 1;
 
-    public bool IsPresenting => _step is not null;
+    public bool IsPlaying => _advance is not null;
     public double EffectiveSpeed =>
         CalculateEffectiveSpeed(
             BaseSpeed,
@@ -28,7 +40,7 @@ public partial class BattlePresenter : Control, IBattlePresenter
 
     private Label _message = default!;
     private Control _popupRoot = default!;
-    private BattleStep? _step;
+    private BattleAdvance? _advance;
     private Action? _finished;
     private int _cueIndex;
     private double _elapsed;
@@ -43,7 +55,7 @@ public partial class BattlePresenter : Control, IBattlePresenter
 
     public override void _Process(double delta)
     {
-        if (_step is null)
+        if (_advance is null)
         {
             return;
         }
@@ -57,19 +69,20 @@ public partial class BattlePresenter : Control, IBattlePresenter
         BeginCue();
     }
 
-    public void Present(BattleStep step, Action finished)
+    /// <inheritdoc />
+    public void Play(BattleAdvance advance, Action finished)
     {
-        ArgumentNullException.ThrowIfNull(step);
+        ArgumentNullException.ThrowIfNull(advance);
         ArgumentNullException.ThrowIfNull(finished);
-        if (step.Kind != BattleStepKind.Presentation)
+        if (advance.Kind != BattleAdvanceKind.CuePlaybackRequired)
         {
             throw new ArgumentException(
-                "Presenter requires a presentation step.",
-                nameof(step)
+                "Presenter requires a cue playback advance.",
+                nameof(advance)
             );
         }
         Cancel();
-        _step = step;
+        _advance = advance;
         _finished = finished;
         _cueIndex = 0;
         SetProcess(true);
@@ -78,7 +91,7 @@ public partial class BattlePresenter : Control, IBattlePresenter
 
     public void Cancel()
     {
-        _step = null;
+        _advance = null;
         _finished = null;
         _cueIndex = 0;
         _elapsed = 0;
@@ -101,11 +114,11 @@ public partial class BattlePresenter : Control, IBattlePresenter
 
     private void BeginCue()
     {
-        if (_step is null)
+        if (_advance is null)
         {
             return;
         }
-        if (_cueIndex >= _step.Cues.Count)
+        if (_cueIndex >= _advance.Cues.Count)
         {
             var callback = _finished;
             Cancel();
@@ -114,7 +127,7 @@ public partial class BattlePresenter : Control, IBattlePresenter
         }
 
         _elapsed = 0;
-        switch (_step.Cues[_cueIndex])
+        switch (_advance.Cues[_cueIndex])
         {
             case AnimationCue animation:
                 _message.Text = animation.AnimationId;

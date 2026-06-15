@@ -1,23 +1,23 @@
 @startuml BattleLogicState
 state "BattleLogicState" as Labyrinth_BattleLogicState {
-  state "AwaitingPresentation" as Labyrinth_BattleLogicState_AwaitingPresentation
+  state "AwaitingCuePlayback" as Labyrinth_BattleLogicState_AwaitingCuePlayback
   state "Completed" as Labyrinth_BattleLogicState_Completed
   state "Disabled" as Labyrinth_BattleLogicState_Disabled
   state "ResolvingTurn" as Labyrinth_BattleLogicState_ResolvingTurn
   state "SelectingCommands" as Labyrinth_BattleLogicState_SelectingCommands
 }
 
-Labyrinth_BattleLogicState_AwaitingPresentation --> Labyrinth_BattleLogicState_ResolvingTurn : PresentationFinished
-Labyrinth_BattleLogicState_ResolvingTurn --> Labyrinth_BattleLogicState_AwaitingPresentation : AdvanceResolution
+Labyrinth_BattleLogicState_AwaitingCuePlayback --> Labyrinth_BattleLogicState_ResolvingTurn : CuePlaybackFinished
+Labyrinth_BattleLogicState_ResolvingTurn --> Labyrinth_BattleLogicState_AwaitingCuePlayback : AdvanceResolution
 Labyrinth_BattleLogicState_ResolvingTurn --> Labyrinth_BattleLogicState_SelectingCommands : AdvanceResolution
-Labyrinth_BattleLogicState_SelectingCommands --> Labyrinth_BattleLogicState_ResolvingTurn : SubmitIntent
-Labyrinth_BattleLogicState_SelectingCommands --> Labyrinth_BattleLogicState_SelectingCommands : SubmitIntent
-Labyrinth_BattleLogicState_SelectingCommands --> Labyrinth_BattleLogicState_SelectingCommands : UndoIntent
+Labyrinth_BattleLogicState_SelectingCommands --> Labyrinth_BattleLogicState_ResolvingTurn : SubmitCommand
+Labyrinth_BattleLogicState_SelectingCommands --> Labyrinth_BattleLogicState_SelectingCommands : SubmitCommand
+Labyrinth_BattleLogicState_SelectingCommands --> Labyrinth_BattleLogicState_SelectingCommands : UndoCommand
 
 Labyrinth_BattleLogicState : Complete() → BattleCompleted
 Labyrinth_BattleLogicState : OutputCommandRequest() → CommandRequested
 Labyrinth_BattleLogicState : Start() → BattleStarted
-Labyrinth_BattleLogicState_ResolvingTurn : OnAdvanceResolution → PresentationRequested
-Labyrinth_BattleLogicState_SelectingCommands : OnSubmitIntent → CommandRejected
-Labyrinth_BattleLogicState_SelectingCommands : OnUndoIntent → CommandUndone
+Labyrinth_BattleLogicState_ResolvingTurn : OnAdvanceResolution → CuePlaybackRequested
+Labyrinth_BattleLogicState_SelectingCommands : OnSubmitCommand → CommandRejected
+Labyrinth_BattleLogicState_SelectingCommands : OnUndoCommand → CommandUndone
 @enduml

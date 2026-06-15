@@ -48,6 +48,12 @@ public class PartyRepoTest : TestClass
         );
         member.StatusResistances[BattleContent.PoisonId]
             .ShouldBe(0.25);
+        member.StatusWeakness[BattleContent.StunId].ShouldBe(0.5);
+        member.DamageTypeResistances[DamageType.Fire].ShouldBe(0.2);
+        member.DamageTypeWeaknesses[DamageType.Ice].ShouldBe(0.4);
+        member.PassiveReactionIds.Single().ShouldBe(
+            BattleContent.ToxicRecoveryReactionId
+        );
     }
 
     [Test]
@@ -57,6 +63,36 @@ public class PartyRepoTest : TestClass
         repo.Load(PartyData.Empty);
         repo.Count.ShouldBe(0);
         PartyData.Empty.Version.ShouldBe(PartyData.CurrentVersion);
+    }
+
+    [Test]
+    public void VersionOnePartyDataDefaultsNewCollectionsToEmpty()
+    {
+        var legacy = new PartyData
+        {
+            Version = 1,
+            Members =
+            [
+                new PartyMemberData
+                {
+                    Id = "legacy",
+                    Name = "Legacy",
+                    Hp = 100,
+                    Tp = 20,
+                    Stats = BattleStatsData.From(BattleStats.Default),
+                },
+            ],
+        };
+        using var repo = new PartyRepo();
+
+        repo.Load(legacy);
+
+        repo.TryGet(new BattlerId("legacy"), out var member)
+            .ShouldBeTrue();
+        member.PassiveReactionIds.ShouldBeEmpty();
+        member.StatusWeakness.ShouldBeEmpty();
+        member.DamageTypeResistances.ShouldBeEmpty();
+        member.DamageTypeWeaknesses.ShouldBeEmpty();
     }
 
     private static PartyMember CreateMember(int index)
@@ -75,6 +111,12 @@ public class PartyRepoTest : TestClass
             new StatModifier(BattleStat.Attack, 2)
         );
         member.StatusResistances[BattleContent.PoisonId] = 0.25;
+        member.StatusWeakness[BattleContent.StunId] = 0.5;
+        member.DamageTypeResistances[DamageType.Fire] = 0.2;
+        member.DamageTypeWeaknesses[DamageType.Ice] = 0.4;
+        member.PassiveReactionIds.Add(
+            BattleContent.ToxicRecoveryReactionId
+        );
         return member;
     }
 }

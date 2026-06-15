@@ -1,0 +1,43 @@
+@startuml Battle Reaction Flow
+skinparam shadowing false
+
+start
+:BattleRepo executes operation;
+:Create ReactionEvent with trigger metadata;
+:Find live registrations with matching trigger;
+
+if (All typed conditions pass?) then (yes)
+  :Order by priority then registration order;
+  :Apply cause guard and depth limit;
+  :Consume finite use;
+
+  if (Schedule?) then (Immediate)
+    :Insert effects at queue front;
+  elseif (AfterCurrentAction)
+    if (Active action?) then (yes)
+      :Store until ActionFinished;
+    else (no)
+      :Insert effects at queue front;
+    endif
+  else (EndOfTurn)
+    :Store until end-turn flush;
+  endif
+else (no)
+endif
+
+:Resolve target from owner/source/target;
+:Carry action, status, source, target,\nstack, cause, and depth context;
+:Expand reaction effects into operations;
+
+if (Status-owned?) then (yes)
+  :Emit StatusTriggered metadata;
+endif
+
+if (New reactions are scheduled?) then (yes)
+  :Repeat through normal operation queue;
+endif
+
+:Expire statuses after end-turn queue drains;
+:Remove expired status registrations;
+stop
+@enduml

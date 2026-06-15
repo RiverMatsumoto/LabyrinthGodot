@@ -14,6 +14,8 @@ public partial class BattleContentResource : Resource
     [Export]
     public Array<BattleStatusResource> Statuses { get; set; } = [];
     [Export]
+    public Array<BattleReactionResource> Reactions { get; set; } = [];
+    [Export]
     public Array<BattleEncounterResource> Encounters { get; set; } = [];
     [Export]
     public Array<BattleEquipmentResource> Equipment { get; set; } = [];
@@ -22,7 +24,8 @@ public partial class BattleContentResource : Resource
     {
         var catalog = new BattleCatalog(
             Actions.Select(action => action.Compile()),
-            Statuses.Select(status => status.Compile())
+            Statuses.Select(status => status.Compile()),
+            Reactions.Select(reaction => reaction.Compile())
         );
         var encounters = Unique(
             Encounters.Select(encounter => encounter.Compile(catalog)),

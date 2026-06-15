@@ -1,0 +1,19 @@
+[gd_resource type="Resource" script_class="BattleReactionResource" format=3]
+
+[ext_resource type="Script" uid="uid://cidn5h6e6ryfc" path="res://src/battle/resources/BattleReactionResource.cs" id="1_reaction"]
+[ext_resource type="Script" uid="uid://l7mkr8b1xxgu" path="res://src/battle/resources/HealBattleEffectResource.cs" id="2_heal"]
+
+[sub_resource type="Resource" id="Resource_heal"]
+script = ExtResource("2_heal")
+Amount = 5
+ScaleBySourceStatusId = "regen"
+metadata/_custom_type_script = "uid://l7mkr8b1xxgu"
+
+[resource]
+script = ExtResource("1_reaction")
+Id = "regen_tick"
+Trigger = 1
+Schedule = 2
+TargetPolicy = 0
+Effects = Array[Resource]([SubResource("Resource_heal")])
+metadata/_custom_type_script = "uid://cidn5h6e6ryfc"

@@ -34,6 +34,20 @@ public readonly record struct EquipmentId(string Value)
     public override string ToString() => Value;
 }
 
+/// <summary>Identifies reusable enemy authoring data.</summary>
+public readonly record struct EnemyId(string Value)
+{
+    public bool IsEmpty => string.IsNullOrWhiteSpace(Value);
+    public override string ToString() => Value;
+}
+
+/// <summary>Identifies a reaction in the battle content catalog.</summary>
+public readonly record struct ReactionId(string Value)
+{
+    public bool IsEmpty => string.IsNullOrWhiteSpace(Value);
+    public override string ToString() => Value;
+}
+
 public enum PartyRow
 {
     Front,
@@ -136,6 +150,10 @@ public sealed class PartyMember
     public List<EquipmentId> Equipment { get; } = [];
     public List<StatModifier> EquipmentModifiers { get; } = [];
     public Dictionary<StatusId, double> StatusResistances { get; } = [];
+    public Dictionary<StatusId, double> StatusWeakness { get; } = [];
+    public Dictionary<DamageType, double> DamageTypeResistances { get; } = [];
+    public Dictionary<DamageType, double> DamageTypeWeaknesses { get; } = [];
+    public List<ReactionId> PassiveReactionIds { get; } = [];
 
     public BattleStats EffectiveStats => BaseStats.Apply(EquipmentModifiers);
     public bool IsAlive => Hp > 0;
@@ -159,6 +177,19 @@ public sealed class PartyMember
         {
             clone.StatusResistances[pair.Key] = pair.Value;
         }
+        foreach (var pair in StatusWeakness)
+        {
+            clone.StatusWeakness[pair.Key] = pair.Value;
+        }
+        foreach (var pair in DamageTypeResistances)
+        {
+            clone.DamageTypeResistances[pair.Key] = pair.Value;
+        }
+        foreach (var pair in DamageTypeWeaknesses)
+        {
+            clone.DamageTypeWeaknesses[pair.Key] = pair.Value;
+        }
+        clone.PassiveReactionIds.AddRange(PassiveReactionIds);
         return clone;
     }
 }

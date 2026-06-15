@@ -1,0 +1,46 @@
+@startuml Battle System Components
+skinparam componentStyle rectangle
+skinparam shadowing false
+
+actor Player
+
+component "GameLogic / GameRepo" as Game
+component "PartyRepo" as Party
+component "Battle\nGodot coordinator" as Battle
+component "BattleLogic\nstate machine" as Logic
+component "BattleRepo\ndomain resolver" as Repo
+component "IEnemyCommandPlanner" as Planner
+component "BattlePresenter\ncue player" as Presenter
+component "BattleContentResource" as Resources
+component "CompiledBattleContent" as Content
+
+Player --> Battle : command controls
+Game --> Battle : enter/exit battle\nBattleRequest
+Party --> Battle : party seeds
+Battle --> Party : final HP/TP
+
+Resources --> Content : Compile()
+Content --> Battle : catalog and encounters
+
+Battle --> Logic : inputs
+Logic --> Battle : outputs and state entry
+Logic --> Repo : commands and resolution
+Repo --> Planner : request enemy commands
+Planner --> Repo : BattleCommand
+Repo --> Logic : BattleAdvance
+
+Battle --> Presenter : Play(cue advance)
+Presenter --> Battle : finished callback
+Battle --> Logic : acknowledge cue batch
+
+note right of Repo
+  Authoritative runtime state:
+  units, turns, operations,
+  effects, reactions, outcome
+end note
+
+note right of Presenter
+  Timing and temporary UI only.
+  Never mutates battle state.
+end note
+@enduml

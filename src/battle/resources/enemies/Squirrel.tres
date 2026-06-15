@@ -1,0 +1,16 @@
+[gd_resource type="Resource" script_class="BattleEnemyResource" format=3]
+
+[ext_resource type="Script" uid="uid://ut05a8nwsuf6" path="res://src/battle/resources/BattleEnemyResource.cs" id="1_enemy"]
+[ext_resource type="Script" uid="uid://teltcxejb0pd" path="res://src/battle/resources/BattleStatsResource.cs" id="2_stats"]
+
+[sub_resource type="Resource" id="Resource_stats"]
+script = ExtResource("2_stats")
+
+[resource]
+script = ExtResource("1_enemy")
+Id = "squirrel"
+DisplayName = "Squirrel"
+Stats = SubResource("Resource_stats")
+Hp = 25
+ActionIds = Array[String](["basic_attack"])
+metadata/_custom_type_script = "uid://ut05a8nwsuf6"

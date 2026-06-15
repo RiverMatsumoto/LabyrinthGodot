@@ -1,0 +1,62 @@
+@startuml Battle and Turn Sequence
+hide footbox
+skinparam shadowing false
+
+actor Player
+participant "GameLogic" as Game
+participant "Battle" as Battle
+participant "BattleLogic" as Logic
+participant "BattleRepo" as Repo
+participant "EnemyCommandPlanner" as Planner
+participant "BattlePresenter" as Presenter
+participant "PartyRepo" as Party
+
+Game -> Battle : enter GameLogicState.Battle
+Battle -> Battle : build BattleSetup
+Battle -> Logic : StartBattle(setup)
+Logic -> Repo : Start(setup)
+Repo --> Logic : SelectingCommands
+Logic --> Battle : CommandRequested(actor)
+
+loop each living player
+  Player -> Battle : choose action and target
+  Battle -> Logic : SubmitCommand(command)
+  Logic -> Repo : ValidateCommand(command)
+  Repo --> Logic : validation
+  Logic -> Repo : SubmitCommand(command)
+  alt another player needs a command
+    Logic --> Battle : CommandRequested(next actor)
+  end
+end
+
+Logic -> Repo : BeginResolution(planner)
+loop each living enemy
+  Repo -> Planner : Plan(snapshot, actor, catalog, random)
+  Planner --> Repo : BattleCommand or null
+end
+Repo -> Repo : order commands and seed operations
+
+loop until command selection or completion
+  Battle -> Logic : AdvanceResolution()
+  Logic -> Repo : AdvanceResolution()
+  Repo -> Repo : execute operations
+
+  alt cue operation reached
+    Repo --> Logic : CuePlaybackRequired(batch ID, cues)
+    Logic --> Battle : CuePlaybackRequested(advance)
+    Battle -> Presenter : Play(advance, callback)
+    Presenter -> Presenter : play cues in order
+    Presenter --> Battle : callback
+    Battle -> Logic : AcknowledgeCuePlayback(batch ID)
+    Logic -> Repo : AcknowledgeCuePlayback(batch ID)
+  else turn finished
+    Repo --> Logic : CommandRequired(actor)
+    Logic --> Battle : CommandRequested(actor)
+  else terminal outcome
+    Repo --> Logic : Completed(result)
+    Logic --> Battle : BattleCompleted(result)
+    Battle -> Party : ApplyBattleVitals(player vitals)
+    Battle -> Game : enter return mode
+  end
+end
+@enduml

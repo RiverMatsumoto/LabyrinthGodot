@@ -8,8 +8,8 @@ using Chickensoft.LogicBlocks;
 public abstract partial record BattleLogicState : LogicBlockState
 {
     protected IBattleRepo BattleRepo => Get<IBattleRepo>();
-    protected IEnemyIntentProvider EnemyIntentProvider =>
-        Get<IEnemyIntentProvider>();
+    protected IEnemyCommandPlanner EnemyCommandPlanner =>
+        Get<IEnemyCommandPlanner>();
 
     protected Type Start(BattleSetup setup)
     {

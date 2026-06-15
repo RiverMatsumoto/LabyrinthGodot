@@ -3,7 +3,7 @@ namespace Labyrinth;
 using Godot;
 
 [GlobalClass]
-public partial class DamageTypeResistance : Resource
+public partial class DamageTypeResistanceResource : Resource
 {
     [Export]
     public DamageType DamageType { get; set; }

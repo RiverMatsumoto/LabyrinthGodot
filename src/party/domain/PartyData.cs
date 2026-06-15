@@ -8,7 +8,7 @@ using Chickensoft.Serialization;
 [Meta, Id("party_data")]
 public partial record PartyData
 {
-    public const int CurrentVersion = 1;
+    public const int CurrentVersion = 2;
 
     [Save("version")]
     public int Version { get; init; } = CurrentVersion;
@@ -53,6 +53,14 @@ public partial record PartyMemberData
     public StatModifierData[] Modifiers { get; init; } = [];
     [Save("resistances")]
     public StatusResistanceData[] Resistances { get; init; } = [];
+    [Save("status_weaknesses")]
+    public StatusResistanceData[] StatusWeaknesses { get; init; } = [];
+    [Save("damage_resistances")]
+    public DamageAffinityData[] DamageResistances { get; init; } = [];
+    [Save("damage_weaknesses")]
+    public DamageAffinityData[] DamageWeaknesses { get; init; } = [];
+    [Save("passive_reactions")]
+    public string[] PassiveReactions { get; init; } = [];
 
     public PartyMember ToDomain()
     {
@@ -78,6 +86,24 @@ public partial record PartyMemberData
             member.StatusResistances[new StatusId(resistance.StatusId)] =
                 resistance.Value;
         }
+        foreach (var weakness in StatusWeaknesses)
+        {
+            member.StatusWeakness[new StatusId(weakness.StatusId)] =
+                weakness.Value;
+        }
+        foreach (var resistance in DamageResistances)
+        {
+            member.DamageTypeResistances[resistance.DamageType] =
+                resistance.Value;
+        }
+        foreach (var weakness in DamageWeaknesses)
+        {
+            member.DamageTypeWeaknesses[weakness.DamageType] =
+                weakness.Value;
+        }
+        member.PassiveReactionIds.AddRange(
+            PassiveReactions.Select(id => new ReactionId(id))
+        );
         return member;
     }
 
@@ -103,6 +129,30 @@ public partial record PartyMemberData
                 StatusId = pair.Key.Value,
                 Value = pair.Value,
             })
+            .ToArray(),
+        StatusWeaknesses = entry.Member.StatusWeakness
+            .Select(pair => new StatusResistanceData
+            {
+                StatusId = pair.Key.Value,
+                Value = pair.Value,
+            })
+            .ToArray(),
+        DamageResistances = entry.Member.DamageTypeResistances
+            .Select(pair => new DamageAffinityData
+            {
+                DamageType = pair.Key,
+                Value = pair.Value,
+            })
+            .ToArray(),
+        DamageWeaknesses = entry.Member.DamageTypeWeaknesses
+            .Select(pair => new DamageAffinityData
+            {
+                DamageType = pair.Key,
+                Value = pair.Value,
+            })
+            .ToArray(),
+        PassiveReactions = entry.Member.PassiveReactionIds
+            .Select(id => id.Value)
             .ToArray(),
     };
 }
@@ -181,6 +231,15 @@ public partial record StatusResistanceData
 {
     [Save("status_id")]
     public string StatusId { get; init; } = "";
+    [Save("value")]
+    public double Value { get; init; }
+}
+
+[Meta, Id("damage_affinity_data")]
+public partial record DamageAffinityData
+{
+    [Save("damage_type")]
+    public DamageType DamageType { get; init; }
     [Save("value")]
     public double Value { get; init; }
 }

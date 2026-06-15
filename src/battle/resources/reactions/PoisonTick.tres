@@ -1,0 +1,22 @@
+[gd_resource type="Resource" script_class="BattleReactionResource" format=3]
+
+[ext_resource type="Script" uid="uid://cidn5h6e6ryfc" path="res://src/battle/resources/BattleReactionResource.cs" id="1_reaction"]
+[ext_resource type="Script" uid="uid://5fk70j1vvyu2" path="res://src/battle/resources/DamageBattleEffectResource.cs" id="2_damage"]
+
+[sub_resource type="Resource" id="Resource_damage"]
+script = ExtResource("2_damage")
+DamageType = 6
+Mode = 1
+Power = 5.0
+ScaleBySourceStatusId = "poison"
+metadata/_custom_type_script = "uid://5fk70j1vvyu2"
+
+[resource]
+script = ExtResource("1_reaction")
+Id = "poison_tick"
+Trigger = 1
+Schedule = 2
+TargetPolicy = 0
+Priority = 10
+Effects = Array[Resource]([SubResource("Resource_damage")])
+metadata/_custom_type_script = "uid://cidn5h6e6ryfc"

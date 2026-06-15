@@ -12,20 +12,20 @@ public partial record BattleLogicState
     {
         public Type On(in Input.AdvanceResolution input)
         {
-            var step = BattleRepo.Advance();
-            switch (step.Kind)
+            var advance = BattleRepo.AdvanceResolution();
+            switch (advance.Kind)
             {
-                case BattleStepKind.Presentation:
-                    Output(new Output.PresentationRequested(step));
-                    return To<AwaitingPresentation>();
-                case BattleStepKind.CommandSelection:
+                case BattleAdvanceKind.CuePlaybackRequired:
+                    Output(new Output.CuePlaybackRequested(advance));
+                    return To<AwaitingCuePlayback>();
+                case BattleAdvanceKind.CommandRequired:
                     OutputCommandRequest();
                     return To<SelectingCommands>();
-                case BattleStepKind.Completed:
-                    return Complete(step.Result!);
+                case BattleAdvanceKind.Completed:
+                    return Complete(advance.Result!);
                 default:
                     throw new InvalidOperationException(
-                        $"Unknown battle step '{step.Kind}'."
+                        $"Unknown battle advance '{advance.Kind}'."
                     );
             }
         }

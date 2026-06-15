@@ -1,17 +1,22 @@
 namespace Labyrinth;
 
 using System;
+using System.Linq;
 using Godot;
+using Godot.Collections;
 
+/// <summary>
+/// Authors action prevention, duration, stacking, and status-owned reactions.
+/// </summary>
 [GlobalClass]
 public partial class BattleStatusResource : Resource
 {
     [Export] public string Id { get; set; } = "";
     [Export] public string DisplayName { get; set; } = "";
-    [Export] public StatusBehavior Behavior { get; set; }
+    [Export] public bool PreventsAction { get; set; }
     [Export] public int DefaultDuration { get; set; } = 1;
     [Export] public int MaxStacks { get; set; } = 1;
-    [Export] public int PowerPerStack { get; set; }
+    [Export] public Array<string> ReactionIds { get; set; } = [];
 
     public StatusDefinition Compile()
     {
@@ -22,10 +27,10 @@ public partial class BattleStatusResource : Resource
         return new StatusDefinition(
             new StatusId(Id),
             string.IsNullOrWhiteSpace(DisplayName) ? Id : DisplayName,
-            Behavior,
+            PreventsAction,
             Math.Max(1, DefaultDuration),
             Math.Max(1, MaxStacks),
-            Math.Max(0, PowerPerStack)
+            ReactionIds.Select(id => new ReactionId(id)).ToArray()
         );
     }
 }

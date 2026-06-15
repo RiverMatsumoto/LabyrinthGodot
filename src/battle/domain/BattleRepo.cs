@@ -4,14 +4,19 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 
+/// <summary>
+/// In-memory implementation of <see cref="IBattleRepo"/>. It resolves commands
+/// through an operation queue and pauses only at external interaction
+/// boundaries.
+/// </summary>
 public sealed class BattleRepo : IBattleRepo
 {
     public const int MaxReactionDepth = 16;
     public const double BackRowMeleeMultiplier = 0.5;
 
     private readonly Dictionary<BattlerId, BattleUnit> _units = [];
-    private readonly Dictionary<BattlerId, BattleIntent> _playerIntents = [];
-    private readonly List<BattlerId> _intentOrder = [];
+    private readonly Dictionary<BattlerId, BattleCommand> _playerCommands = [];
+    private readonly List<BattlerId> _commandOrder = [];
     private readonly LinkedList<Operation> _operations = [];
     private readonly List<ReactionInvocation> _afterActionReactions = [];
     private readonly List<ReactionInvocation> _endTurnReactions = [];
@@ -22,11 +27,13 @@ public sealed class BattleRepo : IBattleRepo
 
     private BattleSetup? _setup;
     private IRandomSource _random = new SeededRandomSource(1);
-    private long _nextPresentationId;
-    private long _awaitingPresentationId;
+    private long _nextCueBatchId;
+    private long _awaitingCueBatchId;
     private long _nextCauseId;
     private long _nextReactionRegistrationId;
     private BattleResult? _result;
+    private bool _afterActionFlushStarted;
+    private bool _endTurnFlushStarted;
     private bool _disposed;
 
     public BattleRepo(BattleCatalog catalog)
@@ -78,107 +85,118 @@ public sealed class BattleRepo : IBattleRepo
             {
                 _ = Catalog.GetAction(actionId);
             }
+            foreach (var reactionId in seed.ReactionIds)
+            {
+                _ = Catalog.GetReaction(reactionId);
+            }
+        }
+        foreach (var unit in _units.Values)
+        {
+            foreach (var reactionId in unit.ReactionIds)
+            {
+                RegisterRuntimeReaction(unit.Id, reactionId, null);
+            }
         }
 
         Turn = 1;
         Phase = BattleDomainPhase.SelectingCommands;
     }
 
-    public IntentValidationResult ValidateIntent(BattleIntent intent)
+    public CommandValidationResult ValidateCommand(BattleCommand command)
     {
         ThrowIfDisposed();
         if (Phase != BattleDomainPhase.SelectingCommands)
         {
-            return IntentValidationResult.Invalid(
+            return CommandValidationResult.Invalid(
                 "Battle is not selecting commands."
             );
         }
         if (
-            !_units.TryGetValue(intent.SourceId, out var source)
-            || source.Team != BattleTeam.Player
-            || !source.IsAlive
+            !_units.TryGetValue(command.ActorId, out var actor)
+            || actor.Team != BattleTeam.Player
+            || !actor.IsAlive
         )
         {
-            return IntentValidationResult.Invalid(
-                "Intent source is not a living player battler."
+            return CommandValidationResult.Invalid(
+                "Command actor is not a living player battler."
             );
         }
         if (
-            !Catalog.TryGetAction(intent.ActionId, out var action)
-            || !source.ActionIds.Contains(intent.ActionId)
+            !Catalog.TryGetAction(command.ActionId, out var action)
+            || !actor.ActionIds.Contains(command.ActionId)
         )
         {
-            return IntentValidationResult.Invalid(
+            return CommandValidationResult.Invalid(
                 "Battler does not know the requested action."
             );
         }
-        if (source.Tp < action.TpCost)
+        if (actor.Tp < action.TpCost)
         {
-            return IntentValidationResult.Invalid("Not enough TP.");
+            return CommandValidationResult.Invalid("Not enough TP.");
         }
 
-        var targets = ResolveTargets(source, action, intent.SelectedTargetId);
+        var targets = ResolveTargets(actor, action, command.TargetId);
         return targets.Count > 0
-            ? IntentValidationResult.Valid
-            : IntentValidationResult.Invalid(
+            ? CommandValidationResult.Valid
+            : CommandValidationResult.Invalid(
                 "The action has no valid targets."
             );
     }
 
-    public bool SubmitIntent(BattleIntent intent)
+    public bool SubmitCommand(BattleCommand command)
     {
-        var validation = ValidateIntent(intent);
+        var validation = ValidateCommand(command);
         if (!validation.IsValid)
         {
             return false;
         }
 
-        if (!_playerIntents.ContainsKey(intent.SourceId))
+        if (!_playerCommands.ContainsKey(command.ActorId))
         {
-            _intentOrder.Add(intent.SourceId);
+            _commandOrder.Add(command.ActorId);
         }
-        _playerIntents[intent.SourceId] = intent;
+        _playerCommands[command.ActorId] = command;
         return true;
     }
 
-    public bool UndoLastIntent()
+    public bool UndoLastCommand()
     {
         ThrowIfDisposed();
         if (
             Phase != BattleDomainPhase.SelectingCommands
-            || _intentOrder.Count == 0
+            || _commandOrder.Count == 0
         )
         {
             return false;
         }
 
-        var id = _intentOrder[^1];
-        _intentOrder.RemoveAt(_intentOrder.Count - 1);
-        return _playerIntents.Remove(id);
+        var id = _commandOrder[^1];
+        _commandOrder.RemoveAt(_commandOrder.Count - 1);
+        return _playerCommands.Remove(id);
     }
 
     public IReadOnlyList<BattlerId> GetValidTargets(
-        BattlerId sourceId,
+        BattlerId actorId,
         ActionId actionId
     )
     {
         ThrowIfDisposed();
         if (
-            !_units.TryGetValue(sourceId, out var source)
+            !_units.TryGetValue(actorId, out var actor)
             || !Catalog.TryGetAction(actionId, out var action)
         )
         {
             return [];
         }
 
-        return GetTargetCandidates(source, action)
+        return GetTargetCandidates(actor, action)
             .Select(unit => unit.Id)
             .ToArray();
     }
 
-    public void BeginResolution(IEnemyIntentProvider enemyIntentProvider)
+    public void BeginResolution(IEnemyCommandPlanner enemyCommandPlanner)
     {
-        ArgumentNullException.ThrowIfNull(enemyIntentProvider);
+        ArgumentNullException.ThrowIfNull(enemyCommandPlanner);
         ThrowIfDisposed();
         if (Phase != BattleDomainPhase.SelectingCommands)
         {
@@ -189,11 +207,11 @@ public sealed class BattleRepo : IBattleRepo
         if (FindRequestedPlayer() is not null)
         {
             throw new InvalidOperationException(
-                "Every living player requires an intent."
+                "Every living player requires a command."
             );
         }
 
-        var intents = new List<BattleIntent>(_playerIntents.Values);
+        var commands = new List<BattleCommand>(_playerCommands.Values);
         var snapshot = Snapshot();
         foreach (var enemy in OrderedUnits(BattleTeam.Enemy))
         {
@@ -201,46 +219,41 @@ public sealed class BattleRepo : IBattleRepo
             {
                 continue;
             }
-            var intent = enemyIntentProvider.Plan(
+            var command = enemyCommandPlanner.Plan(
                 snapshot,
                 enemy.Id,
                 Catalog,
                 _random
             );
-            if (intent is not null)
+            if (command is not null)
             {
-                intents.Add(intent);
+                commands.Add(command);
             }
         }
 
-        var ordered = intents
-            .Where(intent => _units.ContainsKey(intent.SourceId))
-            .OrderByDescending(intent =>
-                Catalog.GetAction(intent.ActionId).Priority)
-            .ThenByDescending(intent =>
-                _units[intent.SourceId].Stats.Agility)
-            .ThenBy(intent => intent.SourceId.Value, StringComparer.Ordinal)
+        var ordered = commands
+            .Where(command => _units.ContainsKey(command.ActorId))
+            .OrderByDescending(command =>
+                Catalog.GetAction(command.ActionId).Priority)
+            .ThenByDescending(command =>
+                _units[command.ActorId].Stats.Agility)
+            .ThenBy(command => command.ActorId.Value, StringComparer.Ordinal)
             .ToArray();
 
         _operations.Clear();
+        _afterActionFlushStarted = false;
+        _endTurnFlushStarted = false;
         _operations.AddLast(new WindowOperation(new ReactionEvent(
             NextCauseId(),
-            ReactionWindow.TurnStart,
-            default,
-            null,
-            0
+            ReactionTrigger.TurnStarted
         )));
-        foreach (var intent in ordered)
+        foreach (var command in ordered)
         {
-            _operations.AddLast(new ExecuteActionOperation(intent));
+            _operations.AddLast(new ExecuteActionOperation(command));
         }
-        _operations.AddLast(new StatusTickOperation());
         _operations.AddLast(new WindowOperation(new ReactionEvent(
             NextCauseId(),
-            ReactionWindow.TurnEnd,
-            default,
-            null,
-            0
+            ReactionTrigger.TurnEnded
         )));
         _operations.AddLast(new FlushEndTurnReactionsOperation());
         _operations.AddLast(new ExpireStatusesOperation());
@@ -248,18 +261,19 @@ public sealed class BattleRepo : IBattleRepo
         Phase = BattleDomainPhase.ResolvingTurn;
     }
 
-    public BattleStep Advance()
+    /// <inheritdoc />
+    public BattleAdvance AdvanceResolution()
     {
         ThrowIfDisposed();
-        if (Phase == BattleDomainPhase.AwaitingPresentation)
+        if (Phase == BattleDomainPhase.AwaitingCuePlayback)
         {
             throw new InvalidOperationException(
-                "Presentation must be acknowledged before advancing."
+                "Cue playback must be acknowledged before advancing."
             );
         }
         if (Phase == BattleDomainPhase.Completed)
         {
-            return BattleStep.Complete(
+            return BattleAdvance.Complete(
                 _result ?? throw new InvalidOperationException(
                     "Completed battle has no result."
                 )
@@ -267,7 +281,7 @@ public sealed class BattleRepo : IBattleRepo
         }
         if (Phase == BattleDomainPhase.SelectingCommands)
         {
-            return BattleStep.Select(
+            return BattleAdvance.RequireCommand(
                 FindRequestedPlayer()
                 ?? throw new InvalidOperationException(
                     "All player commands are already selected."
@@ -286,10 +300,10 @@ public sealed class BattleRepo : IBattleRepo
 
             if (operation is CueOperation cue)
             {
-                _awaitingPresentationId = ++_nextPresentationId;
-                Phase = BattleDomainPhase.AwaitingPresentation;
-                return BattleStep.Present(
-                    _awaitingPresentationId,
+                _awaitingCueBatchId = ++_nextCueBatchId;
+                Phase = BattleDomainPhase.AwaitingCuePlayback;
+                return BattleAdvance.RequireCuePlayback(
+                    _awaitingCueBatchId,
                     cue.Cues
                 );
             }
@@ -297,11 +311,13 @@ public sealed class BattleRepo : IBattleRepo
             Execute(operation);
             if (Phase == BattleDomainPhase.Completed)
             {
-                return BattleStep.Complete(_result!);
+                return BattleAdvance.Complete(_result!);
             }
             if (Phase == BattleDomainPhase.SelectingCommands)
             {
-                return BattleStep.Select(FindRequestedPlayer()!.Value);
+                return BattleAdvance.RequireCommand(
+                    FindRequestedPlayer()!.Value
+                );
             }
         }
 
@@ -310,24 +326,25 @@ public sealed class BattleRepo : IBattleRepo
         );
     }
 
-    public void AcknowledgePresentation(long presentationId)
+    /// <inheritdoc />
+    public void AcknowledgeCuePlayback(long cueBatchId)
     {
         ThrowIfDisposed();
         if (
-            Phase != BattleDomainPhase.AwaitingPresentation
-            || presentationId != _awaitingPresentationId
+            Phase != BattleDomainPhase.AwaitingCuePlayback
+            || cueBatchId != _awaitingCueBatchId
         )
         {
             throw new InvalidOperationException(
-                "Presentation acknowledgement does not match."
+                "Cue playback acknowledgement does not match."
             );
         }
 
-        _awaitingPresentationId = 0;
+        _awaitingCueBatchId = 0;
         Phase = BattleDomainPhase.ResolvingTurn;
     }
 
-    public BattleStep Flee()
+    public BattleAdvance Flee()
     {
         ThrowIfDisposed();
         if (
@@ -341,7 +358,7 @@ public sealed class BattleRepo : IBattleRepo
         }
 
         Complete(BattleOutcome.Fled);
-        return BattleStep.Complete(_result!);
+        return BattleAdvance.Complete(_result!);
     }
 
     public BattleSnapshot Snapshot() => new(
@@ -371,7 +388,7 @@ public sealed class BattleRepo : IBattleRepo
         switch (operation)
         {
             case ExecuteActionOperation execute:
-                ExecuteAction(execute.Intent);
+                ExecuteAction(execute.Command);
                 break;
             case WindowOperation window:
                 TriggerReactions(window.Event);
@@ -394,17 +411,22 @@ public sealed class BattleRepo : IBattleRepo
             case RegisterReactionOperation register:
                 RegisterReaction(register);
                 break;
+            case UnregisterStatusReactionsOperation unregister:
+                UnregisterStatusReactions(
+                    unregister.OwnerId,
+                    unregister.StatusId
+                );
+                break;
             case ActionEndOperation actionEnd:
                 EndAction(actionEnd);
                 break;
             case FlushAfterActionReactionsOperation:
-                FlushReactions(_afterActionReactions);
-                break;
-            case StatusTickOperation:
-                TickStatuses();
+                _afterActionFlushStarted = true;
+                FlushReactions(_afterActionReactions, repeat: false);
                 break;
             case FlushEndTurnReactionsOperation:
-                FlushReactions(_endTurnReactions);
+                _endTurnFlushStarted = true;
+                FlushReactions(_endTurnReactions, repeat: true);
                 break;
             case ExpireStatusesOperation:
                 ExpireStatuses();
@@ -425,44 +447,49 @@ public sealed class BattleRepo : IBattleRepo
         }
     }
 
-    private void ExecuteAction(BattleIntent intent)
+    private void ExecuteAction(BattleCommand command)
     {
+        _afterActionFlushStarted = false;
         if (
-            !_units.TryGetValue(intent.SourceId, out var source)
-            || !source.IsAlive
-            || !Catalog.TryGetAction(intent.ActionId, out var action)
-            || source.Tp < action.TpCost
+            !_units.TryGetValue(command.ActorId, out var actor)
+            || !actor.IsAlive
+            || !Catalog.TryGetAction(command.ActionId, out var action)
+            || actor.Tp < action.TpCost
         )
         {
             return;
         }
 
-        if (source.HasStatusBehavior(Catalog, StatusBehavior.Stun))
+        if (actor.PreventsAction(Catalog))
         {
             return;
         }
 
-        var targets = ResolveTargets(source, action, intent.SelectedTargetId);
+        var targets = ResolveTargets(actor, action, command.TargetId);
         if (targets.Count == 0)
         {
             return;
         }
 
-        source.Tp -= action.TpCost;
+        actor.Tp -= action.TpCost;
         var context = new EffectContext(
-            source.Id,
+            actor.Id,
             targets.Select(target => target.Id).ToArray(),
             action.Range,
+            action.Id,
+            0,
+            null,
             0
         );
         var operations = new List<Operation>
         {
             new WindowOperation(new ReactionEvent(
                 NextCauseId(),
-                ReactionWindow.ActionStart,
-                source.Id,
+                ReactionTrigger.ActionStarted,
+                actor.Id,
                 targets[0].Id,
-                0
+                action.Id,
+                Depth: 0
             )),
         };
         foreach (var effect in action.Effects)
@@ -482,16 +509,25 @@ public sealed class BattleRepo : IBattleRepo
         {
             new WindowOperation(new ReactionEvent(
                 NextCauseId(),
-                ReactionWindow.BeforeEffect,
+                ReactionTrigger.BeforeEffect,
                 context.SourceId,
                 context.TargetIds.FirstOrDefault(),
-                context.ReactionDepth
+                context.ActionId,
+                Depth: context.ReactionDepth
             )),
         };
 
         switch (effect)
         {
             case DamageEffectDefinition damage:
+                var scaledDamage = damage.Spec with
+                {
+                    Power = ScaleAmount(
+                        context,
+                        damage.Spec.Power,
+                        damage.Scale
+                    ),
+                };
                 if (!string.IsNullOrWhiteSpace(damage.AnimationId))
                 {
                     operations.Add(new CueOperation([
@@ -502,7 +538,7 @@ public sealed class BattleRepo : IBattleRepo
                         ),
                     ]));
                 }
-                operations.Add(new DamageOperation(context, damage.Spec));
+                operations.Add(new DamageOperation(context, scaledDamage));
                 break;
             case HealEffectDefinition heal:
                 if (!string.IsNullOrWhiteSpace(heal.AnimationId))
@@ -515,13 +551,20 @@ public sealed class BattleRepo : IBattleRepo
                         ),
                     ]));
                 }
-                operations.Add(new HealOperation(context, heal.Amount));
+                operations.Add(new HealOperation(
+                    context,
+                    ScaleAmount(context, heal.Amount, heal.Scale)
+                ));
                 break;
             case ModifyResourceEffectDefinition modify:
                 operations.Add(new ModifyResourceOperation(
                     context,
                     modify.Resource,
-                    modify.Amount
+                    ScaleAmount(
+                        context,
+                        modify.Amount,
+                        modify.Scale
+                    )
                 ));
                 break;
             case ApplyStatusEffectDefinition apply:
@@ -550,7 +593,7 @@ public sealed class BattleRepo : IBattleRepo
             case RegisterReactionEffectDefinition register:
                 operations.Add(new RegisterReactionOperation(
                     context,
-                    register.Reaction
+                    register.ReactionId
                 ));
                 break;
             default:
@@ -561,10 +604,11 @@ public sealed class BattleRepo : IBattleRepo
 
         operations.Add(new WindowOperation(new ReactionEvent(
             NextCauseId(),
-            ReactionWindow.AfterEffect,
+            ReactionTrigger.AfterEffect,
             context.SourceId,
             context.TargetIds.FirstOrDefault(),
-            context.ReactionDepth
+            context.ActionId,
+            Depth: context.ReactionDepth
         )));
         return operations;
     }
@@ -598,10 +642,11 @@ public sealed class BattleRepo : IBattleRepo
             ));
             reactionEvents.Add(new WindowOperation(new ReactionEvent(
                 NextCauseId(),
-                ReactionWindow.Damage,
+                ReactionTrigger.Damage,
                 source.Id,
                 target.Id,
-                operation.Context.ReactionDepth
+                operation.Context.ActionId,
+                Depth: operation.Context.ReactionDepth
             )));
         }
 
@@ -612,6 +657,8 @@ public sealed class BattleRepo : IBattleRepo
         }
         followUps.AddRange(reactionEvents);
         followUps.Add(new DeathCheckOperation(
+            operation.Context.SourceId,
+            operation.Context.ActionId,
             operation.Context.ReactionDepth
         ));
         InsertFront(followUps);
@@ -638,10 +685,11 @@ public sealed class BattleRepo : IBattleRepo
             ));
             reactionEvents.Add(new WindowOperation(new ReactionEvent(
                 NextCauseId(),
-                ReactionWindow.Healing,
+                ReactionTrigger.Healing,
                 operation.Context.SourceId,
                 target.Id,
-                operation.Context.ReactionDepth
+                operation.Context.ActionId,
+                Depth: operation.Context.ReactionDepth
             )));
         }
 
@@ -699,7 +747,11 @@ public sealed class BattleRepo : IBattleRepo
         {
             InsertFront([
                 new CueOperation([new PopupBatchCue(popups)]),
-                new DeathCheckOperation(operation.Context.ReactionDepth),
+                new DeathCheckOperation(
+                    operation.Context.SourceId,
+                    operation.Context.ActionId,
+                    operation.Context.ReactionDepth
+                ),
             ]);
         }
     }
@@ -714,9 +766,18 @@ public sealed class BattleRepo : IBattleRepo
             {
                 continue;
             }
-            target.Resistances.TryGetValue(definition.Id, out var resistance);
+            target.StatusResistances.TryGetValue(
+                definition.Id,
+                out var resistance
+            );
+            target.StatusWeaknesses.TryGetValue(
+                definition.Id,
+                out var weakness
+            );
             var chance = Math.Clamp(
-                operation.Effect.BaseChance * (1.0 - resistance),
+                operation.Effect.BaseChance
+                    * (1.0 - resistance)
+                    * (1.0 + weakness),
                 0.0,
                 1.0
             );
@@ -728,16 +789,23 @@ public sealed class BattleRepo : IBattleRepo
             var duration = operation.Effect.Duration > 0
                 ? operation.Effect.Duration
                 : definition.DefaultDuration;
-            if (target.Statuses.TryGetValue(definition.Id, out var status))
+            var isNew = !target.Statuses.TryGetValue(
+                definition.Id,
+                out var status
+            );
+            if (!isNew)
             {
-                status.Stacks = Math.Min(
+                var existingStatus = status!;
+                existingStatus.Stacks = Math.Min(
                     definition.MaxStacks,
-                    status.Stacks + Math.Max(1, operation.Effect.Stacks)
+                    existingStatus.Stacks
+                        + Math.Max(1, operation.Effect.Stacks)
                 );
-                status.RemainingTurns = Math.Max(
-                    status.RemainingTurns,
+                existingStatus.RemainingTurns = Math.Max(
+                    existingStatus.RemainingTurns,
                     duration
                 );
+                status = existingStatus;
             }
             else
             {
@@ -750,6 +818,7 @@ public sealed class BattleRepo : IBattleRepo
                     duration
                 );
                 target.Statuses.Add(definition.Id, status);
+                RegisterStatusReactions(target.Id, definition);
             }
 
             followUps.Add(new CueOperation([
@@ -762,9 +831,12 @@ public sealed class BattleRepo : IBattleRepo
             ]));
             followUps.Add(new WindowOperation(new ReactionEvent(
                 NextCauseId(),
-                ReactionWindow.StatusApplied,
+                ReactionTrigger.StatusApplied,
                 operation.Context.SourceId,
                 target.Id,
+                operation.Context.ActionId,
+                definition.Id,
+                status.Stacks,
                 operation.Context.ReactionDepth
             )));
         }
@@ -773,52 +845,69 @@ public sealed class BattleRepo : IBattleRepo
 
     private void RemoveStatus(RemoveStatusOperation operation)
     {
-        var cues = new List<BattleCue>();
+        var followUps = new List<Operation>();
         foreach (var targetId in operation.Context.TargetIds)
         {
             if (
                 _units.TryGetValue(targetId, out var target)
-                && target.Statuses.Remove(operation.StatusId)
+                && target.Statuses.Remove(
+                    operation.StatusId,
+                    out var removed
+                )
             )
             {
-                cues.Add(new StatusCue(
+                followUps.Add(new CueOperation([
+                    new StatusCue(
+                        target.Id,
+                        operation.StatusId,
+                        Applied: false,
+                        0
+                    ),
+                ]));
+                followUps.Add(new WindowOperation(new ReactionEvent(
+                    NextCauseId(),
+                    ReactionTrigger.StatusRemoved,
+                    operation.Context.SourceId,
                     target.Id,
+                    operation.Context.ActionId,
                     operation.StatusId,
-                    Applied: false,
-                    0
+                    removed.Stacks,
+                    operation.Context.ReactionDepth
+                )));
+                followUps.Add(new UnregisterStatusReactionsOperation(
+                    target.Id,
+                    operation.StatusId
                 ));
             }
         }
-        if (cues.Count > 0)
-        {
-            InsertFront([new CueOperation(cues)]);
-        }
+        InsertFront(followUps);
     }
 
     private void RegisterReaction(RegisterReactionOperation operation)
     {
-        if (
-            operation.Context.ReactionDepth >= MaxReactionDepth
-            || string.IsNullOrWhiteSpace(operation.Definition.Id)
-        )
+        if (operation.Context.ReactionDepth >= MaxReactionDepth)
         {
             return;
         }
-        _reactions.Add(new RuntimeReaction(
-            ++_nextReactionRegistrationId,
+        RegisterRuntimeReaction(
             operation.Context.SourceId,
-            operation.Definition
-        ));
+            operation.ReactionId,
+            null
+        );
     }
 
     private void TriggerReactions(ReactionEvent reactionEvent)
     {
         var matching = _reactions
             .Where(reaction =>
-                reaction.Definition.Window == reactionEvent.Window
+                reaction.Definition.Trigger == reactionEvent.Trigger
                 && reaction.HasUses
                 && _units.TryGetValue(reaction.OwnerId, out var owner)
-                && owner.IsAlive)
+                && (
+                    owner.IsAlive
+                    || reactionEvent.Trigger == ReactionTrigger.Defeat
+                )
+                && ConditionsMatch(reaction, reactionEvent))
             .OrderByDescending(reaction => reaction.Definition.Priority)
             .ThenBy(reaction => reaction.RegistrationId)
             .ToArray();
@@ -840,25 +929,87 @@ public sealed class BattleRepo : IBattleRepo
                 reaction,
                 reactionEvent
             );
-            switch (reaction.Definition.InsertionPolicy)
+            switch (reaction.Definition.Schedule)
             {
-                case ReactionInsertionPolicy.BeforeNextEffect:
+                case ReactionSchedule.Immediate:
                     immediate.Add(invocation);
                     break;
-                case ReactionInsertionPolicy.AfterCurrentAction:
-                    _afterActionReactions.Add(invocation);
+                case ReactionSchedule.AfterCurrentAction:
+                    if (
+                        reactionEvent.ActionId is null
+                        || _afterActionFlushStarted
+                    )
+                    {
+                        immediate.Add(invocation);
+                    }
+                    else
+                    {
+                        _afterActionReactions.Add(invocation);
+                    }
                     break;
-                case ReactionInsertionPolicy.EndOfTurn:
-                    _endTurnReactions.Add(invocation);
+                case ReactionSchedule.EndOfTurn:
+                    if (_endTurnFlushStarted)
+                    {
+                        immediate.Add(invocation);
+                    }
+                    else
+                    {
+                        _endTurnReactions.Add(invocation);
+                    }
                     break;
             }
         }
 
-        FlushReactions(immediate);
+        FlushReactions(immediate, repeat: false);
         _reactions.RemoveAll(reaction => !reaction.HasUses);
     }
 
-    private void FlushReactions(List<ReactionInvocation> reactions)
+    private bool ConditionsMatch(
+        RuntimeReaction reaction,
+        ReactionEvent reactionEvent
+    )
+    {
+        if (!_units.TryGetValue(reaction.OwnerId, out var owner))
+        {
+            return false;
+        }
+        foreach (var condition in reaction.Definition.Conditions)
+        {
+            var matches = condition switch
+            {
+                OwnerHasStatusConditionDefinition status =>
+                    owner.Statuses.TryGetValue(
+                        status.StatusId,
+                        out var runtimeStatus
+                    )
+                    && runtimeStatus.Stacks >= status.MinimumStacks,
+                TriggerActionConditionDefinition action =>
+                    reactionEvent.ActionId == action.ActionId,
+                TriggerStatusConditionDefinition status =>
+                    reactionEvent.StatusId == status.StatusId,
+                OwnerRelationConditionDefinition relation =>
+                    relation.Relation switch
+                    {
+                        ReactionOwnerRelation.EventSource =>
+                            reaction.OwnerId == reactionEvent.SourceId,
+                        ReactionOwnerRelation.EventTarget =>
+                            reaction.OwnerId == reactionEvent.TargetId,
+                        _ => false,
+                    },
+                _ => false,
+            };
+            if (!matches)
+            {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    private void FlushReactions(
+        List<ReactionInvocation> reactions,
+        bool repeat
+    )
     {
         if (reactions.Count == 0)
         {
@@ -877,14 +1028,45 @@ public sealed class BattleRepo : IBattleRepo
                 invocation.Reaction.OwnerId,
                 targets,
                 BattleRange.None,
-                invocation.Event.Depth + 1
+                invocation.Event.ActionId,
+                invocation.Event.Depth + 1,
+                invocation.Reaction.SourceStatusId
+                    ?? invocation.Event.StatusId,
+                ResolveStatusStackContext(invocation)
             );
+            if (
+                invocation.Reaction.SourceStatusId is { } sourceStatusId
+                && _units.TryGetValue(
+                    invocation.Reaction.OwnerId,
+                    out var owner
+                )
+                && owner.Statuses.TryGetValue(
+                    sourceStatusId,
+                    out var sourceStatus
+                )
+            )
+            {
+                operations.Add(new WindowOperation(new ReactionEvent(
+                    NextCauseId(),
+                    ReactionTrigger.StatusTriggered,
+                    invocation.Reaction.OwnerId,
+                    invocation.Reaction.OwnerId,
+                    invocation.Event.ActionId,
+                    sourceStatusId,
+                    sourceStatus.Stacks,
+                    invocation.Event.Depth + 1
+                )));
+            }
             foreach (var effect in invocation.Reaction.Definition.Effects)
             {
                 operations.AddRange(BuildEffectOperations(effect, context));
             }
         }
         reactions.Clear();
+        if (repeat && operations.Count > 0)
+        {
+            operations.Add(new FlushEndTurnReactionsOperation());
+        }
         InsertFront(operations);
     }
 
@@ -911,56 +1093,19 @@ public sealed class BattleRepo : IBattleRepo
         InsertFront([
             new WindowOperation(new ReactionEvent(
                 NextCauseId(),
-                ReactionWindow.ActionEnd,
+                ReactionTrigger.ActionFinished,
                 operation.Context.SourceId,
                 operation.Context.TargetIds.FirstOrDefault(),
-                operation.Context.ReactionDepth
+                operation.Context.ActionId,
+                Depth: operation.Context.ReactionDepth
             )),
             new FlushAfterActionReactionsOperation(),
         ]);
     }
 
-    private void TickStatuses()
-    {
-        var operations = new List<Operation>();
-        foreach (var unit in _units.Values.Where(unit => unit.IsAlive))
-        {
-            foreach (var status in unit.Statuses.Values)
-            {
-                var definition = Catalog.GetStatus(status.Id);
-                var amount = definition.PowerPerStack * status.Stacks;
-                var context = new EffectContext(
-                    unit.Id,
-                    [unit.Id],
-                    BattleRange.None,
-                    0
-                );
-                if (
-                    definition.Behavior == StatusBehavior.Poison
-                    && amount > 0
-                )
-                {
-                    operations.Add(new ModifyResourceOperation(
-                        context,
-                        BattleResource.Hp,
-                        -amount
-                    ));
-                }
-                else if (
-                    definition.Behavior == StatusBehavior.Regen
-                    && amount > 0
-                )
-                {
-                    operations.Add(new HealOperation(context, amount));
-                }
-            }
-        }
-        InsertFront(operations);
-    }
-
     private void ExpireStatuses()
     {
-        var cues = new List<BattleCue>();
+        var operations = new List<Operation>();
         foreach (var unit in _units.Values)
         {
             foreach (var status in unit.Statuses.Values.ToArray())
@@ -971,18 +1116,29 @@ public sealed class BattleRepo : IBattleRepo
                     continue;
                 }
                 unit.Statuses.Remove(status.Id);
-                cues.Add(new StatusCue(
+                operations.Add(new CueOperation([
+                    new StatusCue(
+                        unit.Id,
+                        status.Id,
+                        Applied: false,
+                        0
+                    ),
+                ]));
+                operations.Add(new WindowOperation(new ReactionEvent(
+                    NextCauseId(),
+                    ReactionTrigger.StatusRemoved,
                     unit.Id,
-                    status.Id,
-                    Applied: false,
-                    0
+                    unit.Id,
+                    StatusId: status.Id,
+                    StatusStacks: status.Stacks
+                )));
+                operations.Add(new UnregisterStatusReactionsOperation(
+                    unit.Id,
+                    status.Id
                 ));
             }
         }
-        if (cues.Count > 0)
-        {
-            InsertFront([new CueOperation(cues)]);
-        }
+        InsertFront(operations);
     }
 
     private void CheckDeaths(DeathCheckOperation operation)
@@ -1007,10 +1163,11 @@ public sealed class BattleRepo : IBattleRepo
         operations.AddRange(newlyDead.Select(unit =>
             (Operation)new WindowOperation(new ReactionEvent(
                 NextCauseId(),
-                ReactionWindow.Defeat,
+                ReactionTrigger.Defeat,
+                operation.SourceId,
                 unit.Id,
-                unit.Id,
-                operation.ReactionDepth
+                operation.ActionId,
+                Depth: operation.ReactionDepth
             ))
         ));
 
@@ -1032,9 +1189,11 @@ public sealed class BattleRepo : IBattleRepo
             return;
         }
 
-        _playerIntents.Clear();
-        _intentOrder.Clear();
+        _playerCommands.Clear();
+        _commandOrder.Clear();
         _reactionGuards.Clear();
+        _afterActionFlushStarted = false;
+        _endTurnFlushStarted = false;
         Turn++;
         Phase = BattleDomainPhase.SelectingCommands;
     }
@@ -1072,6 +1231,88 @@ public sealed class BattleRepo : IBattleRepo
             return BattleOutcome.Defeat;
         }
         return null;
+    }
+
+    private void RegisterStatusReactions(
+        BattlerId ownerId,
+        StatusDefinition status
+    )
+    {
+        foreach (var reactionId in status.ReactionIds)
+        {
+            RegisterRuntimeReaction(ownerId, reactionId, status.Id);
+        }
+    }
+
+    private void RegisterRuntimeReaction(
+        BattlerId ownerId,
+        ReactionId reactionId,
+        StatusId? sourceStatusId
+    )
+    {
+        _reactions.Add(new RuntimeReaction(
+            ++_nextReactionRegistrationId,
+            ownerId,
+            Catalog.GetReaction(reactionId),
+            sourceStatusId
+        ));
+    }
+
+    private void UnregisterStatusReactions(
+        BattlerId ownerId,
+        StatusId statusId
+    ) => _reactions.RemoveAll(reaction =>
+        reaction.OwnerId == ownerId
+        && reaction.SourceStatusId == statusId);
+
+    private int ResolveStatusStackContext(
+        ReactionInvocation invocation
+    )
+    {
+        var statusId = invocation.Reaction.SourceStatusId
+            ?? invocation.Event.StatusId;
+        if (
+            statusId is { } id
+            && _units.TryGetValue(
+                invocation.Reaction.OwnerId,
+                out var owner
+            )
+            && owner.Statuses.TryGetValue(id, out var status)
+        )
+        {
+            return status.Stacks;
+        }
+        return invocation.Event.StatusId == statusId
+            ? invocation.Event.StatusStacks
+            : 0;
+    }
+
+    private int ScaleAmount(
+        EffectContext context,
+        int amount,
+        StatusStackScaleDefinition? scale
+    ) => (int)Math.Round(ScaleAmount(context, (double)amount, scale));
+
+    private double ScaleAmount(
+        EffectContext context,
+        double amount,
+        StatusStackScaleDefinition? scale
+    )
+    {
+        if (scale is null)
+        {
+            return amount;
+        }
+        if (
+            _units.TryGetValue(context.SourceId, out var source)
+            && source.Statuses.TryGetValue(scale.StatusId, out var status)
+        )
+        {
+            return amount * status.Stacks;
+        }
+        return context.StatusId == scale.StatusId
+            ? amount * context.StatusStacks
+            : 0;
     }
 
     private int ComputeDamage(
@@ -1140,6 +1381,19 @@ public sealed class BattleRepo : IBattleRepo
             {
                 damage *= spec.CritMultiplier;
             }
+        }
+
+        if (spec.Type != DamageType.True)
+        {
+            target.DamageTypeResistances.TryGetValue(
+                spec.Type,
+                out var resistance
+            );
+            target.DamageTypeWeaknesses.TryGetValue(
+                spec.Type,
+                out var weakness
+            );
+            damage *= (1.0 - resistance) * (1.0 + weakness);
         }
 
         return Math.Max(0, (int)Math.Round(damage));
@@ -1227,7 +1481,7 @@ public sealed class BattleRepo : IBattleRepo
     {
         foreach (var unit in OrderedUnits(BattleTeam.Player))
         {
-            if (unit.IsAlive && !_playerIntents.ContainsKey(unit.Id))
+            if (unit.IsAlive && !_playerCommands.ContainsKey(unit.Id))
             {
                 return unit.Id;
             }
@@ -1255,8 +1509,8 @@ public sealed class BattleRepo : IBattleRepo
     private void Reset()
     {
         _units.Clear();
-        _playerIntents.Clear();
-        _intentOrder.Clear();
+        _playerCommands.Clear();
+        _commandOrder.Clear();
         _operations.Clear();
         _afterActionReactions.Clear();
         _endTurnReactions.Clear();
@@ -1265,10 +1519,12 @@ public sealed class BattleRepo : IBattleRepo
         _handledDeaths.Clear();
         _setup = null;
         _result = null;
-        _nextPresentationId = 0;
-        _awaitingPresentationId = 0;
+        _nextCueBatchId = 0;
+        _awaitingCueBatchId = 0;
         _nextCauseId = 0;
         _nextReactionRegistrationId = 0;
+        _afterActionFlushStarted = false;
+        _endTurnFlushStarted = false;
         Turn = 0;
         Phase = BattleDomainPhase.Disabled;
     }
@@ -1288,8 +1544,18 @@ public sealed class BattleRepo : IBattleRepo
             Hp = Math.Clamp(seed.Hp, 0, seed.Stats.MaxHp);
             Tp = Math.Clamp(seed.Tp, 0, seed.Stats.MaxTp);
             ActionIds = seed.ActionIds.ToArray();
-            Resistances = new Dictionary<StatusId, double>(
-                seed.Resistances
+            ReactionIds = seed.ReactionIds.ToArray();
+            StatusResistances = new Dictionary<StatusId, double>(
+                seed.StatusResistanceValues
+            );
+            StatusWeaknesses = new Dictionary<StatusId, double>(
+                seed.StatusWeaknessValues
+            );
+            DamageTypeResistances = new Dictionary<DamageType, double>(
+                seed.DamageResistanceValues
+            );
+            DamageTypeWeaknesses = new Dictionary<DamageType, double>(
+                seed.DamageWeaknessValues
             );
         }
 
@@ -1301,15 +1567,18 @@ public sealed class BattleRepo : IBattleRepo
         public int Hp { get; set; }
         public int Tp { get; set; }
         public IReadOnlyList<ActionId> ActionIds { get; }
-        public Dictionary<StatusId, double> Resistances { get; }
+        public IReadOnlyList<ReactionId> ReactionIds { get; }
+        public Dictionary<StatusId, double> StatusResistances { get; }
+        public Dictionary<StatusId, double> StatusWeaknesses { get; }
+        public Dictionary<DamageType, double> DamageTypeResistances { get; }
+        public Dictionary<DamageType, double> DamageTypeWeaknesses { get; }
         public Dictionary<StatusId, RuntimeStatus> Statuses { get; } = [];
         public bool IsAlive => Hp > 0;
 
-        public bool HasStatusBehavior(
-            BattleCatalog catalog,
-            StatusBehavior behavior
+        public bool PreventsAction(
+            BattleCatalog catalog
         ) => Statuses.Keys.Any(id =>
-            catalog.GetStatus(id).Behavior == behavior);
+            catalog.GetStatus(id).PreventsAction);
 
         public BattleUnitView View() => new(
             Id,
@@ -1337,12 +1606,14 @@ public sealed class BattleRepo : IBattleRepo
     private sealed class RuntimeReaction(
         long registrationId,
         BattlerId ownerId,
-        ReactionDefinition definition
+        ReactionDefinition definition,
+        StatusId? sourceStatusId
     )
     {
         public long RegistrationId { get; } = registrationId;
         public BattlerId OwnerId { get; } = ownerId;
         public ReactionDefinition Definition { get; } = definition;
+        public StatusId? SourceStatusId { get; } = sourceStatusId;
         public int RemainingUses { get; private set; } = definition.Uses;
         public bool HasUses => RemainingUses != 0;
 
@@ -1359,15 +1630,21 @@ public sealed class BattleRepo : IBattleRepo
         BattlerId SourceId,
         IReadOnlyList<BattlerId> TargetIds,
         BattleRange Range,
-        int ReactionDepth
+        ActionId? ActionId,
+        int ReactionDepth,
+        StatusId? StatusId,
+        int StatusStacks
     );
 
     private sealed record ReactionEvent(
         long CauseId,
-        ReactionWindow Window,
-        BattlerId? SourceId,
-        BattlerId? TargetId,
-        int Depth
+        ReactionTrigger Trigger,
+        BattlerId? SourceId = null,
+        BattlerId? TargetId = null,
+        ActionId? ActionId = null,
+        StatusId? StatusId = null,
+        int StatusStacks = 0,
+        int Depth = 0
     );
 
     private sealed record ReactionInvocation(
@@ -1378,7 +1655,7 @@ public sealed class BattleRepo : IBattleRepo
     private abstract record Operation;
     private sealed record CueOperation(IReadOnlyList<BattleCue> Cues)
         : Operation;
-    private sealed record ExecuteActionOperation(BattleIntent Intent)
+    private sealed record ExecuteActionOperation(BattleCommand Command)
         : Operation;
     private sealed record WindowOperation(ReactionEvent Event) : Operation;
     private sealed record DamageOperation(
@@ -1404,15 +1681,22 @@ public sealed class BattleRepo : IBattleRepo
     ) : Operation;
     private sealed record RegisterReactionOperation(
         EffectContext Context,
-        ReactionDefinition Definition
+        ReactionId ReactionId
+    ) : Operation;
+    private sealed record UnregisterStatusReactionsOperation(
+        BattlerId OwnerId,
+        StatusId StatusId
     ) : Operation;
     private sealed record ActionEndOperation(EffectContext Context)
         : Operation;
     private sealed record FlushAfterActionReactionsOperation : Operation;
-    private sealed record StatusTickOperation : Operation;
     private sealed record FlushEndTurnReactionsOperation : Operation;
     private sealed record ExpireStatusesOperation : Operation;
-    private sealed record DeathCheckOperation(int ReactionDepth) : Operation;
+    private sealed record DeathCheckOperation(
+        BattlerId? SourceId,
+        ActionId? ActionId,
+        int ReactionDepth
+    ) : Operation;
     private sealed record FinishTurnOperation : Operation;
     private sealed record CompleteOperation(BattleOutcome Outcome)
         : Operation;

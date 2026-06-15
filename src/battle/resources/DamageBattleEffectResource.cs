@@ -12,6 +12,7 @@ public partial class DamageBattleEffectResource : BattleEffectResource
     [Export] public bool CanCrit { get; set; }
     [Export] public double CritMultiplier { get; set; } = 1.8;
     [Export] public string AnimationId { get; set; } = "";
+    [Export] public string ScaleBySourceStatusId { get; set; } = "";
 
     public override BattleEffectDefinition Compile() =>
         new DamageEffectDefinition(
@@ -22,6 +23,11 @@ public partial class DamageBattleEffectResource : BattleEffectResource
                 CanCrit,
                 Math.Max(1, CritMultiplier)
             ),
-            AnimationId
+            AnimationId,
+            string.IsNullOrWhiteSpace(ScaleBySourceStatusId)
+                ? null
+                : new StatusStackScaleDefinition(
+                    new StatusId(ScaleBySourceStatusId)
+                )
         );
 }

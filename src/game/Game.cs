@@ -183,6 +183,18 @@ public partial class Game : Node, IGame
 #endif
     }
 
+    public override void _Input(InputEvent @event)
+    {
+#if DEBUG
+        if (Input.IsActionJustPressed(GameInputs.Debug1))
+        {
+            GameLogic.Input(new GameLogicState.Input.EnterBattle(
+                ReturnMode: GameMode.Labyrinth
+            ));
+        }
+#endif
+    }
+
     public void OnExitTree()
     {
 #if DEBUG

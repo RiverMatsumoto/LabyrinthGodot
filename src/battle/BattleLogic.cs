@@ -4,16 +4,37 @@ using Chickensoft.Introspection;
 using Chickensoft.LogicBlocks;
 using Chickensoft.LogicBlocks.Auto;
 
+/// <summary>
+/// State-machine facade for battle interactions. Inputs are accepted by the
+/// current <see cref="BattleLogicState"/> and observable outputs coordinate the
+/// scene without owning domain state.
+/// </summary>
 public interface IBattleLogic : ILogicBlock
 {
     void StartBattle(BattleSetup setup);
-    void SubmitIntent(BattleIntent intent);
-    void UndoIntent();
+    void SubmitCommand(BattleCommand command);
+    void UndoCommand();
+
+    /// <summary>
+    /// Requests resolution until the repository reaches the next command,
+    /// cue-playback, or completion boundary.
+    /// </summary>
     void AdvanceResolution();
-    void AcknowledgePresentation(long presentationId);
+
+    /// <summary>
+    /// Confirms that the currently requested cue batch finished playing.
+    /// </summary>
+    /// <param name="cueBatchId">
+    /// The exact batch ID supplied by the corresponding
+    /// <see cref="BattleAdvance"/>.
+    /// </param>
+    void AcknowledgeCuePlayback(long cueBatchId);
     void Flee();
 }
 
+/// <summary>
+/// LogicBlocks implementation of <see cref="IBattleLogic"/>.
+/// </summary>
 [Meta]
 public partial class BattleLogic : AutoBlock, IBattleLogic
 {
@@ -25,18 +46,18 @@ public partial class BattleLogic : AutoBlock, IBattleLogic
     public void StartBattle(BattleSetup setup) =>
         Input(new BattleLogicState.Input.StartBattle(setup));
 
-    public void SubmitIntent(BattleIntent intent) =>
-        Input(new BattleLogicState.Input.SubmitIntent(intent));
+    public void SubmitCommand(BattleCommand command) =>
+        Input(new BattleLogicState.Input.SubmitCommand(command));
 
-    public void UndoIntent() =>
-        Input(new BattleLogicState.Input.UndoIntent());
+    public void UndoCommand() =>
+        Input(new BattleLogicState.Input.UndoCommand());
 
     public void AdvanceResolution() =>
         Input(new BattleLogicState.Input.AdvanceResolution());
 
-    public void AcknowledgePresentation(long presentationId) =>
-        Input(new BattleLogicState.Input.PresentationFinished(
-            presentationId
+    public void AcknowledgeCuePlayback(long cueBatchId) =>
+        Input(new BattleLogicState.Input.CuePlaybackFinished(
+            cueBatchId
         ));
 
     public void Flee() =>

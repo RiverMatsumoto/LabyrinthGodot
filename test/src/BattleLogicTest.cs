@@ -10,7 +10,7 @@ public class BattleLogicTest : TestClass
     public BattleLogicTest(Node testScene) : base(testScene) { }
 
     [Test]
-    public void CoordinatesSelectionPresentationAndAcknowledgement()
+    public void CoordinatesSelectionCuePlaybackAndAcknowledgement()
     {
         var actionId = new ActionId("attack");
         var catalog = new BattleCatalog(
@@ -37,17 +37,17 @@ public class BattleLogicTest : TestClass
         using var repo = new BattleRepo(catalog);
         using var logic = new BattleLogic();
         logic.Set<IBattleRepo>(repo);
-        logic.Set<IEnemyIntentProvider>(new NoEnemyIntentProvider());
+        logic.Set<IEnemyCommandPlanner>(new NoEnemyCommandPlanner());
 
         var requested = new List<BattlerId>();
-        BattleStep? presentation = null;
+        BattleAdvance? cuePlayback = null;
         using var binding = logic.Bind()
             .OnOutput((
                 in BattleLogicState.Output.CommandRequested output
-            ) => requested.Add(output.BattlerId))
+            ) => requested.Add(output.ActorId))
             .OnOutput((
-                in BattleLogicState.Output.PresentationRequested output
-            ) => presentation = output.Step);
+                in BattleLogicState.Output.CuePlaybackRequested output
+            ) => cuePlayback = output.Advance);
 
         logic.Start<BattleLogicState.Disabled>();
         logic.StartBattle(new BattleSetup(
@@ -62,7 +62,7 @@ public class BattleLogicTest : TestClass
         logic.State.ShouldBeOfType<BattleLogicState.SelectingCommands>();
         requested.ShouldContain(new BattlerId("hero"));
 
-        logic.SubmitIntent(new BattleIntent(
+        logic.SubmitCommand(new BattleCommand(
             new BattlerId("hero"),
             actionId,
             new BattlerId("enemy")
@@ -70,10 +70,10 @@ public class BattleLogicTest : TestClass
         logic.State.ShouldBeOfType<BattleLogicState.ResolvingTurn>();
 
         logic.AdvanceResolution();
-        logic.State.ShouldBeOfType<BattleLogicState.AwaitingPresentation>();
-        presentation.ShouldNotBeNull();
+        logic.State.ShouldBeOfType<BattleLogicState.AwaitingCuePlayback>();
+        cuePlayback.ShouldNotBeNull();
 
-        logic.AcknowledgePresentation(presentation.PresentationId);
+        logic.AcknowledgeCuePlayback(cuePlayback.CueBatchId);
         logic.State.ShouldBeOfType<BattleLogicState.ResolvingTurn>();
     }
 
@@ -92,11 +92,11 @@ public class BattleLogicTest : TestClass
         [actionId]
     );
 
-    private sealed class NoEnemyIntentProvider : IEnemyIntentProvider
+    private sealed class NoEnemyCommandPlanner : IEnemyCommandPlanner
     {
-        public BattleIntent? Plan(
+        public BattleCommand? Plan(
             BattleSnapshot snapshot,
-            BattlerId enemyId,
+            BattlerId enemyActorId,
             BattleCatalog catalog,
             IRandomSource random
         ) => null;

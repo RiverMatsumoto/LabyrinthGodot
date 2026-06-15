@@ -58,38 +58,42 @@ public enum BattleResource
     Tp,
 }
 
-public enum StatusBehavior
+/// <summary>Battle event metadata that can activate a reaction.</summary>
+public enum ReactionTrigger
 {
-    None,
-    Poison,
-    Stun,
-    Regen,
-}
-
-public enum ReactionWindow
-{
-    TurnStart,
-    TurnEnd,
-    ActionStart,
-    ActionEnd,
+    TurnStarted,
+    TurnEnded,
+    ActionStarted,
+    ActionFinished,
     BeforeEffect,
     AfterEffect,
     Damage,
     Healing,
     StatusApplied,
+    StatusTriggered,
+    StatusRemoved,
     Defeat,
 }
 
-public enum ReactionInsertionPolicy
+/// <summary>Controls when a matched reaction enters the resolver queue.</summary>
+public enum ReactionSchedule
 {
-    BeforeNextEffect,
+    Immediate,
     AfterCurrentAction,
     EndOfTurn,
 }
 
+/// <summary>Selects the battler affected by reaction effects.</summary>
 public enum ReactionTargetPolicy
 {
     Owner,
+    EventSource,
+    EventTarget,
+}
+
+/// <summary>Tests whether the reaction owner participated in an event.</summary>
+public enum ReactionOwnerRelation
+{
     EventSource,
     EventTarget,
 }
@@ -104,19 +108,27 @@ public sealed record DamageSpec(
 
 public abstract record BattleEffectDefinition;
 
+/// <summary>
+/// Multiplies an effect amount by the source status's current stack count.
+/// </summary>
+public sealed record StatusStackScaleDefinition(StatusId StatusId);
+
 public sealed record DamageEffectDefinition(
     DamageSpec Spec,
-    string AnimationId = ""
+    string AnimationId = "",
+    StatusStackScaleDefinition? Scale = null
 ) : BattleEffectDefinition;
 
 public sealed record HealEffectDefinition(
     int Amount,
-    string AnimationId = ""
+    string AnimationId = "",
+    StatusStackScaleDefinition? Scale = null
 ) : BattleEffectDefinition;
 
 public sealed record ModifyResourceEffectDefinition(
     BattleResource Resource,
-    int Amount
+    int Amount,
+    StatusStackScaleDefinition? Scale = null
 ) : BattleEffectDefinition;
 
 public sealed record ApplyStatusEffectDefinition(
@@ -137,16 +149,35 @@ public sealed record PlayAnimationEffectDefinition(
 public sealed record WaitEffectDefinition(double Seconds)
     : BattleEffectDefinition;
 
-public sealed record RegisterReactionEffectDefinition(
-    ReactionDefinition Reaction
-) : BattleEffectDefinition;
+public sealed record RegisterReactionEffectDefinition(ReactionId ReactionId)
+    : BattleEffectDefinition;
 
+/// <summary>Base contract for AND-combined reaction predicates.</summary>
+public abstract record ReactionConditionDefinition;
+
+public sealed record OwnerHasStatusConditionDefinition(
+    StatusId StatusId,
+    int MinimumStacks = 1
+) : ReactionConditionDefinition;
+
+public sealed record TriggerActionConditionDefinition(ActionId ActionId)
+    : ReactionConditionDefinition;
+
+public sealed record TriggerStatusConditionDefinition(StatusId StatusId)
+    : ReactionConditionDefinition;
+
+public sealed record OwnerRelationConditionDefinition(
+    ReactionOwnerRelation Relation
+) : ReactionConditionDefinition;
+
+/// <summary>Compiled catalog reaction shared by authored references.</summary>
 public sealed record ReactionDefinition(
-    string Id,
-    ReactionWindow Window,
-    ReactionInsertionPolicy InsertionPolicy,
+    ReactionId Id,
+    ReactionTrigger Trigger,
+    ReactionSchedule Schedule,
     ReactionTargetPolicy TargetPolicy,
     int Priority,
+    IReadOnlyList<ReactionConditionDefinition> Conditions,
     IReadOnlyList<BattleEffectDefinition> Effects,
     int Uses = -1
 );
@@ -162,13 +193,56 @@ public sealed record BattleActionDefinition(
     RetargetPolicy RetargetPolicy = RetargetPolicy.Fail
 );
 
+/// <summary>
+/// Data-driven status behavior and reactions; runtime stacks are battle state.
+/// </summary>
 public sealed record StatusDefinition(
     StatusId Id,
     string Name,
-    StatusBehavior Behavior,
+    bool PreventsAction,
     int DefaultDuration,
     int MaxStacks = 1,
-    int PowerPerStack = 0
+    IReadOnlyList<ReactionId>? ReactionIdList = null
+)
+{
+    public IReadOnlyList<ReactionId> ReactionIds => ReactionIdList ?? [];
+}
+
+/// <summary>
+/// Reusable enemy data that is independent from encounter placement.
+/// </summary>
+public sealed record BattleEnemyDefinition(
+    EnemyId Id,
+    string Name,
+    BattleStats Stats,
+    int Hp,
+    int Tp,
+    IReadOnlyList<ActionId> ActionIds,
+    IReadOnlyList<ReactionId>? ReactionIdList = null,
+    IReadOnlyDictionary<StatusId, double>? StatusResistances = null,
+    IReadOnlyDictionary<StatusId, double>? StatusWeaknesses = null,
+    IReadOnlyDictionary<DamageType, double>? DamageTypeResistances = null,
+    IReadOnlyDictionary<DamageType, double>? DamageTypeWeaknesses = null
+)
+{
+    public IReadOnlyList<ReactionId> ReactionIds => ReactionIdList ?? [];
+    public IReadOnlyDictionary<StatusId, double> StatusResistanceValues =>
+        StatusResistances ?? new Dictionary<StatusId, double>();
+    public IReadOnlyDictionary<StatusId, double> StatusWeaknessValues =>
+        StatusWeaknesses ?? new Dictionary<StatusId, double>();
+    public IReadOnlyDictionary<DamageType, double> DamageResistanceValues =>
+        DamageTypeResistances ?? new Dictionary<DamageType, double>();
+    public IReadOnlyDictionary<DamageType, double> DamageWeaknessValues =>
+        DamageTypeWeaknesses ?? new Dictionary<DamageType, double>();
+}
+
+/// <summary>
+/// One encounter-specific enemy instance, identity, and formation position.
+/// </summary>
+public sealed record BattleEnemyPlacement(
+    BattlerId BattlerId,
+    PartyPosition Position,
+    BattleEnemyDefinition Enemy
 );
 
 public sealed record BattleReward(
@@ -201,25 +275,63 @@ public sealed record BattleBattlerSeed(
     int Hp,
     int Tp,
     IReadOnlyList<ActionId> ActionIds,
-    IReadOnlyDictionary<StatusId, double>? StatusResistances = null
+    IReadOnlyList<ReactionId>? ReactionIdList = null,
+    IReadOnlyDictionary<StatusId, double>? StatusResistances = null,
+    IReadOnlyDictionary<StatusId, double>? StatusWeaknesses = null,
+    IReadOnlyDictionary<DamageType, double>? DamageTypeResistances = null,
+    IReadOnlyDictionary<DamageType, double>? DamageTypeWeaknesses = null
 )
 {
-    public IReadOnlyDictionary<StatusId, double> Resistances =>
-        StatusResistances
-        ?? new Dictionary<StatusId, double>();
+    public IReadOnlyList<ReactionId> ReactionIds => ReactionIdList ?? [];
+    public IReadOnlyDictionary<StatusId, double> StatusResistanceValues =>
+        StatusResistances ?? new Dictionary<StatusId, double>();
+    public IReadOnlyDictionary<StatusId, double> StatusWeaknessValues =>
+        StatusWeaknesses ?? new Dictionary<StatusId, double>();
+    public IReadOnlyDictionary<DamageType, double> DamageResistanceValues =>
+        DamageTypeResistances ?? new Dictionary<DamageType, double>();
+    public IReadOnlyDictionary<DamageType, double> DamageWeaknessValues =>
+        DamageTypeWeaknesses ?? new Dictionary<DamageType, double>();
 
     public static BattleBattlerSeed FromParty(PartyMemberEntry entry) => new(
-        entry.Member.Id,
-        entry.Member.Name,
-        BattleTeam.Player,
-        entry.Position,
-        entry.Member.EffectiveStats,
-        entry.Member.Hp,
-        entry.Member.Tp,
-        entry.Member.LearnedActions.ToArray(),
-        new Dictionary<StatusId, double>(
+        Id: entry.Member.Id,
+        Name: entry.Member.Name,
+        Team: BattleTeam.Player,
+        Position: entry.Position,
+        Stats: entry.Member.EffectiveStats,
+        Hp: entry.Member.Hp,
+        Tp: entry.Member.Tp,
+        ActionIds: entry.Member.LearnedActions.ToArray(),
+        ReactionIdList: entry.Member.PassiveReactionIds.ToArray(),
+        StatusResistances: new Dictionary<StatusId, double>(
             entry.Member.StatusResistances
+        ),
+        StatusWeaknesses: new Dictionary<StatusId, double>(
+            entry.Member.StatusWeakness
+        ),
+        DamageTypeResistances: new Dictionary<DamageType, double>(
+            entry.Member.DamageTypeResistances
+        ),
+        DamageTypeWeaknesses: new Dictionary<DamageType, double>(
+            entry.Member.DamageTypeWeaknesses
         )
+    );
+
+    public static BattleBattlerSeed FromEnemy(
+        BattleEnemyPlacement placement
+    ) => new(
+        Id: placement.BattlerId,
+        Name: placement.Enemy.Name,
+        Team: BattleTeam.Enemy,
+        Position: placement.Position,
+        Stats: placement.Enemy.Stats,
+        Hp: placement.Enemy.Hp,
+        Tp: placement.Enemy.Tp,
+        ActionIds: placement.Enemy.ActionIds,
+        ReactionIdList: placement.Enemy.ReactionIds,
+        StatusResistances: placement.Enemy.StatusResistanceValues,
+        StatusWeaknesses: placement.Enemy.StatusWeaknessValues,
+        DamageTypeResistances: placement.Enemy.DamageResistanceValues,
+        DamageTypeWeaknesses: placement.Enemy.DamageWeaknessValues
     );
 }
 
@@ -236,10 +348,12 @@ public sealed class BattleCatalog
 {
     private readonly Dictionary<ActionId, BattleActionDefinition> _actions;
     private readonly Dictionary<StatusId, StatusDefinition> _statuses;
+    private readonly Dictionary<ReactionId, ReactionDefinition> _reactions;
 
     public BattleCatalog(
         IEnumerable<BattleActionDefinition> actions,
-        IEnumerable<StatusDefinition> statuses
+        IEnumerable<StatusDefinition> statuses,
+        IEnumerable<ReactionDefinition>? reactions = null
     )
     {
         _actions = ToUniqueDictionary(
@@ -252,6 +366,11 @@ public sealed class BattleCatalog
             status => status.Id,
             "status"
         );
+        _reactions = ToUniqueDictionary(
+            reactions ?? [],
+            reaction => reaction.Id,
+            "reaction"
+        );
         ValidateReferences();
     }
 
@@ -259,6 +378,8 @@ public sealed class BattleCatalog
         _actions.Values;
     public IReadOnlyCollection<StatusDefinition> Statuses =>
         _statuses.Values;
+    public IReadOnlyCollection<ReactionDefinition> Reactions =>
+        _reactions.Values;
 
     public BattleActionDefinition GetAction(ActionId id) =>
         _actions.TryGetValue(id, out var action)
@@ -280,11 +401,36 @@ public sealed class BattleCatalog
         out StatusDefinition status
     ) => _statuses.TryGetValue(id, out status!);
 
+    public ReactionDefinition GetReaction(ReactionId id) =>
+        _reactions.TryGetValue(id, out var reaction)
+            ? reaction
+            : throw new KeyNotFoundException($"Unknown reaction '{id}'.");
+
+    public bool TryGetReaction(
+        ReactionId id,
+        out ReactionDefinition reaction
+    ) => _reactions.TryGetValue(id, out reaction!);
+
     private void ValidateReferences()
     {
         foreach (var action in _actions.Values)
         {
             ValidateEffects(action.Effects, $"action '{action.Id}'");
+        }
+        foreach (var status in _statuses.Values)
+        {
+            foreach (var reactionId in status.ReactionIds)
+            {
+                RequireReaction(reactionId, $"status '{status.Id}'");
+            }
+        }
+        foreach (var reaction in _reactions.Values)
+        {
+            ValidateConditions(
+                reaction.Conditions,
+                $"reaction '{reaction.Id}'"
+            );
+            ValidateEffects(reaction.Effects, $"reaction '{reaction.Id}'");
         }
     }
 
@@ -310,12 +456,63 @@ public sealed class BattleCatalog
                             + $"'{remove.StatusId}'."
                     );
                 case RegisterReactionEffectDefinition register:
-                    ValidateEffects(
-                        register.Reaction.Effects,
-                        $"reaction '{register.Reaction.Id}'"
-                    );
+                    RequireReaction(register.ReactionId, owner);
+                    break;
+                case DamageEffectDefinition { Scale: { } scale }:
+                    RequireStatus(scale.StatusId, owner);
+                    break;
+                case HealEffectDefinition { Scale: { } scale }:
+                    RequireStatus(scale.StatusId, owner);
+                    break;
+                case ModifyResourceEffectDefinition { Scale: { } scale }:
+                    RequireStatus(scale.StatusId, owner);
                     break;
             }
+        }
+    }
+
+    private void ValidateConditions(
+        IEnumerable<ReactionConditionDefinition> conditions,
+        string owner
+    )
+    {
+        foreach (var condition in conditions)
+        {
+            switch (condition)
+            {
+                case OwnerHasStatusConditionDefinition status:
+                    RequireStatus(status.StatusId, owner);
+                    break;
+                case TriggerStatusConditionDefinition status:
+                    RequireStatus(status.StatusId, owner);
+                    break;
+                case TriggerActionConditionDefinition action
+                    when !_actions.ContainsKey(action.ActionId):
+                    throw new InvalidOperationException(
+                        $"{owner} references unknown action "
+                            + $"'{action.ActionId}'."
+                    );
+            }
+        }
+    }
+
+    private void RequireStatus(StatusId id, string owner)
+    {
+        if (!_statuses.ContainsKey(id))
+        {
+            throw new InvalidOperationException(
+                $"{owner} references unknown status '{id}'."
+            );
+        }
+    }
+
+    private void RequireReaction(ReactionId id, string owner)
+    {
+        if (!_reactions.ContainsKey(id))
+        {
+            throw new InvalidOperationException(
+                $"{owner} references unknown reaction '{id}'."
+            );
         }
     }
 
@@ -349,6 +546,12 @@ public static class BattleContent
     public static readonly StatusId PoisonId = new("poison");
     public static readonly StatusId StunId = new("stun");
     public static readonly StatusId RegenId = new("regen");
+    public static readonly ReactionId PoisonTickReactionId =
+        new("poison_tick");
+    public static readonly ReactionId RegenTickReactionId =
+        new("regen_tick");
+    public static readonly ReactionId ToxicRecoveryReactionId =
+        new("toxic_recovery");
 
     public static BattleCatalog CreateDefaultCatalog() => new(
         [
@@ -425,24 +628,78 @@ public static class BattleContent
             new StatusDefinition(
                 PoisonId,
                 "Poison",
-                StatusBehavior.Poison,
+                PreventsAction: false,
                 DefaultDuration: 3,
                 MaxStacks: 3,
-                PowerPerStack: 5
+                ReactionIdList: [PoisonTickReactionId]
             ),
             new StatusDefinition(
                 StunId,
                 "Stun",
-                StatusBehavior.Stun,
+                PreventsAction: true,
                 DefaultDuration: 1
             ),
             new StatusDefinition(
                 RegenId,
                 "Regen",
-                StatusBehavior.Regen,
+                PreventsAction: false,
                 DefaultDuration: 3,
                 MaxStacks: 3,
-                PowerPerStack: 5
+                ReactionIdList: [RegenTickReactionId]
+            ),
+        ],
+        [
+            new ReactionDefinition(
+                PoisonTickReactionId,
+                ReactionTrigger.TurnEnded,
+                ReactionSchedule.EndOfTurn,
+                ReactionTargetPolicy.Owner,
+                Priority: 10,
+                Conditions: [],
+                Effects:
+                [
+                    new DamageEffectDefinition(
+                        new DamageSpec(
+                            DamageType.True,
+                            DamageMode.Fixed,
+                            5
+                        ),
+                        Scale: new StatusStackScaleDefinition(PoisonId)
+                    ),
+                ]
+            ),
+            new ReactionDefinition(
+                RegenTickReactionId,
+                ReactionTrigger.TurnEnded,
+                ReactionSchedule.EndOfTurn,
+                ReactionTargetPolicy.Owner,
+                Priority: 0,
+                Conditions: [],
+                Effects:
+                [
+                    new HealEffectDefinition(
+                        5,
+                        Scale: new StatusStackScaleDefinition(RegenId)
+                    ),
+                ]
+            ),
+            new ReactionDefinition(
+                ToxicRecoveryReactionId,
+                ReactionTrigger.TurnEnded,
+                ReactionSchedule.EndOfTurn,
+                ReactionTargetPolicy.Owner,
+                Priority: 0,
+                Conditions:
+                [
+                    new OwnerHasStatusConditionDefinition(PoisonId),
+                ],
+                Effects:
+                [
+                    new HealEffectDefinition(
+                        5,
+                        Scale: new StatusStackScaleDefinition(PoisonId)
+                    ),
+                ]
             ),
         ]
     );
