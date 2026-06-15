@@ -9,11 +9,12 @@
 [ext_resource type="Resource" uid="uid://bw0v5ywg6wuqc" path="res://src/battle/resources/floor_1_encounters/Floor1Squirrel.tres" id="5_r45ja"]
 [ext_resource type="Script" uid="uid://b3nq66we03b8c" path="res://src/battle/resources/BattleStatusResource.cs" id="6_m5w0c"]
 [ext_resource type="Resource" path="res://src/battle/resources/statuses/Poison.tres" id="7_poison"]
+[ext_resource type="Script" uid="uid://cidn5h6e6ryfc" path="res://src/battle/resources/BattleReactionResource.cs" id="7_qdjtg"]
 [ext_resource type="Resource" path="res://src/battle/resources/statuses/Regen.tres" id="8_regen"]
 [ext_resource type="Resource" path="res://src/battle/resources/statuses/Stun.tres" id="9_stun"]
-[ext_resource type="Resource" path="res://src/battle/resources/reactions/PoisonTick.tres" id="10_poison_tick"]
-[ext_resource type="Resource" path="res://src/battle/resources/reactions/RegenTick.tres" id="11_regen_tick"]
-[ext_resource type="Resource" path="res://src/battle/resources/reactions/ToxicRecovery.tres" id="12_toxic_recovery"]
+[ext_resource type="Resource" uid="uid://d10k7wvu6xeb7" path="res://src/battle/resources/reactions/PoisonTick.tres" id="10_poison_tick"]
+[ext_resource type="Resource" uid="uid://4ou7tjxrgrf8" path="res://src/battle/resources/reactions/RegenTick.tres" id="11_regen_tick"]
+[ext_resource type="Resource" uid="uid://b1qm8lf0oqysj" path="res://src/battle/resources/reactions/ToxicRecovery.tres" id="12_toxic_recovery"]
 
 [sub_resource type="Resource" id="Resource_r45ja"]
 script = ExtResource("3_vsbrb")
@@ -36,6 +37,6 @@ metadata/_custom_type_script = "uid://w8j6cwe8vpbk"
 script = ExtResource("1_n83rk")
 Actions = Array[ExtResource("1_te633")]([SubResource("Resource_qjmqu")])
 Statuses = Array[ExtResource("6_m5w0c")]([ExtResource("7_poison"), ExtResource("8_regen"), ExtResource("9_stun")])
-Reactions = Array[Resource]([ExtResource("10_poison_tick"), ExtResource("11_regen_tick"), ExtResource("12_toxic_recovery")])
+Reactions = Array[ExtResource("7_qdjtg")]([ExtResource("10_poison_tick"), ExtResource("11_regen_tick"), ExtResource("12_toxic_recovery")])
 Encounters = Array[ExtResource("4_xy72y")]([ExtResource("5_r45ja")])
 metadata/_custom_type_script = "uid://2yyrwj4jjjar"

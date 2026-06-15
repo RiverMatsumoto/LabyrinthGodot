@@ -1137,7 +1137,6 @@ public class BattleRepoTest : TestClass
     ) => new(
         new EncounterId("test"),
         7,
-        GameMode.Labyrinth,
         players,
         enemies,
         new BattleReward()

@@ -23,12 +23,12 @@ public partial class EnemyMapEntity : Node3D, IEnemyMapEntity
     private MapEntityId _entityId;
     private MapEntityPose _startPose;
 
-    [Node] public IMapMovement MapMovement { get; private set; } = default!;
+    [Node] public IMapMovement MapMovement { get; set; } = default!;
     [Node]
     public IEnemyMapMovementController MovementController
     {
         get;
-        private set;
+        set;
     } = default!;
 
     public MapEntityId EntityId => _entityId;
@@ -46,16 +46,16 @@ public partial class EnemyMapEntity : Node3D, IEnemyMapEntity
         _isInitialized = true;
         Name = id.Value;
 
-        GetNode<MapMovement>("MapMovement")
-            .Initialize(_entityId, _startPose, isPlayer: false);
     }
 
-    public void OnResolved()
+    public void Setup()
     {
         if (!_isInitialized)
         {
-            GD.PrintErr("EnemyMapEntity: resolved before initialization");
+            GD.PrintErr("EnemyMapEntity: setup before initialization");
             return;
         }
+
+        MapMovement.Initialize(_entityId, _startPose, isPlayer: false);
     }
 }

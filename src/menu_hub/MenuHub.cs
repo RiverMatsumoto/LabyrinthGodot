@@ -6,7 +6,10 @@ using Chickensoft.Introspection;
 using Chickensoft.LogicBlocks;
 using Godot;
 
-public interface IMenuHub : IControl, IProvide<IMenuHubLogic>;
+public interface IMenuHub : IControl, IProvide<IMenuHubLogic>
+{
+    IMenuHubLogic MenuHubLogic { get; }
+}
 
 [Meta(typeof(IAutoNode))]
 public partial class MenuHub : Control, IMenuHub

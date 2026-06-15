@@ -206,9 +206,9 @@ calling Godot presentation code from the resolver.
 
 ## Tests
 
-- [`BattleLogicTest`](../test/src/BattleLogicTest.cs) verifies the
+- [`BattleLogicTest`](../test/src/battle/BattleLogicTest.cs) verifies the
   command-resolution-cue acknowledgement state flow.
-- [`BattleRepoTest`](../test/src/BattleRepoTest.cs) verifies command
+- [`BattleRepoTest`](../test/src/battle/domain/BattleRepoTest.cs) verifies command
   validation, enemy planning, operation ordering, effects, rows, statuses,
   reactions, and cue sequencing.
 

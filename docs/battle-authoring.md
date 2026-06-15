@@ -248,8 +248,8 @@ battle seed is created.
 ## Verification
 
 Resolver and authoring tests are in
-[`BattleRepoTest`](../test/src/BattleRepoTest.cs). Party persistence tests are
-in [`PartyRepoTest`](../test/src/PartyRepoTest.cs).
+[`BattleRepoTest`](../test/src/battle/domain/BattleRepoTest.cs). Party persistence tests are
+in [`PartyRepoTest`](../test/src/party/domain/PartyRepoTest.cs).
 
 The reaction operation flow is shown in
 [`battle-reaction-flow.puml`](diagrams/battle-reaction-flow.puml).

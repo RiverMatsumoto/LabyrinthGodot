@@ -15,5 +15,5 @@ public readonly record struct BattleRequest(
 )
 {
     public static BattleRequest Debug =>
-        new(new EncounterId("debug"), 1, GameMode.Labyrinth);
+        new(BattleContent.DefaultEncounterId, 1, GameMode.Labyrinth);
 }

@@ -27,7 +27,7 @@ public partial record GameLogicState
         {
             Get<IGameRepo>().SetBattleRequest(new BattleRequest(
                 input.EncounterId.IsEmpty
-                    ? new EncounterId("debug")
+                    ? BattleContent.DefaultEncounterId
                     : input.EncounterId,
                 input.Seed,
                 input.ReturnMode

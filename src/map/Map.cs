@@ -19,22 +19,21 @@ public partial class Map : Node3D, IMap
     public override void _Notification(int what) => this.Notify(what);
 
     [Dependency] public IMapRepo MapRepo => this.DependOn<IMapRepo>();
+    [Dependency]
+    public IInstantiator Instantiator => this.DependOn<IInstantiator>();
 
-    public IMapLogic MapLogic { get; private set; } = default!;
+    public IMapLogic MapLogic { get; set; } = default!;
     IMapLogic IProvide<IMapLogic>.Value() => MapLogic;
     private MapLogic.Binding? _mapBinding;
     private readonly Dictionary<MapEntityId, Node> _entityNodes = [];
-    [Node] public IGridMap GridMap { get; private set; } = default!;
+    [Node] public IGridMap GridMap { get; set; } = default!;
     public IGridMap Value() => GridMap;
-    [Node] public INode3D Entities { get; private set; } = default!;
+    [Node] public INode3D Entities { get; set; } = default!;
 
-    public static PackedScene MapMovementScene =>
-        GD.Load<PackedScene>(
-            "res://src/map_movement/MapMovement.tscn"
-        );
-
-    public static PackedScene EnemyMapEntityScene =>
-        GD.Load<PackedScene>("res://src/enemy_map_entity/EnemyMapEntity.tscn");
+    public const string MapMovementScenePath =
+        "res://src/map_movement/MapMovement.tscn";
+    public const string EnemyMapEntityScenePath =
+        "res://src/enemy_map_entity/EnemyMapEntity.tscn";
 
     public void Setup()
     {
@@ -53,8 +52,7 @@ public partial class Map : Node3D, IMap
             .OnOutput((in MapLogicState.Output.DespawnEntity output) =>
                 DespawnEntity(output.Id));
 
-        // Intentional boundary exception: maps are authored with Godot GridMap.
-        MapRepo.LoadTerrainFromGridMap(GridMap);
+        MapRepo.LoadTerrain(GridMapTerrainCompiler.Compile(GridMap));
 
         MapLogic.Start<MapLogicState.Idle>();
 
@@ -79,7 +77,9 @@ public partial class Map : Node3D, IMap
 
     private void SpawnPlayer(MapEntityId id, MapEntityPose pose)
     {
-        var player = MapMovementScene.Instantiate<MapMovement>();
+        var player = Instantiator.LoadAndInstantiate<MapMovement>(
+            MapMovementScenePath
+        );
         player.Initialize(id, pose, isPlayer: true);
         _entityNodes[id] = player;
         Entities.AddChild(player);
@@ -87,7 +87,9 @@ public partial class Map : Node3D, IMap
 
     private void SpawnEnemy(MapEntityId id, MapEntityPose pose)
     {
-        var enemy = EnemyMapEntityScene.Instantiate<EnemyMapEntity>();
+        var enemy = Instantiator.LoadAndInstantiate<EnemyMapEntity>(
+            EnemyMapEntityScenePath
+        );
         enemy.Initialize(id, pose);
         _entityNodes[id] = enemy;
         Entities.AddChild(enemy);

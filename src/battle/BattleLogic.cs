@@ -11,7 +11,7 @@ using Chickensoft.LogicBlocks.Auto;
 /// </summary>
 public interface IBattleLogic : ILogicBlock
 {
-    void StartBattle(BattleSetup setup);
+    void StartRequestedBattle();
     void SubmitCommand(BattleCommand command);
     void UndoCommand();
 
@@ -43,8 +43,8 @@ public partial class BattleLogic : AutoBlock, IBattleLogic
         Preallocate<BattleLogicState>();
     }
 
-    public void StartBattle(BattleSetup setup) =>
-        Input(new BattleLogicState.Input.StartBattle(setup));
+    public void StartRequestedBattle() =>
+        Input(new BattleLogicState.Input.StartRequestedBattle());
 
     public void SubmitCommand(BattleCommand command) =>
         Input(new BattleLogicState.Input.SubmitCommand(command));

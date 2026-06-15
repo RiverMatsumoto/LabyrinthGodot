@@ -11,5 +11,6 @@ public partial record GameLogicState
         public readonly record struct MovementSettingsChanged(
             MapMovementSettings Settings
         );
+        public readonly record struct MaxFpsRequested(int MaxFps);
     }
 }

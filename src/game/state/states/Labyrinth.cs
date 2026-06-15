@@ -2,7 +2,6 @@ namespace Labyrinth;
 
 using System;
 using Chickensoft.LogicBlocks;
-using Godot;
 
 public partial record GameLogicState
 {
@@ -17,7 +16,7 @@ public partial record GameLogicState
             this.OnEnter(() =>
             {
                 Output(new Output.EnteredLabyrinth());
-                Engine.MaxFps = 0;
+                Output(new Output.MaxFpsRequested(0));
             });
         }
 
@@ -29,7 +28,7 @@ public partial record GameLogicState
         {
             Get<IGameRepo>().SetBattleRequest(new BattleRequest(
                 input.EncounterId.IsEmpty
-                    ? new EncounterId("debug")
+                    ? BattleContent.DefaultEncounterId
                     : input.EncounterId,
                 input.Seed,
                 input.ReturnMode

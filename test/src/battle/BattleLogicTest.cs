@@ -38,26 +38,26 @@ public class BattleLogicTest : TestClass
         using var logic = new BattleLogic();
         logic.Set<IBattleRepo>(repo);
         logic.Set<IEnemyCommandPlanner>(new NoEnemyCommandPlanner());
+        logic.Set<IBattleSession>(new FakeBattleSession(new BattleSetup(
+            new EncounterId("test"),
+            1,
+            [Seed("hero", BattleTeam.Player, actionId)],
+            [Seed("enemy", BattleTeam.Enemy, actionId)],
+            new BattleReward()
+        )));
 
         var requested = new List<BattlerId>();
-        BattleAdvance? cuePlayback = null;
+        long? cueBatchId = null;
         using var binding = logic.Bind()
             .OnOutput((
                 in BattleLogicState.Output.CommandRequested output
             ) => requested.Add(output.ActorId))
             .OnOutput((
                 in BattleLogicState.Output.CuePlaybackRequested output
-            ) => cuePlayback = output.Advance);
+            ) => cueBatchId = output.CueBatchId);
 
         logic.Start<BattleLogicState.Disabled>();
-        logic.StartBattle(new BattleSetup(
-            new EncounterId("test"),
-            1,
-            GameMode.Labyrinth,
-            [Seed("hero", BattleTeam.Player, actionId)],
-            [Seed("enemy", BattleTeam.Enemy, actionId)],
-            new BattleReward()
-        ));
+        logic.StartRequestedBattle();
 
         logic.State.ShouldBeOfType<BattleLogicState.SelectingCommands>();
         requested.ShouldContain(new BattlerId("hero"));
@@ -71,9 +71,9 @@ public class BattleLogicTest : TestClass
 
         logic.AdvanceResolution();
         logic.State.ShouldBeOfType<BattleLogicState.AwaitingCuePlayback>();
-        cuePlayback.ShouldNotBeNull();
+        cueBatchId.ShouldNotBeNull();
 
-        logic.AcknowledgeCuePlayback(cuePlayback.CueBatchId);
+        logic.AcknowledgeCuePlayback(cueBatchId.Value);
         logic.State.ShouldBeOfType<BattleLogicState.ResolvingTurn>();
     }
 
@@ -100,5 +100,12 @@ public class BattleLogicTest : TestClass
             BattleCatalog catalog,
             IRandomSource random
         ) => null;
+    }
+
+    private sealed class FakeBattleSession(BattleSetup setup)
+        : IBattleSession
+    {
+        public BattleSetup CreateSetup() => setup;
+        public GameMode Complete(BattleResult result) => GameMode.Labyrinth;
     }
 }

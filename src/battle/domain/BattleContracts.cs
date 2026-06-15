@@ -71,7 +71,6 @@ public sealed record DeathCue(BattlerId TargetId) : BattleCue;
 public sealed record BattleResult(
     BattleOutcome Outcome,
     EncounterId EncounterId,
-    GameMode ReturnMode,
     BattleReward Reward,
     IReadOnlyDictionary<BattlerId, (int Hp, int Tp)> PlayerVitals
 );
@@ -205,6 +204,10 @@ public sealed class BasicEnemyCommandPlanner : IEnemyCommandPlanner
         foreach (var actionId in actor.ActionIds)
         {
             if (!catalog.TryGetAction(actionId, out var action))
+            {
+                continue;
+            }
+            if (actor.Tp < action.TpCost)
             {
                 continue;
             }

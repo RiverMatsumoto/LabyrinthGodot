@@ -21,6 +21,7 @@ public interface IGame : INode,
     IProvide<IMapRepo>,
     IProvide<IPartyRepo>,
     IProvide<IGameLogic>,
+    IProvide<IInstantiator>,
     IProvide<ISaveChunk<GameData>>
 {
     bool IsSaveReady { get; }
@@ -80,9 +81,15 @@ public partial class Game : Node, IGame
     #endregion State
 
     public IGameLogic GameLogic { get; set; } = default!;
+    public IInstantiator Instantiator { get; set; } = default!;
     IGameLogic IProvide<IGameLogic>.Value() => GameLogic;
-    [Node] public INode AreaRoot { get; private set; } = default!;
-    [Node] public INode UiRoot { get; private set; } = default!;
+    IInstantiator IProvide<IInstantiator>.Value() => Instantiator;
+    [Node] public INode AreaRoot { get; set; } = default!;
+    [Node] public INode UiRoot { get; set; } = default!;
+    [Node] public Map Map { get; set; } = default!;
+    [Node] public MenuHub MenuHub { get; set; } = default!;
+
+    private GameLogic.Binding? _gameBinding;
 
     public void Setup()
     {
@@ -93,6 +100,7 @@ public partial class Game : Node, IGame
         MapRepo = new MapRepo();
         PartyRepo = new PartyRepo();
         GameLogic = new GameLogic();
+        Instantiator = new Instantiator(GetTree());
         GameLogic.Set(GameRepo);
 
         GodotSerialization.Setup();
@@ -170,15 +178,21 @@ public partial class Game : Node, IGame
             }
         );
         this.Provide();
+        _gameBinding = ((GameLogic)GameLogic).Bind()
+            .OnOutput((
+                in GameLogicState.Output.MaxFpsRequested output
+            ) => Engine.MaxFps = output.MaxFps);
         GameLogic.Start<GameLogicState.MainMenu>();
 
         GameLogic.Input(new GameLogicState.Input.EnterLabyrinth());
 
 #if DEBUG
-        var map = GetNode<Map>("AreaRoot/Map");
-        var menuHub = GetNode<MenuHub>("UiRoot/MenuHub");
         _debugConsole = new DebugConsole();
-        _debugConsole.Initialize(GameLogic, menuHub.MenuHubLogic, map.MapLogic);
+        _debugConsole.Initialize(
+            GameLogic,
+            MenuHub.MenuHubLogic,
+            Map.MapLogic
+        );
         UiRoot.AddChild(_debugConsole);
 #endif
     }
@@ -201,6 +215,7 @@ public partial class Game : Node, IGame
         _debugConsole?.Shutdown();
 #endif
 
+        _gameBinding?.Dispose();
         GameLogic.Dispose();
         GameRepo.Dispose();
         MapRepo.Dispose();

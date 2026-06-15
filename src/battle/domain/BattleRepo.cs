@@ -54,7 +54,10 @@ public sealed class BattleRepo : IBattleRepo
         ThrowIfDisposed();
         Reset();
 
-        if (setup.Players.Count is < 1 or > PartyRepo.MaxMembers)
+        if (
+            setup.Players.Count is < 1
+            or > BattleLimits.MaxPlayerBattlers
+        )
         {
             throw new ArgumentException(
                 "Battle requires one to five player battlers.",
@@ -65,6 +68,20 @@ public sealed class BattleRepo : IBattleRepo
         {
             throw new ArgumentException(
                 "Battle requires at least one enemy.",
+                nameof(setup)
+            );
+        }
+        if (!setup.Players.Any(player => player.Hp > 0))
+        {
+            throw new ArgumentException(
+                "Battle requires at least one living player battler.",
+                nameof(setup)
+            );
+        }
+        if (!setup.Enemies.Any(enemy => enemy.Hp > 0))
+        {
+            throw new ArgumentException(
+                "Battle requires at least one living enemy battler.",
                 nameof(setup)
             );
         }
@@ -225,7 +242,7 @@ public sealed class BattleRepo : IBattleRepo
                 Catalog,
                 _random
             );
-            if (command is not null)
+            if (command is not null && IsValidEnemyCommand(command, enemy))
             {
                 commands.Add(command);
             }
@@ -1207,13 +1224,30 @@ public sealed class BattleRepo : IBattleRepo
         _result = new BattleResult(
             outcome,
             setup.EncounterId,
-            setup.ReturnMode,
             setup.Reward,
             _units.Values
                 .Where(unit => unit.Team == BattleTeam.Player)
                 .ToDictionary(unit => unit.Id, unit => (unit.Hp, unit.Tp))
         );
         Phase = BattleDomainPhase.Completed;
+    }
+
+    private bool IsValidEnemyCommand(
+        BattleCommand command,
+        BattleUnit enemy
+    )
+    {
+        if (
+            command.ActorId != enemy.Id
+            || !Catalog.TryGetAction(command.ActionId, out var action)
+            || !enemy.ActionIds.Contains(command.ActionId)
+            || enemy.Tp < action.TpCost
+        )
+        {
+            return false;
+        }
+
+        return ResolveTargets(enemy, action, command.TargetId).Count > 0;
     }
 
     private BattleOutcome? DetermineOutcome()

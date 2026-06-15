@@ -31,7 +31,8 @@ public partial class MapMovement : Node3D, IMapMovement
     private Tween? _turnTween;
     private MapEntityPose _startPose;
 
-    public IMapMovementLogic MapMovementLogic { get; } = new MapMovementLogic();
+    public IMapMovementLogic MapMovementLogic { get; set; } =
+        new MapMovementLogic();
     IMapMovementLogic IProvide<IMapMovementLogic>.Value() => MapMovementLogic;
     private MapMovementLogic.Binding? _mapMovementBinding;
     private LogicBlock.Binding? _gameBinding;
@@ -45,6 +46,8 @@ public partial class MapMovement : Node3D, IMapMovement
 
     [Dependency]
     public IGridMap GridMap => this.DependOn<IGridMap>();
+    [Dependency]
+    public IInstantiator Instantiator => this.DependOn<IInstantiator>();
 
     #region State
     [Dependency] public IGameLogic GameLogic => this.DependOn<IGameLogic>();
@@ -65,10 +68,10 @@ public partial class MapMovement : Node3D, IMapMovement
     private Camera3D _playerCamera { get; set; } = default!;
     private PlayerMovementController _playerMovementController { get; set; } = default!;
 
-    private PackedScene _playerCameraScene =
-        GD.Load<PackedScene>("res://src/map_movement/PlayerCamera.tscn");
-    private PackedScene _playerMovementControllerScene =
-        GD.Load<PackedScene>("res://src/map_movement/PlayerMovementController.tscn");
+    public const string PlayerCameraScenePath =
+        "res://src/map_movement/PlayerCamera.tscn";
+    public const string PlayerMovementControllerScenePath =
+        "res://src/map_movement/PlayerMovementController.tscn";
 
     [Node]
     public Timer CooldownTimer { get; set; } = default!;
@@ -119,6 +122,7 @@ public partial class MapMovement : Node3D, IMapMovement
         if (MapMovementLogic.Data.IsPlayer)
         {
             GameChunk.AddChunk(MapMovementChunk);
+            SpawnPlayerNodes();
         }
 
         ApplyStartPosition();
@@ -154,10 +158,6 @@ public partial class MapMovement : Node3D, IMapMovement
         _isInitialized = true;
         Name = id.Value;
 
-        if (isPlayer)
-        {
-            SpawnPlayerNodes();
-        }
     }
 
     public static Vector3I GridToMapCell(Vector2I gridPosition) =>
@@ -199,7 +199,11 @@ public partial class MapMovement : Node3D, IMapMovement
     {
         var target = GridToGlobalPosition(move.To);
 
-        _moveTween?.Kill();
+        if (_moveTween is not null)
+        {
+            _moveTween.Finished -= FinishMove;
+            _moveTween.Kill();
+        }
 
         if (duration <= 0)
         {
@@ -241,6 +245,10 @@ public partial class MapMovement : Node3D, IMapMovement
 
     private void FinishMove()
     {
+        if (_moveTween is not null)
+        {
+            _moveTween.Finished -= FinishMove;
+        }
         _moveTween = null;
 
         MapMovementLogic.Input(new MapMovementLogicState.Input.MoveFinished());
@@ -248,8 +256,13 @@ public partial class MapMovement : Node3D, IMapMovement
 
     private void SpawnPlayerNodes()
     {
-        _playerCamera = _playerCameraScene.Instantiate<Camera3D>();
-        _playerMovementController = _playerMovementControllerScene.Instantiate<PlayerMovementController>();
+        _playerCamera = Instantiator.LoadAndInstantiate<Camera3D>(
+            PlayerCameraScenePath
+        );
+        _playerMovementController =
+            Instantiator.LoadAndInstantiate<PlayerMovementController>(
+                PlayerMovementControllerScenePath
+            );
         _playerMovementController.PlayerCamera = _playerCamera;
         AddChild(_playerCamera);
         AddChild(_playerMovementController);
@@ -262,7 +275,11 @@ public partial class MapMovement : Node3D, IMapMovement
             FacingDirectionToYaw(turnTo)
         );
 
-        _turnTween?.Kill();
+        if (_turnTween is not null)
+        {
+            _turnTween.Finished -= FinishTurn;
+            _turnTween.Kill();
+        }
 
         if (duration <= 0)
         {
@@ -278,6 +295,10 @@ public partial class MapMovement : Node3D, IMapMovement
 
     private void FinishTurn()
     {
+        if (_turnTween is not null)
+        {
+            _turnTween.Finished -= FinishTurn;
+        }
         _turnTween = null;
 
         MapMovementLogic.Input(new MapMovementLogicState.Input.TurnFinished());
@@ -285,14 +306,23 @@ public partial class MapMovement : Node3D, IMapMovement
 
     public void OnExitTree()
     {
-        _moveTween?.Kill();
+        if (_moveTween is not null)
+        {
+            _moveTween.Finished -= FinishMove;
+            _moveTween.Kill();
+        }
         _moveTween = null;
-        _turnTween?.Kill();
+        if (_turnTween is not null)
+        {
+            _turnTween.Finished -= FinishTurn;
+            _turnTween.Kill();
+        }
         _turnTween = null;
         CooldownTimer.Stop();
 
         _mapMovementBinding?.Dispose();
         _gameBinding?.Dispose();
+        _isInMenuBinding?.Dispose();
         MapMovementLogic.Dispose();
     }
 

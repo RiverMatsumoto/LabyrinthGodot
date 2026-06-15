@@ -1,5 +1,8 @@
 {
   "[csharp]": {
+    "editor.tabSize": 4,
+    "editor.insertSpaces": true,
+    "editor.detectIndentation": false,
     "editor.codeActionsOnSave": {
       "source.addMissingImports": "explicit",
       "source.fixAll": "explicit",
@@ -192,5 +195,5 @@
     }
   },
   "godotTools.editorPath.godot4": "c:\\Users\\river\\AppData\\Roaming\\godotenv\\godot\\versions\\godot_dotnet_4_6_3_stable\\Godot_v4.6.3-stable_mono_win64\\Godot_v4.6.3-stable_mono_win64.exe",
-  "godot.csharp.executablePath": "C:\\Users\\river\\AppData\\Roaming\\godotenv\\godot\\versions\\godot_dotnet_4_6_3_stable\\Godot_v4.6.3-stable_mono_win64\\Godot_v4.6.3-stable_mono_win64.exe"
+  "godot.csharp.executablePath": "C:\\Users\\river\\AppData\\Roaming\\godotenv\\godot\\versions\\godot_dotnet_4_6_3_stable\\Godot_v4.6.3-stable_mono_win64\\Godot_v4.6.3-stable_mono_win64.exe",
 }

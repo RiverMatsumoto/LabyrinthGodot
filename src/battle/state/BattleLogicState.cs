@@ -10,9 +10,11 @@ public abstract partial record BattleLogicState : LogicBlockState
     protected IBattleRepo BattleRepo => Get<IBattleRepo>();
     protected IEnemyCommandPlanner EnemyCommandPlanner =>
         Get<IEnemyCommandPlanner>();
+    protected IBattleSession BattleSession => Get<IBattleSession>();
 
-    protected Type Start(BattleSetup setup)
+    protected Type Start()
     {
+        var setup = BattleSession.CreateSetup();
         BattleRepo.Start(setup);
         Output(new Output.BattleStarted(setup.EncounterId));
         OutputCommandRequest();
@@ -29,7 +31,9 @@ public abstract partial record BattleLogicState : LogicBlockState
 
     protected Type Complete(BattleResult result)
     {
+        var returnMode = BattleSession.Complete(result);
         Output(new Output.BattleCompleted(result));
+        Output(new Output.ReturnModeRequested(returnMode));
         return To<Completed>();
     }
 }

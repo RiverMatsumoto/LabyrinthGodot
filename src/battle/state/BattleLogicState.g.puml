@@ -14,7 +14,7 @@ Labyrinth_BattleLogicState_SelectingCommands --> Labyrinth_BattleLogicState_Reso
 Labyrinth_BattleLogicState_SelectingCommands --> Labyrinth_BattleLogicState_SelectingCommands : SubmitCommand
 Labyrinth_BattleLogicState_SelectingCommands --> Labyrinth_BattleLogicState_SelectingCommands : UndoCommand
 
-Labyrinth_BattleLogicState : Complete() → BattleCompleted
+Labyrinth_BattleLogicState : Complete() → BattleCompleted, ReturnModeRequested
 Labyrinth_BattleLogicState : OutputCommandRequest() → CommandRequested
 Labyrinth_BattleLogicState : Start() → BattleStarted
 Labyrinth_BattleLogicState_ResolvingTurn : OnAdvanceResolution → CuePlaybackRequested

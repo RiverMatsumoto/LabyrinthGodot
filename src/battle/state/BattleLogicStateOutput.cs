@@ -1,5 +1,7 @@
 namespace Labyrinth;
 
+using System.Collections.Generic;
+
 public partial record BattleLogicState
 {
     public static class Output
@@ -9,8 +11,10 @@ public partial record BattleLogicState
         public readonly record struct CommandRejected(string Error);
         public readonly record struct CommandUndone(BattlerId ActorId);
         public readonly record struct CuePlaybackRequested(
-            BattleAdvance Advance
+            long CueBatchId,
+            IReadOnlyList<BattleCue> Cues
         );
         public readonly record struct BattleCompleted(BattleResult Result);
+        public readonly record struct ReturnModeRequested(GameMode Mode);
     }
 }

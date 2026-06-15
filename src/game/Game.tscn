@@ -21,3 +21,4 @@ unique_name_in_owner = true
 unique_name_in_owner = true
 
 [node name="Battle" parent="UiRoot" unique_id=1524882212 instance=ExtResource("3_battle")]
+unique_name_in_owner = true

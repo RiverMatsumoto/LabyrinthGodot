@@ -8,14 +8,13 @@ public abstract partial class MenuSubmenu<TState> : LogicControl<TState>
 {
     protected abstract IMenuHubLogic MenuHubLogic { get; }
 
-    protected Button BackButton { get; private set; } = default!;
+    protected abstract Button BackButton { get; set; }
 
     protected override ILogicBlock LogicBlock => MenuHubLogic;
     protected override Control DefaultFocusControl => BackButton;
 
     public override void OnResolved()
     {
-        BackButton = GetNode<Button>("CenterContainer/Content/BackButton");
         BackButton.Pressed += GoBack;
         base.OnResolved();
     }

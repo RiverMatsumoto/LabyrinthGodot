@@ -7,8 +7,8 @@ public partial record BattleLogicState
 {
     public record Completed :
         BattleLogicState,
-        IGet<Input.StartBattle>
+        IGet<Input.StartRequestedBattle>
     {
-        public Type On(in Input.StartBattle input) => Start(input.Setup);
+        public Type On(in Input.StartRequestedBattle input) => Start();
     }
 }

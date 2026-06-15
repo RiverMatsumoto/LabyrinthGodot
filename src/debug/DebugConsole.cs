@@ -133,6 +133,10 @@ public partial class DebugConsole : CanvasLayer
             RestoreGameInputState();
         }
 
+        if (IsInstanceValid(_commandInput))
+        {
+            _commandInput.TextSubmitted -= OnCommandSubmitted;
+        }
         _mapBinding?.Dispose();
         _gameBinding?.Dispose();
         _menuHubBinding?.Dispose();

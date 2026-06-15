@@ -1,0 +1,12 @@
+[gd_resource type="Resource" script_class="BattleActionResource" format=3 uid="uid://cutdclklat13l"]
+
+[ext_resource type="Script" uid="uid://gwug75hcnrr3" path="res://src/battle/resources/BattleEffectResource.cs" id="1_xhhlm"]
+[ext_resource type="Script" uid="uid://w8j6cwe8vpbk" path="res://src/battle/resources/BattleActionResource.cs" id="2_6hgsh"]
+
+[resource]
+script = ExtResource("2_6hgsh")
+Id = "basic_attack"
+DisplayName = "Attack"
+TargetRule = 2
+Range = 3
+metadata/_custom_type_script = "uid://w8j6cwe8vpbk"

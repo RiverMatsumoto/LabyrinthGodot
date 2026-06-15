@@ -22,7 +22,7 @@ Labyrinth_GameLogicState_Town --> Labyrinth_GameLogicState_MainMenu : EnterMainM
 
 Labyrinth_GameLogicState : OnSetMovementSettings → MovementSettingsChanged
 Labyrinth_GameLogicState_Battle : OnEnter → EnteredBattle
-Labyrinth_GameLogicState_Labyrinth : OnEnter → EnteredLabyrinth
+Labyrinth_GameLogicState_Labyrinth : OnEnter → EnteredLabyrinth, MaxFpsRequested
 Labyrinth_GameLogicState_MainMenu : OnEnter → EnteredMainMenu
 Labyrinth_GameLogicState_Town : OnEnter → EnteredTown
 @enduml

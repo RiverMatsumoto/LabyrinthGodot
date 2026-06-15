@@ -26,12 +26,13 @@ public enum BattleRange
     None,
     Melee,
     Ranged,
+    FromWeapon
 }
 
 public enum RetargetPolicy
 {
-    Fail,
     NearestValid,
+    Fail,
 }
 
 public enum DamageType
@@ -292,30 +293,6 @@ public sealed record BattleBattlerSeed(
     public IReadOnlyDictionary<DamageType, double> DamageWeaknessValues =>
         DamageTypeWeaknesses ?? new Dictionary<DamageType, double>();
 
-    public static BattleBattlerSeed FromParty(PartyMemberEntry entry) => new(
-        Id: entry.Member.Id,
-        Name: entry.Member.Name,
-        Team: BattleTeam.Player,
-        Position: entry.Position,
-        Stats: entry.Member.EffectiveStats,
-        Hp: entry.Member.Hp,
-        Tp: entry.Member.Tp,
-        ActionIds: entry.Member.LearnedActions.ToArray(),
-        ReactionIdList: entry.Member.PassiveReactionIds.ToArray(),
-        StatusResistances: new Dictionary<StatusId, double>(
-            entry.Member.StatusResistances
-        ),
-        StatusWeaknesses: new Dictionary<StatusId, double>(
-            entry.Member.StatusWeakness
-        ),
-        DamageTypeResistances: new Dictionary<DamageType, double>(
-            entry.Member.DamageTypeResistances
-        ),
-        DamageTypeWeaknesses: new Dictionary<DamageType, double>(
-            entry.Member.DamageTypeWeaknesses
-        )
-    );
-
     public static BattleBattlerSeed FromEnemy(
         BattleEnemyPlacement placement
     ) => new(
@@ -338,7 +315,6 @@ public sealed record BattleBattlerSeed(
 public sealed record BattleSetup(
     EncounterId EncounterId,
     int Seed,
-    GameMode ReturnMode,
     IReadOnlyList<BattleBattlerSeed> Players,
     IReadOnlyList<BattleBattlerSeed> Enemies,
     BattleReward Reward
@@ -539,6 +515,8 @@ public sealed class BattleCatalog
 
 public static class BattleContent
 {
+    public static readonly EncounterId DefaultEncounterId =
+        new("floor_1_squirrel");
     public static readonly ActionId BasicAttackId = new("basic_attack");
     public static readonly ActionId FireId = new("fire");
     public static readonly ActionId PoisonStrikeId = new("poison_strike");

@@ -2,7 +2,6 @@ namespace Labyrinth;
 
 using System;
 using System.Collections.Generic;
-using Chickensoft.GodotNodeInterfaces;
 using Chickensoft.Sync.Primitives;
 using Godot;
 
@@ -10,7 +9,7 @@ public interface IMapRepo : IDisposable
 {
     IAutoChannel AutoChannel { get; }
 
-    void LoadTerrainFromGridMap(IGridMap gridMap);
+    void LoadTerrain(GridCellMap terrain);
     bool IsInside(Vector2I gridPosition);
     bool CanEnter(Vector2I gridPosition);
     bool TryRegisterEntity(string id, Vector2I position);
@@ -90,47 +89,10 @@ public class MapRepo : IMapRepo
         _occupants = new Dictionary<Vector2I, MapEntityId>();
     }
 
-    public void LoadTerrainFromGridMap(IGridMap gridMap)
+    public void LoadTerrain(GridCellMap terrain)
     {
-        ArgumentNullException.ThrowIfNull(gridMap);
-
-        var meshLibrary = gridMap.MeshLibrary
-            ?? throw new InvalidOperationException(
-                "MapRepo: GridMap has no MeshLibrary."
-            );
-
-        var terrainMap = new GridCellMap(
-            TerrainWidth,
-            TerrainHeight,
-            GridCellTerrain.Unmapped
-        );
-
-        foreach (var cell in gridMap.GetUsedCells())
-        {
-            var position = new Vector2I(cell.X, cell.Z);
-
-            if (!terrainMap.IsInside(position))
-            {
-                throw new InvalidOperationException(
-                    $"MapRepo: GridMap cell {cell} is outside "
-                        + $"{TerrainWidth}x{TerrainHeight} terrain bounds."
-                );
-            }
-
-            var item = gridMap.GetCellItem(cell);
-            var itemName = meshLibrary.GetItemName(item);
-
-            terrainMap[position] = itemName switch
-            {
-                "Floor" => GridCell.Floor(position),
-                "Wall" => GridCell.Wall(position),
-                _ => throw new InvalidOperationException(
-                    $"MapRepo: Unsupported GridMap mesh item '{itemName}'."
-                ),
-            };
-        }
-
-        _gridCellMap = terrainMap;
+        ArgumentNullException.ThrowIfNull(terrain);
+        _gridCellMap = terrain;
     }
 
     public bool IsInside(Vector2I gridPosition) =>

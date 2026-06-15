@@ -16,7 +16,10 @@ public partial record BattleLogicState
             switch (advance.Kind)
             {
                 case BattleAdvanceKind.CuePlaybackRequired:
-                    Output(new Output.CuePlaybackRequested(advance));
+                    Output(new Output.CuePlaybackRequested(
+                        advance.CueBatchId,
+                        advance.Cues
+                    ));
                     return To<AwaitingCuePlayback>();
                 case BattleAdvanceKind.CommandRequired:
                     OutputCommandRequest();
