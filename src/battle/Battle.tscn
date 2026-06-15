@@ -3,6 +3,7 @@
 [ext_resource type="Script" uid="uid://cs40hrsd76ys1" path="res://src/battle/Battle.cs" id="1_battle"]
 [ext_resource type="Script" uid="uid://cueatsxwduceh" path="res://src/battle/presentation/BattlePresenter.cs" id="2_presenter"]
 [ext_resource type="Resource" path="res://src/battle/resources/BattleContent.tres" id="3_content"]
+[ext_resource type="Resource" path="res://src/party/resources/PartyContent.tres" id="4_party_content"]
 
 [node name="Battle" type="Control" unique_id=1524882212]
 visible = false
@@ -15,6 +16,7 @@ grow_vertical = 2
 mouse_filter = 2
 script = ExtResource("1_battle")
 Content = ExtResource("3_content")
+PartyContent = ExtResource("4_party_content")
 
 [node name="Panel" type="Panel" parent="." unique_id=1829091622]
 layout_mode = 1

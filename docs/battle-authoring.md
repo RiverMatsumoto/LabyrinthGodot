@@ -76,7 +76,7 @@ Enemy species data and encounter placement are separate.
 | `DisplayName` | Name shared by each placed instance |
 | `Stats` | Base battle stats |
 | `Hp`, `Tp` | Starting resources |
-| `ActionIds` | Known catalog actions |
+| `Actions` | External `BattleActionResource` references |
 | `ReactionIds` | Innate catalog reactions |
 | `StatusResistances`, `StatusWeaknesses` | Status affinity values by status ID |
 | `DamageTypeResistances`, `DamageTypeWeaknesses` | Damage affinity values by type |
@@ -106,7 +106,7 @@ and positions. See
 ### Create an Enemy Encounter
 
 1. Create one reusable `BattleEnemyResource`.
-2. Reference valid action and reaction IDs.
+2. Reference valid action resources and reaction IDs.
 3. Add affinity entries as needed.
 4. Create an encounter.
 5. Add one placement per enemy instance.

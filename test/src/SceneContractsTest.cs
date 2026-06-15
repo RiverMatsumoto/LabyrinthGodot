@@ -10,6 +10,7 @@ public class SceneContractsTest(Node testScene) : TestClass(testScene) {
     var battle = Instantiate<Battle>("res://src/battle/Battle.tscn");
 
     battle.Content.ShouldNotBeNull();
+    battle.PartyContent.ShouldNotBeNull();
     battle.Content.Compile().GetEncounter(
       BattleContent.DefaultEncounterId
     ).ShouldNotBeNull();

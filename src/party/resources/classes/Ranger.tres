@@ -1,0 +1,25 @@
+[gd_resource type="Resource" script_class="CharacterClassResource" format=3]
+
+[ext_resource type="Script" path="res://src/party/resources/CharacterClassResource.cs" id="1_class"]
+[ext_resource type="Script" path="res://src/battle/resources/BattleStatsResource.cs" id="2_stats"]
+[ext_resource type="Script" path="res://src/battle/resources/BattleActionResource.cs" id="3_action"]
+[ext_resource type="Resource" path="res://src/battle/resources/actions/BasicAttack.tres" id="4_basic"]
+[ext_resource type="Resource" path="res://src/battle/resources/actions/Heal.tres" id="5_heal"]
+[ext_resource type="Resource" path="res://src/battle/resources/actions/PoisonStrike.tres" id="6_poison"]
+
+[sub_resource type="Resource" id="Stats_ranger"]
+script = ExtResource("2_stats")
+MaxTp = 32
+Strength = 11
+Technique = 15
+Agility = 16
+Luck = 14
+Attack = 8
+Defense = 3
+
+[resource]
+script = ExtResource("1_class")
+Id = "ranger"
+DisplayName = "Ranger"
+Stats = SubResource("Stats_ranger")
+Actions = Array[ExtResource("3_action")]([ExtResource("4_basic"), ExtResource("5_heal"), ExtResource("6_poison")])

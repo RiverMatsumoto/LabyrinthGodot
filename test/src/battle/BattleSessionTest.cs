@@ -23,7 +23,12 @@ public class BattleSessionTest(Node testScene) : TestClass(testScene) {
       7,
       GameMode.Town
     ));
-    var session = new BattleSession(content, gameRepo, partyRepo);
+    var session = new BattleSession(
+      content,
+      EmptyPartyContent(),
+      gameRepo,
+      partyRepo
+    );
 
     var setup = session.CreateSetup();
     setup.EncounterId.ShouldBe(encounterId);
@@ -58,6 +63,7 @@ public class BattleSessionTest(Node testScene) : TestClass(testScene) {
     ));
     var session = new BattleSession(
       Content(new EncounterId("authored")),
+      EmptyPartyContent(),
       gameRepo,
       partyRepo
     );
@@ -102,4 +108,10 @@ public class BattleSessionTest(Node testScene) : TestClass(testScene) {
     member.LearnedActions.Add(BattleContent.BasicAttackId);
     return member;
   }
+
+  private static CompiledPartyContent EmptyPartyContent() => new(
+    new Dictionary<CharacterClassId, CharacterClassDefinition>(),
+    new Dictionary<BattlerId, BattleCharacterDefinition>(),
+    new DebugPartyDefinition([])
+  );
 }

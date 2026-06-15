@@ -382,9 +382,27 @@ public class BattleRepoTest : TestClass
         content.Catalog.GetReaction(
             BattleContent.ToxicRecoveryReactionId
         ).Conditions.ShouldNotBeEmpty();
-        content.GetEncounter(new EncounterId("floor_1_squirrel"))
-            .Enemies.Single().Id.ShouldBe(new BattlerId("squirrel_1"));
-    }
+          content.GetEncounter(new EncounterId("floor_1_squirrel"))
+              .Enemies.Single().Id.ShouldBe(new BattlerId("squirrel_1"));
+          content.Catalog.GetAction(BattleContent.BasicAttackId)
+              .TargetRule.ShouldBe(BattleTargetRule.SingleEnemy);
+      }
+
+      [Test]
+      public void RejectsEnemyActionMissingFromCatalog()
+      {
+          var enemy = new BattleEnemyResource
+          {
+              Id = "invalid",
+              Actions =
+              [
+                  new BattleActionResource { Id = "missing" },
+              ],
+          };
+
+          Should.Throw<KeyNotFoundException>(() =>
+              enemy.Compile(BattleContent.CreateDefaultCatalog()));
+      }
 
     [Test]
     public void RejectsInvalidEncounterPlacements()
@@ -1006,11 +1024,17 @@ public class BattleRepoTest : TestClass
     private static BattleEnemyResource EnemyResource() => new()
     {
         Id = "squirrel",
-        DisplayName = "Squirrel",
-        Stats = new BattleStatsResource(),
-        Hp = 25,
-        ActionIds = [BattleContent.BasicAttackId.Value],
-    };
+          DisplayName = "Squirrel",
+          Stats = new BattleStatsResource(),
+          Hp = 25,
+          Actions =
+          [
+              new BattleActionResource
+              {
+                  Id = BattleContent.BasicAttackId.Value,
+              },
+          ],
+      };
 
     private static BattleEnemyPlacementResource Placement(
         string battlerId,

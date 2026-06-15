@@ -24,6 +24,7 @@ public partial class Battle : Control, IBattle
     public override void _Notification(int what) => this.Notify(what);
 
     [Export] public BattleContentResource Content { get; set; } = default!;
+    [Export] public PartyContentResource PartyContent { get; set; } = default!;
 
     [Dependency] public IGameLogic GameLogic => this.DependOn<IGameLogic>();
     [Dependency] public IGameRepo GameRepo => this.DependOn<IGameRepo>();
@@ -60,9 +61,20 @@ public partial class Battle : Control, IBattle
             "Battle requires authored battle content."
           )
         ).Compile();
+        var compiledParty = (
+          PartyContent
+          ?? throw new InvalidOperationException(
+            "Battle requires authored party content."
+          )
+        ).Compile(compiled.Catalog);
 
         BattleRepo = new BattleRepo(compiled.Catalog);
-        BattleSession = new BattleSession(compiled, GameRepo, PartyRepo);
+        BattleSession = new BattleSession(
+          compiled,
+          compiledParty,
+          GameRepo,
+          PartyRepo
+        );
         BattleLogic = new BattleLogic();
         BattleLogic.Set(BattleRepo);
         BattleLogic.Set<IEnemyCommandPlanner>(new BasicEnemyCommandPlanner());

@@ -9,25 +9,25 @@ public class DebugPartyBootstrapTest(Node testScene) : TestClass(testScene) {
   [Test]
   public void SeedsOnlyAnEmptyParty() {
     using var partyRepo = new PartyRepo();
-    var catalog = new BattleCatalog(
-      [
-        new BattleActionDefinition(
-          BattleContent.BasicAttackId,
-          "Attack",
-          BattleTargetRule.SingleEnemy,
-          []
-        ),
-      ],
-      []
-    );
+    var battleContent = GD.Load<BattleContentResource>(
+      "res://src/battle/resources/BattleContent.tres"
+    ).Compile();
+    var partyContent = GD.Load<PartyContentResource>(
+      "res://src/party/resources/PartyContent.tres"
+    ).Compile(battleContent.Catalog);
 
-    DebugPartyBootstrap.SeedIfEmpty(partyRepo, catalog);
-    DebugPartyBootstrap.SeedIfEmpty(partyRepo, catalog);
+    DebugPartyBootstrap.SeedIfEmpty(
+      partyRepo,
+      partyContent.DebugParty
+    );
+    DebugPartyBootstrap.SeedIfEmpty(
+      partyRepo,
+      partyContent.DebugParty
+    );
 
     partyRepo.Count.ShouldBe(BattleLimits.MaxPlayerBattlers);
     partyRepo.Members.ShouldAllBe(entry =>
-      entry.Member.LearnedActions.Count == 1
-      && entry.Member.LearnedActions[0] == BattleContent.BasicAttackId
+      entry.Member.LearnedActions.Contains(BattleContent.BasicAttackId)
     );
   }
 
@@ -36,6 +36,9 @@ public class DebugPartyBootstrapTest(Node testScene) : TestClass(testScene) {
     var content = GD.Load<BattleContentResource>(
       "res://src/battle/resources/BattleContent.tres"
     ).Compile();
+    var partyContent = GD.Load<PartyContentResource>(
+      "res://src/party/resources/PartyContent.tres"
+    ).Compile(content.Catalog);
     using var gameRepo = new GameRepo();
     using var partyRepo = new PartyRepo();
     gameRepo.SetBattleRequest(new BattleRequest(
@@ -45,6 +48,7 @@ public class DebugPartyBootstrapTest(Node testScene) : TestClass(testScene) {
     ));
     var setup = new BattleSession(
       content,
+      partyContent,
       gameRepo,
       partyRepo
     ).CreateSetup();

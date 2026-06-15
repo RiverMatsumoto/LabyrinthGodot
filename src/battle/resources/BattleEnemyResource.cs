@@ -16,7 +16,7 @@ public partial class BattleEnemyResource : Resource
     [Export] public BattleStatsResource Stats { get; set; } = new();
     [Export] public int Hp { get; set; } = 100;
     [Export] public int Tp { get; set; } = 20;
-    [Export] public Array<string> ActionIds { get; set; } = [];
+    [Export] public Array<BattleActionResource> Actions { get; set; } = [];
     [Export] public Array<string> ReactionIds { get; set; } = [];
     [Export]
     public Array<StatusResistanceResource> StatusResistances { get; set; } = [];
@@ -41,7 +41,22 @@ public partial class BattleEnemyResource : Resource
         {
             throw new InvalidOperationException("Enemy id is required.");
         }
-        var actions = ActionIds.Select(id => new ActionId(id)).ToArray();
+        var actions = Actions.Select(action =>
+        {
+            if (action is null)
+            {
+                throw new InvalidOperationException(
+                    $"Enemy '{Id}' has a missing action."
+                );
+            }
+            return new ActionId(action.Id);
+        }).ToArray();
+        if (actions.Distinct().Count() != actions.Length)
+        {
+            throw new InvalidOperationException(
+                $"Enemy '{Id}' has duplicate action references."
+            );
+        }
         foreach (var actionId in actions)
         {
             _ = catalog.GetAction(actionId);

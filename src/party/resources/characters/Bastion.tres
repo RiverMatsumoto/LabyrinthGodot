@@ -1,0 +1,10 @@
+[gd_resource type="Resource" script_class="BattleCharacterResource" format=3]
+
+[ext_resource type="Script" path="res://src/party/resources/BattleCharacterResource.cs" id="1_character"]
+[ext_resource type="Resource" path="res://src/party/resources/classes/Bastion.tres" id="2_class"]
+
+[resource]
+script = ExtResource("1_character")
+BattlerId = "bastion"
+DisplayName = "Bastion"
+Class = ExtResource("2_class")

@@ -12,6 +12,7 @@ public interface IBattleSession
 
 public sealed class BattleSession(
     CompiledBattleContent content,
+    CompiledPartyContent partyContent,
     IGameRepo gameRepo,
     IPartyRepo partyRepo
 ) : IBattleSession
@@ -24,7 +25,10 @@ public sealed class BattleSession(
         var encounter = content.GetEncounter(request.EncounterId);
         _returnMode = request.ReturnMode;
 #if DEBUG
-        DebugPartyBootstrap.SeedIfEmpty(partyRepo, content.Catalog);
+        DebugPartyBootstrap.SeedIfEmpty(
+            partyRepo,
+            partyContent.DebugParty
+        );
 #endif
 
         return new BattleSetup(

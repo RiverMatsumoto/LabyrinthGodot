@@ -1,0 +1,24 @@
+[gd_resource type="Resource" script_class="CharacterClassResource" format=3]
+
+[ext_resource type="Script" path="res://src/party/resources/CharacterClassResource.cs" id="1_class"]
+[ext_resource type="Script" path="res://src/battle/resources/BattleStatsResource.cs" id="2_stats"]
+[ext_resource type="Script" path="res://src/battle/resources/BattleActionResource.cs" id="3_action"]
+[ext_resource type="Resource" path="res://src/battle/resources/actions/BasicAttack.tres" id="4_basic"]
+[ext_resource type="Resource" path="res://src/battle/resources/actions/Fire.tres" id="5_fire"]
+
+[sub_resource type="Resource" id="Stats_arcanist"]
+script = ExtResource("2_stats")
+MaxHp = 80
+MaxTp = 45
+Technique = 17
+Agility = 11
+Wisdom = 14
+Attack = 7
+Defense = 2
+
+[resource]
+script = ExtResource("1_class")
+Id = "arcanist"
+DisplayName = "Arcanist"
+Stats = SubResource("Stats_arcanist")
+Actions = Array[ExtResource("3_action")]([ExtResource("4_basic"), ExtResource("5_fire")])

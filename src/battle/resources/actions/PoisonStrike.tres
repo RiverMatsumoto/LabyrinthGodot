@@ -1,0 +1,28 @@
+[gd_resource type="Resource" script_class="BattleActionResource" format=3]
+
+[ext_resource type="Script" path="res://src/battle/resources/BattleEffectResource.cs" id="1_effect"]
+[ext_resource type="Script" path="res://src/battle/resources/DamageBattleEffectResource.cs" id="2_damage"]
+[ext_resource type="Script" path="res://src/battle/resources/ApplyStatusBattleEffectResource.cs" id="3_status"]
+[ext_resource type="Script" path="res://src/battle/resources/BattleActionResource.cs" id="4_action"]
+
+[sub_resource type="Resource" id="Damage_poison_strike"]
+script = ExtResource("2_damage")
+DamageType = 2
+Power = 8.0
+AnimationId = "stab"
+
+[sub_resource type="Resource" id="Status_poison"]
+script = ExtResource("3_status")
+StatusId = "poison"
+Duration = 3
+BaseChance = 0.75
+
+[resource]
+script = ExtResource("4_action")
+Id = "poison_strike"
+DisplayName = "Poison Strike"
+TargetRule = 2
+TpCost = 3
+Range = 1
+RetargetPolicy = 0
+Effects = Array[ExtResource("1_effect")]([SubResource("Damage_poison_strike"), SubResource("Status_poison")])

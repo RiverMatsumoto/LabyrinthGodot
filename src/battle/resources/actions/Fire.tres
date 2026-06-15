@@ -1,22 +1,21 @@
-[gd_resource type="Resource" script_class="BattleActionResource" format=3 uid="uid://cutdclklat13l"]
+[gd_resource type="Resource" script_class="BattleActionResource" format=3]
 
 [ext_resource type="Script" path="res://src/battle/resources/BattleEffectResource.cs" id="1_effect"]
 [ext_resource type="Script" path="res://src/battle/resources/DamageBattleEffectResource.cs" id="2_damage"]
 [ext_resource type="Script" path="res://src/battle/resources/BattleActionResource.cs" id="3_action"]
 
-[sub_resource type="Resource" id="Damage_basic_attack"]
+[sub_resource type="Resource" id="Damage_fire"]
 script = ExtResource("2_damage")
-DamageType = 7
-Power = 12.0
-CanCrit = true
-CritMultiplier = 2.5
-AnimationId = "from_weapon"
+DamageType = 3
+Power = 18.0
+AnimationId = "fire"
 
 [resource]
 script = ExtResource("3_action")
-Id = "basic_attack"
-DisplayName = "Attack"
+Id = "fire"
+DisplayName = "Fire"
 TargetRule = 2
-Range = 1
+TpCost = 4
+Range = 2
 RetargetPolicy = 0
-Effects = Array[ExtResource("1_effect")]([SubResource("Damage_basic_attack")])
+Effects = Array[ExtResource("1_effect")]([SubResource("Damage_fire")])

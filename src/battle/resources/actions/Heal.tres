@@ -1,0 +1,20 @@
+[gd_resource type="Resource" script_class="BattleActionResource" format=3]
+
+[ext_resource type="Script" path="res://src/battle/resources/BattleEffectResource.cs" id="1_effect"]
+[ext_resource type="Script" path="res://src/battle/resources/HealBattleEffectResource.cs" id="2_heal"]
+[ext_resource type="Script" path="res://src/battle/resources/BattleActionResource.cs" id="3_action"]
+
+[sub_resource type="Resource" id="Heal_default"]
+script = ExtResource("2_heal")
+Amount = 30
+AnimationId = "heal"
+
+[resource]
+script = ExtResource("3_action")
+Id = "heal"
+DisplayName = "Heal"
+TargetRule = 1
+TpCost = 4
+Range = 2
+RetargetPolicy = 0
+Effects = Array[ExtResource("1_effect")]([SubResource("Heal_default")])

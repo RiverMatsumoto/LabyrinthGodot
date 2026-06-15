@@ -1,42 +1,25 @@
 [gd_resource type="Resource" script_class="BattleContentResource" format=3 uid="uid://b6pulfqapkhaa"]
 
-[ext_resource type="Script" uid="uid://2yyrwj4jjjar" path="res://src/battle/resources/BattleContentResource.cs" id="1_n83rk"]
-[ext_resource type="Script" uid="uid://w8j6cwe8vpbk" path="res://src/battle/resources/BattleActionResource.cs" id="1_te633"]
-[ext_resource type="Script" uid="uid://gwug75hcnrr3" path="res://src/battle/resources/BattleEffectResource.cs" id="2_lh0so"]
-[ext_resource type="Script" uid="uid://5fk70j1vvyu2" path="res://src/battle/resources/DamageBattleEffectResource.cs" id="3_vsbrb"]
-[ext_resource type="Script" uid="uid://66srkle36pij" path="res://src/battle/resources/BattleEncounterResource.cs" id="4_xy72y"]
-[ext_resource type="Script" uid="uid://redg1glvpkym" path="res://src/battle/resources/BattleEquipmentResource.cs" id="5_o5vti"]
-[ext_resource type="Resource" uid="uid://bw0v5ywg6wuqc" path="res://src/battle/resources/floor_1_encounters/Floor1Squirrel.tres" id="5_r45ja"]
-[ext_resource type="Script" uid="uid://b3nq66we03b8c" path="res://src/battle/resources/BattleStatusResource.cs" id="6_m5w0c"]
-[ext_resource type="Resource" path="res://src/battle/resources/statuses/Poison.tres" id="7_poison"]
-[ext_resource type="Script" uid="uid://cidn5h6e6ryfc" path="res://src/battle/resources/BattleReactionResource.cs" id="7_qdjtg"]
-[ext_resource type="Resource" path="res://src/battle/resources/statuses/Regen.tres" id="8_regen"]
-[ext_resource type="Resource" path="res://src/battle/resources/statuses/Stun.tres" id="9_stun"]
-[ext_resource type="Resource" uid="uid://d10k7wvu6xeb7" path="res://src/battle/resources/reactions/PoisonTick.tres" id="10_poison_tick"]
-[ext_resource type="Resource" uid="uid://4ou7tjxrgrf8" path="res://src/battle/resources/reactions/RegenTick.tres" id="11_regen_tick"]
-[ext_resource type="Resource" uid="uid://b1qm8lf0oqysj" path="res://src/battle/resources/reactions/ToxicRecovery.tres" id="12_toxic_recovery"]
-
-[sub_resource type="Resource" id="Resource_r45ja"]
-script = ExtResource("3_vsbrb")
-DamageType = 7
-CanCrit = true
-CritMultiplier = 2.5
-AnimationId = "from_weapon"
-metadata/_custom_type_script = "uid://5fk70j1vvyu2"
-
-[sub_resource type="Resource" id="Resource_qjmqu"]
-script = ExtResource("1_te633")
-Id = "basic_attack"
-DisplayName = "BasicAttack"
-Range = 1
-RetargetPolicy = 1
-Effects = Array[ExtResource("2_lh0so")]([SubResource("Resource_r45ja")])
-metadata/_custom_type_script = "uid://w8j6cwe8vpbk"
+[ext_resource type="Script" path="res://src/battle/resources/BattleContentResource.cs" id="1_content"]
+[ext_resource type="Script" path="res://src/battle/resources/BattleActionResource.cs" id="2_action"]
+[ext_resource type="Script" path="res://src/battle/resources/BattleStatusResource.cs" id="3_status"]
+[ext_resource type="Script" path="res://src/battle/resources/BattleReactionResource.cs" id="4_reaction"]
+[ext_resource type="Script" path="res://src/battle/resources/BattleEncounterResource.cs" id="5_encounter"]
+[ext_resource type="Resource" path="res://src/battle/resources/actions/BasicAttack.tres" id="10_basic"]
+[ext_resource type="Resource" path="res://src/battle/resources/actions/Fire.tres" id="11_fire"]
+[ext_resource type="Resource" path="res://src/battle/resources/actions/PoisonStrike.tres" id="12_poison_strike"]
+[ext_resource type="Resource" path="res://src/battle/resources/actions/Heal.tres" id="13_heal"]
+[ext_resource type="Resource" path="res://src/battle/resources/statuses/Poison.tres" id="20_poison"]
+[ext_resource type="Resource" path="res://src/battle/resources/statuses/Regen.tres" id="21_regen"]
+[ext_resource type="Resource" path="res://src/battle/resources/statuses/Stun.tres" id="22_stun"]
+[ext_resource type="Resource" path="res://src/battle/resources/reactions/PoisonTick.tres" id="30_poison_tick"]
+[ext_resource type="Resource" path="res://src/battle/resources/reactions/RegenTick.tres" id="31_regen_tick"]
+[ext_resource type="Resource" path="res://src/battle/resources/reactions/ToxicRecovery.tres" id="32_toxic_recovery"]
+[ext_resource type="Resource" path="res://src/battle/resources/floor_1_encounters/Floor1Squirrel.tres" id="40_encounter"]
 
 [resource]
-script = ExtResource("1_n83rk")
-Actions = Array[ExtResource("1_te633")]([SubResource("Resource_qjmqu")])
-Statuses = Array[ExtResource("6_m5w0c")]([ExtResource("7_poison"), ExtResource("8_regen"), ExtResource("9_stun")])
-Reactions = Array[ExtResource("7_qdjtg")]([ExtResource("10_poison_tick"), ExtResource("11_regen_tick"), ExtResource("12_toxic_recovery")])
-Encounters = Array[ExtResource("4_xy72y")]([ExtResource("5_r45ja")])
-metadata/_custom_type_script = "uid://2yyrwj4jjjar"
+script = ExtResource("1_content")
+Actions = Array[ExtResource("2_action")]([ExtResource("10_basic"), ExtResource("11_fire"), ExtResource("12_poison_strike"), ExtResource("13_heal")])
+Statuses = Array[ExtResource("3_status")]([ExtResource("20_poison"), ExtResource("21_regen"), ExtResource("22_stun")])
+Reactions = Array[ExtResource("4_reaction")]([ExtResource("30_poison_tick"), ExtResource("31_regen_tick"), ExtResource("32_toxic_recovery")])
+Encounters = Array[ExtResource("5_encounter")]([ExtResource("40_encounter")])

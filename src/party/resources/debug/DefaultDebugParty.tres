@@ -1,0 +1,39 @@
+[gd_resource type="Resource" script_class="DebugPartyResource" format=3]
+
+[ext_resource type="Script" path="res://src/party/resources/DebugPartyResource.cs" id="1_party"]
+[ext_resource type="Script" path="res://src/party/resources/DebugPartyEntryResource.cs" id="2_entry"]
+[ext_resource type="Resource" path="res://src/party/resources/characters/Bastion.tres" id="10_bastion"]
+[ext_resource type="Resource" path="res://src/party/resources/characters/Duelist.tres" id="11_duelist"]
+[ext_resource type="Resource" path="res://src/party/resources/characters/Arcanist.tres" id="12_arcanist"]
+[ext_resource type="Resource" path="res://src/party/resources/characters/Medic.tres" id="13_medic"]
+[ext_resource type="Resource" path="res://src/party/resources/characters/Ranger.tres" id="14_ranger"]
+
+[sub_resource type="Resource" id="Entry_bastion"]
+script = ExtResource("2_entry")
+Character = ExtResource("10_bastion")
+
+[sub_resource type="Resource" id="Entry_duelist"]
+script = ExtResource("2_entry")
+Character = ExtResource("11_duelist")
+Slot = 1
+
+[sub_resource type="Resource" id="Entry_arcanist"]
+script = ExtResource("2_entry")
+Character = ExtResource("12_arcanist")
+Row = 1
+
+[sub_resource type="Resource" id="Entry_medic"]
+script = ExtResource("2_entry")
+Character = ExtResource("13_medic")
+Row = 1
+Slot = 1
+
+[sub_resource type="Resource" id="Entry_ranger"]
+script = ExtResource("2_entry")
+Character = ExtResource("14_ranger")
+Row = 1
+Slot = 2
+
+[resource]
+script = ExtResource("1_party")
+Entries = Array[ExtResource("2_entry")]([SubResource("Entry_bastion"), SubResource("Entry_duelist"), SubResource("Entry_arcanist"), SubResource("Entry_medic"), SubResource("Entry_ranger")])

@@ -1,0 +1,22 @@
+[gd_resource type="Resource" script_class="CharacterClassResource" format=3]
+
+[ext_resource type="Script" path="res://src/party/resources/CharacterClassResource.cs" id="1_class"]
+[ext_resource type="Script" path="res://src/battle/resources/BattleStatsResource.cs" id="2_stats"]
+[ext_resource type="Script" path="res://src/battle/resources/BattleActionResource.cs" id="3_action"]
+[ext_resource type="Resource" path="res://src/battle/resources/actions/BasicAttack.tres" id="4_basic"]
+
+[sub_resource type="Resource" id="Stats_bastion"]
+script = ExtResource("2_stats")
+MaxHp = 160
+Strength = 12
+Agility = 7
+Vitality = 16
+Attack = 6
+Defense = 12
+
+[resource]
+script = ExtResource("1_class")
+Id = "bastion"
+DisplayName = "Bastion"
+Stats = SubResource("Stats_bastion")
+Actions = Array[ExtResource("3_action")]([ExtResource("4_basic")])

@@ -1,0 +1,22 @@
+[gd_resource type="Resource" script_class="PartyContentResource" format=3]
+
+[ext_resource type="Script" path="res://src/party/resources/PartyContentResource.cs" id="1_content"]
+[ext_resource type="Script" path="res://src/party/resources/CharacterClassResource.cs" id="2_class"]
+[ext_resource type="Script" path="res://src/party/resources/BattleCharacterResource.cs" id="3_character"]
+[ext_resource type="Resource" path="res://src/party/resources/classes/Bastion.tres" id="10_bastion_class"]
+[ext_resource type="Resource" path="res://src/party/resources/classes/Duelist.tres" id="11_duelist_class"]
+[ext_resource type="Resource" path="res://src/party/resources/classes/Arcanist.tres" id="12_arcanist_class"]
+[ext_resource type="Resource" path="res://src/party/resources/classes/Medic.tres" id="13_medic_class"]
+[ext_resource type="Resource" path="res://src/party/resources/classes/Ranger.tres" id="14_ranger_class"]
+[ext_resource type="Resource" path="res://src/party/resources/characters/Bastion.tres" id="20_bastion"]
+[ext_resource type="Resource" path="res://src/party/resources/characters/Duelist.tres" id="21_duelist"]
+[ext_resource type="Resource" path="res://src/party/resources/characters/Arcanist.tres" id="22_arcanist"]
+[ext_resource type="Resource" path="res://src/party/resources/characters/Medic.tres" id="23_medic"]
+[ext_resource type="Resource" path="res://src/party/resources/characters/Ranger.tres" id="24_ranger"]
+[ext_resource type="Resource" path="res://src/party/resources/debug/DefaultDebugParty.tres" id="30_party"]
+
+[resource]
+script = ExtResource("1_content")
+Classes = Array[ExtResource("2_class")]([ExtResource("10_bastion_class"), ExtResource("11_duelist_class"), ExtResource("12_arcanist_class"), ExtResource("13_medic_class"), ExtResource("14_ranger_class")])
+Characters = Array[ExtResource("3_character")]([ExtResource("20_bastion"), ExtResource("21_duelist"), ExtResource("22_arcanist"), ExtResource("23_medic"), ExtResource("24_ranger")])
+DebugParty = ExtResource("30_party")

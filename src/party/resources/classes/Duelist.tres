@@ -1,0 +1,24 @@
+[gd_resource type="Resource" script_class="CharacterClassResource" format=3]
+
+[ext_resource type="Script" path="res://src/party/resources/CharacterClassResource.cs" id="1_class"]
+[ext_resource type="Script" path="res://src/battle/resources/BattleStatsResource.cs" id="2_stats"]
+[ext_resource type="Script" path="res://src/battle/resources/BattleActionResource.cs" id="3_action"]
+[ext_resource type="Resource" path="res://src/battle/resources/actions/BasicAttack.tres" id="4_basic"]
+[ext_resource type="Resource" path="res://src/battle/resources/actions/PoisonStrike.tres" id="5_poison"]
+
+[sub_resource type="Resource" id="Stats_duelist"]
+script = ExtResource("2_stats")
+MaxHp = 110
+MaxTp = 28
+Strength = 16
+Agility = 13
+Luck = 12
+Attack = 10
+Defense = 4
+
+[resource]
+script = ExtResource("1_class")
+Id = "duelist"
+DisplayName = "Duelist"
+Stats = SubResource("Stats_duelist")
+Actions = Array[ExtResource("3_action")]([ExtResource("4_basic"), ExtResource("5_poison")])
