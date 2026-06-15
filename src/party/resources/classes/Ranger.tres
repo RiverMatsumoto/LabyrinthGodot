@@ -1,11 +1,16 @@
-[gd_resource type="Resource" script_class="CharacterClassResource" format=3]
+[gd_resource type="Resource" script_class="CharacterClassResource" format=3 uid="uid://bge3v1fri4xnw"]
 
-[ext_resource type="Script" path="res://src/party/resources/CharacterClassResource.cs" id="1_class"]
-[ext_resource type="Script" path="res://src/battle/resources/BattleStatsResource.cs" id="2_stats"]
-[ext_resource type="Script" path="res://src/battle/resources/BattleActionResource.cs" id="3_action"]
-[ext_resource type="Resource" path="res://src/battle/resources/actions/BasicAttack.tres" id="4_basic"]
-[ext_resource type="Resource" path="res://src/battle/resources/actions/Heal.tres" id="5_heal"]
-[ext_resource type="Resource" path="res://src/battle/resources/actions/PoisonStrike.tres" id="6_poison"]
+[ext_resource type="Script" uid="uid://dofbgx7q0j8oi" path="res://src/party/resources/CharacterClassResource.cs" id="1_class"]
+[ext_resource type="Script" uid="uid://teltcxejb0pd" path="res://src/battle/resources/BattleStatsResource.cs" id="2_stats"]
+[ext_resource type="Script" uid="uid://w8j6cwe8vpbk" path="res://src/battle/resources/BattleActionResource.cs" id="3_action"]
+[ext_resource type="Resource" uid="uid://cutdclklat13l" path="res://src/battle/resources/actions/BasicAttack.tres" id="4_basic"]
+[ext_resource type="Resource" uid="uid://b7gbnn1soap1f" path="res://src/battle/resources/actions/Heal.tres" id="5_heal"]
+[ext_resource type="Script" uid="uid://w7prxgfy8udc" path="res://src/battle/resources/DamageTypeResistanceResource.cs" id="5_javte"]
+[ext_resource type="Script" uid="uid://bftd8hkll8s6r" path="res://src/battle/resources/DamageTypeWeaknessResource.cs" id="6_5s8o8"]
+[ext_resource type="Resource" uid="uid://dl5cl8itc1ops" path="res://src/battle/resources/actions/PoisonStrike.tres" id="6_poison"]
+[ext_resource type="Script" uid="uid://cidn5h6e6ryfc" path="res://src/battle/resources/BattleReactionResource.cs" id="7_w2ka1"]
+[ext_resource type="Script" uid="uid://bolb43snulv2k" path="res://src/battle/resources/StatusResistanceResource.cs" id="9_vw2bq"]
+[ext_resource type="Script" uid="uid://bsx7mfygk2d3i" path="res://src/battle/resources/StatusWeaknessResource.cs" id="10_31b2b"]
 
 [sub_resource type="Resource" id="Stats_ranger"]
 script = ExtResource("2_stats")

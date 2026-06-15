@@ -1,11 +1,11 @@
 [gd_resource type="Resource" script_class="BattleActionResource" format=3 uid="uid://cutdclklat13l"]
 
-[ext_resource type="Script" path="res://src/battle/resources/BattleEffectResource.cs" id="1_effect"]
-[ext_resource type="Script" path="res://src/battle/resources/DamageBattleEffectResource.cs" id="2_damage"]
-[ext_resource type="Script" path="res://src/battle/resources/BattleActionResource.cs" id="3_action"]
+[ext_resource type="Script" uid="uid://gwug75hcnrr3" path="res://src/battle/resources/effect_resources/BattleEffectResource.cs" id="1_effect"]
+[ext_resource type="Script" uid="uid://5fk70j1vvyu2" path="res://src/battle/resources/effect_resources/DamageBattleEffectResource.cs" id="2_6hgsh"]
+[ext_resource type="Script" uid="uid://w8j6cwe8vpbk" path="res://src/battle/resources/BattleActionResource.cs" id="3_action"]
 
 [sub_resource type="Resource" id="Damage_basic_attack"]
-script = ExtResource("2_damage")
+script = ExtResource("2_6hgsh")
 DamageType = 7
 Power = 12.0
 CanCrit = true
@@ -18,5 +18,5 @@ Id = "basic_attack"
 DisplayName = "Attack"
 TargetRule = 2
 Range = 1
-RetargetPolicy = 0
 Effects = Array[ExtResource("1_effect")]([SubResource("Damage_basic_attack")])
+metadata/_custom_type_script = "uid://w8j6cwe8vpbk"

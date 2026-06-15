@@ -1,8 +1,8 @@
 [gd_resource type="Resource" script_class="BattleEnemyResource" format=3 uid="uid://brjy0uahc8v70"]
 
-[ext_resource type="Script" uid="uid://ut05a8nwsuf6" path="res://src/battle/resources/BattleEnemyResource.cs" id="1_enemy"]
 [ext_resource type="Resource" uid="uid://cutdclklat13l" path="res://src/battle/resources/actions/BasicAttack.tres" id="1_action"]
-[ext_resource type="Script" path="res://src/battle/resources/BattleActionResource.cs" id="1_action_script"]
+[ext_resource type="Script" uid="uid://w8j6cwe8vpbk" path="res://src/battle/resources/BattleActionResource.cs" id="1_action_script"]
+[ext_resource type="Script" uid="uid://ut05a8nwsuf6" path="res://src/battle/resources/BattleEnemyResource.cs" id="1_enemy"]
 [ext_resource type="Script" uid="uid://w7prxgfy8udc" path="res://src/battle/resources/DamageTypeResistanceResource.cs" id="1_pe24t"]
 [ext_resource type="Script" uid="uid://bftd8hkll8s6r" path="res://src/battle/resources/DamageTypeWeaknessResource.cs" id="2_lb0l7"]
 [ext_resource type="Script" uid="uid://teltcxejb0pd" path="res://src/battle/resources/BattleStatsResource.cs" id="2_stats"]
@@ -11,12 +11,13 @@
 
 [sub_resource type="Resource" id="Resource_stats"]
 script = ExtResource("2_stats")
+MaxHp = 1000
 
 [resource]
 script = ExtResource("1_enemy")
 Id = "squirrel"
 DisplayName = "Squirrel"
 Stats = SubResource("Resource_stats")
-Hp = 25
+Hp = 1000
 Actions = Array[ExtResource("1_action_script")]([ExtResource("1_action")])
 metadata/_custom_type_script = "uid://ut05a8nwsuf6"

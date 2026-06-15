@@ -56,24 +56,24 @@ public partial class Battle : Control, IBattle
     public void Setup()
     {
         var compiled = (
-          Content
-          ?? throw new InvalidOperationException(
-            "Battle requires authored battle content."
-          )
+            Content
+            ?? throw new InvalidOperationException(
+                "Battle requires authored battle content."
+            )
         ).Compile();
         var compiledParty = (
-          PartyContent
-          ?? throw new InvalidOperationException(
-            "Battle requires authored party content."
-          )
+            PartyContent
+            ?? throw new InvalidOperationException(
+                "Battle requires authored party content."
+            )
         ).Compile(compiled.Catalog);
 
         BattleRepo = new BattleRepo(compiled.Catalog);
         BattleSession = new BattleSession(
-          compiled,
-          compiledParty,
-          GameRepo,
-          PartyRepo
+            compiled,
+            compiledParty,
+            GameRepo,
+            PartyRepo
         );
         BattleLogic = new BattleLogic();
         BattleLogic.Set(BattleRepo);
@@ -89,27 +89,27 @@ public partial class Battle : Control, IBattle
         Flee.Pressed += BattleLogic.Flee;
 
         _battleBinding = ((BattleLogic)BattleLogic).Bind()
-          .OnOutput((
-            in BattleLogicState.Output.CommandRequested output
-          ) => ShowCommand(output.ActorId))
-          .OnOutput((
-            in BattleLogicState.Output.CommandRejected output
-          ) => Turn.Text = output.Error)
-          .OnOutput((
-            in BattleLogicState.Output.CuePlaybackRequested output
-          ) => PlayCues(output.CueBatchId, output.Cues))
-          .OnOutput((
-            in BattleLogicState.Output.BattleCompleted output
-          ) => CompleteBattle())
-          .OnOutput((
-            in BattleLogicState.Output.ReturnModeRequested output
-          ) => RequestReturnMode(output.Mode))
-          .OnEnter<BattleLogicState.ResolvingTurn>(_ =>
-            CallDeferred(nameof(AdvanceBattleLogic)));
+            .OnOutput((
+                in BattleLogicState.Output.CommandRequested output
+            ) => ShowCommand(output.ActorId))
+            .OnOutput((
+                in BattleLogicState.Output.CommandRejected output
+            ) => Turn.Text = output.Error)
+            .OnOutput((
+                in BattleLogicState.Output.CuePlaybackRequested output
+            ) => PlayCues(output.CueBatchId, output.Cues))
+            .OnOutput((
+                in BattleLogicState.Output.BattleCompleted output
+            ) => CompleteBattle())
+            .OnOutput((
+                in BattleLogicState.Output.ReturnModeRequested output
+            ) => RequestReturnMode(output.Mode))
+            .OnEnter<BattleLogicState.ResolvingTurn>(_ =>
+                CallDeferred(nameof(AdvanceBattleLogic)));
 
         _gameBinding = GameLogic.Bind()
-          .OnEnter<GameLogicState.Battle>(_ => StartRequestedBattle())
-          .OnExit<GameLogicState.Battle>(_ => HideBattle());
+            .OnEnter<GameLogicState.Battle>(_ => StartRequestedBattle())
+            .OnExit<GameLogicState.Battle>(_ => HideBattle());
 
         this.Provide();
         BattleLogic.Start<BattleLogicState.Disabled>();
@@ -205,35 +205,35 @@ public partial class Battle : Control, IBattle
     private void ConfirmCommand()
     {
         if (
-          _currentBattlerId is not { } actorId
-          || Action.Selected < 0
-          || Action.Selected >= _actionIds.Count
+            _currentBattlerId is not { } actorId
+            || Action.Selected < 0
+            || Action.Selected >= _actionIds.Count
         )
         {
             return;
         }
 
         var target = Target.Selected >= 0
-          && Target.Selected < _targetIds.Count
-          ? _targetIds[Target.Selected]
-          : (BattlerId?)null;
+            && Target.Selected < _targetIds.Count
+            ? _targetIds[Target.Selected]
+            : (BattlerId?)null;
         BattleLogic.SubmitCommand(new BattleCommand(
-          actorId,
-          _actionIds[Action.Selected],
-          target
+            actorId,
+            _actionIds[Action.Selected],
+            target
         ));
     }
 
     private void PlayCues(
-      long cueBatchId,
-      IReadOnlyList<BattleCue> cues
+        long cueBatchId,
+        IReadOnlyList<BattleCue> cues
     )
     {
         SetCommandControlsEnabled(false);
         RefreshBattleState();
         Presenter.Play(
-          cues,
-          () => BattleLogic.AcknowledgeCuePlayback(cueBatchId)
+            cues,
+            () => BattleLogic.AcknowledgeCuePlayback(cueBatchId)
         );
     }
 
@@ -271,15 +271,15 @@ public partial class Battle : Control, IBattle
     }
 
     private static string FormatTeam(
-      BattleSnapshot snapshot,
-      BattleTeam team
-    ) => string.Join(
-      "\n",
-      snapshot.Units
-        .Where(unit => unit.Team == team)
-        .Select(unit =>
-          $"{unit.Name}  HP {unit.Hp}/{unit.Stats.MaxHp}  "
-          + $"TP {unit.Tp}/{unit.Stats.MaxTp}")
+        BattleSnapshot snapshot,
+        BattleTeam team
+        ) => string.Join(
+        "\n",
+        snapshot.Units
+            .Where(unit => unit.Team == team)
+            .Select(unit =>
+            $"{unit.Name}  HP {unit.Hp}/{unit.Stats.MaxHp}  "
+            + $"TP {unit.Tp}/{unit.Stats.MaxTp}")
     );
 
     private void SetCommandControlsEnabled(bool enabled)

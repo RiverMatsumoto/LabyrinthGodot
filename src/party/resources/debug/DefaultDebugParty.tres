@@ -1,7 +1,7 @@
-[gd_resource type="Resource" script_class="DebugPartyResource" format=3]
+[gd_resource type="Resource" script_class="DebugPartyResource" format=3 uid="uid://be7qcw47lv1ed"]
 
-[ext_resource type="Script" path="res://src/party/resources/DebugPartyResource.cs" id="1_party"]
-[ext_resource type="Script" path="res://src/party/resources/DebugPartyEntryResource.cs" id="2_entry"]
+[ext_resource type="Script" uid="uid://cd8jvle04e1ib" path="res://src/party/resources/DebugPartyResource.cs" id="1_party"]
+[ext_resource type="Script" uid="uid://c2yvefqjdspls" path="res://src/party/resources/DebugPartyEntryResource.cs" id="2_entry"]
 [ext_resource type="Resource" path="res://src/party/resources/characters/Bastion.tres" id="10_bastion"]
 [ext_resource type="Resource" path="res://src/party/resources/characters/Duelist.tres" id="11_duelist"]
 [ext_resource type="Resource" path="res://src/party/resources/characters/Arcanist.tres" id="12_arcanist"]

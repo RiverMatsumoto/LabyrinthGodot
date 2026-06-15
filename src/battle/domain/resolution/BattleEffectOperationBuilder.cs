@@ -1,0 +1,163 @@
+namespace Labyrinth;
+
+using System;
+using System.Collections.Generic;
+
+internal sealed class BattleEffectOperationBuilder(BattleRuntime runtime)
+{
+    public IReadOnlyList<BattleOperation> Build(
+        BattleEffectDefinition effect,
+        EffectContext context
+    )
+    {
+        var operations = new List<BattleOperation>
+        {
+            new WindowOperation(new ReactionEvent(
+                runtime.NextCauseId(),
+                ReactionTrigger.BeforeEffect,
+                context.SourceId,
+                FirstTarget(context),
+                context.ActionId,
+                Depth: context.ReactionDepth
+            )),
+        };
+
+        switch (effect)
+        {
+            case DamageEffectDefinition damage:
+                var scaledDamage = damage.Spec with
+                {
+                    Power = ScaleAmount(
+                        context,
+                        damage.Spec.Power,
+                        damage.Scale
+                    ),
+                };
+                if (!string.IsNullOrWhiteSpace(damage.AnimationId))
+                {
+                    operations.Add(new CueOperation([
+                        new AnimationCue(
+                            damage.AnimationId,
+                            context.SourceId,
+                            context.TargetIds
+                        ),
+                    ]));
+                }
+                operations.Add(new DamageOperation(
+                    context,
+                    scaledDamage
+                ));
+                break;
+            case HealEffectDefinition heal:
+                if (!string.IsNullOrWhiteSpace(heal.AnimationId))
+                {
+                    operations.Add(new CueOperation([
+                        new AnimationCue(
+                            heal.AnimationId,
+                            context.SourceId,
+                            context.TargetIds
+                        ),
+                    ]));
+                }
+                operations.Add(new HealOperation(
+                    context,
+                    ScaleAmount(context, heal.Amount, heal.Scale)
+                ));
+                break;
+            case ModifyResourceEffectDefinition modify:
+                operations.Add(new ModifyResourceOperation(
+                    context,
+                    modify.Resource,
+                    ScaleAmount(
+                        context,
+                        modify.Amount,
+                        modify.Scale
+                    )
+                ));
+                break;
+            case ApplyStatusEffectDefinition apply:
+                operations.Add(new ApplyStatusOperation(context, apply));
+                break;
+            case RemoveStatusEffectDefinition remove:
+                operations.Add(new RemoveStatusOperation(
+                    context,
+                    remove.StatusId
+                ));
+                break;
+            case PlayAnimationEffectDefinition animation:
+                operations.Add(new CueOperation([
+                    new AnimationCue(
+                        animation.AnimationId,
+                        context.SourceId,
+                        context.TargetIds
+                    ),
+                ]));
+                break;
+            case WaitEffectDefinition wait:
+                operations.Add(new CueOperation([
+                    new WaitCue(Math.Max(0, wait.Seconds)),
+                ]));
+                break;
+            case RegisterReactionEffectDefinition register:
+                operations.Add(new RegisterReactionOperation(
+                    context,
+                    register.ReactionId
+                ));
+                break;
+            default:
+                throw new InvalidOperationException(
+                    $"Unsupported effect '{effect.GetType().Name}'."
+                );
+        }
+
+        operations.Add(new WindowOperation(new ReactionEvent(
+            runtime.NextCauseId(),
+            ReactionTrigger.AfterEffect,
+            context.SourceId,
+            FirstTarget(context),
+            context.ActionId,
+            Depth: context.ReactionDepth
+        )));
+        return operations;
+    }
+
+    private static BattlerId FirstTarget(EffectContext context) =>
+        context.TargetIds.Count > 0
+            ? context.TargetIds[0]
+            : default;
+
+    private int ScaleAmount(
+        EffectContext context,
+        int amount,
+        StatusStackScaleDefinition? scale
+    ) => (int)Math.Round(ScaleAmount(
+        context,
+        (double)amount,
+        scale
+    ));
+
+    private double ScaleAmount(
+        EffectContext context,
+        double amount,
+        StatusStackScaleDefinition? scale
+    )
+    {
+        if (scale is null)
+        {
+            return amount;
+        }
+        if (
+            runtime.Units.TryGetValue(context.SourceId, out var source)
+            && source.Statuses.TryGetValue(
+                scale.StatusId,
+                out var status
+            )
+        )
+        {
+            return amount * status.Stacks;
+        }
+        return context.StatusId == scale.StatusId
+            ? amount * context.StatusStacks
+            : 0;
+    }
+}

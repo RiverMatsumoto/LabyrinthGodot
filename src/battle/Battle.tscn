@@ -1,8 +1,8 @@
 [gd_scene format=3 uid="uid://bds5grrhgtmic"]
 
 [ext_resource type="Script" uid="uid://cs40hrsd76ys1" path="res://src/battle/Battle.cs" id="1_battle"]
-[ext_resource type="Script" uid="uid://cueatsxwduceh" path="res://src/battle/presentation/BattlePresenter.cs" id="2_presenter"]
-[ext_resource type="Resource" path="res://src/battle/resources/BattleContent.tres" id="3_content"]
+[ext_resource type="Script" uid="uid://dv48glfkgmjom" path="res://src/game/BattlePresenter.cs" id="2_presenter"]
+[ext_resource type="Resource" uid="uid://b6pulfqapkhaa" path="res://src/battle/resources/BattleContent.tres" id="3_content"]
 [ext_resource type="Resource" path="res://src/party/resources/PartyContent.tres" id="4_party_content"]
 
 [node name="Battle" type="Control" unique_id=1524882212]

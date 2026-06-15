@@ -44,33 +44,33 @@ public sealed class BattleSession(
     {
         partyRepo.ApplyBattleVitals(result.PlayerVitals);
         return result.Outcome == BattleOutcome.Defeat
-          ? GameMode.MainMenu
-          : _returnMode ?? throw new InvalidOperationException(
-            "Battle session has not been started."
-          );
+            ? GameMode.MainMenu
+            : _returnMode ?? throw new InvalidOperationException(
+                "Battle session has not been started."
+            );
     }
 
     private static BattleBattlerSeed FromParty(PartyMemberEntry entry) => new(
-      Id: entry.Member.Id,
-      Name: entry.Member.Name,
-      Team: BattleTeam.Player,
-      Position: entry.Position,
-      Stats: entry.Member.EffectiveStats,
-      Hp: entry.Member.Hp,
-      Tp: entry.Member.Tp,
-      ActionIds: entry.Member.LearnedActions.ToArray(),
-      ReactionIdList: entry.Member.PassiveReactionIds.ToArray(),
-      StatusResistances: new Dictionary<StatusId, double>(
-        entry.Member.StatusResistances
-      ),
-      StatusWeaknesses: new Dictionary<StatusId, double>(
-        entry.Member.StatusWeakness
-      ),
-      DamageTypeResistances: new Dictionary<DamageType, double>(
-        entry.Member.DamageTypeResistances
-      ),
-      DamageTypeWeaknesses: new Dictionary<DamageType, double>(
-        entry.Member.DamageTypeWeaknesses
-      )
+        Id: entry.Member.Id,
+        Name: entry.Member.Name,
+        Team: BattleTeam.Player,
+        Position: entry.Position,
+        Stats: entry.Member.EffectiveStats,
+        Hp: entry.Member.Hp,
+        Tp: entry.Member.Tp,
+        ActionIds: entry.Member.LearnedActions.ToArray(),
+        ReactionIdList: entry.Member.PassiveReactionIds.ToArray(),
+        StatusResistances: new Dictionary<StatusId, double>(
+            entry.Member.StatusResistances
+        ),
+        StatusWeaknesses: new Dictionary<StatusId, double>(
+            entry.Member.StatusWeakness
+        ),
+        DamageTypeResistances: new Dictionary<DamageType, double>(
+            entry.Member.DamageTypeResistances
+        ),
+        DamageTypeWeaknesses: new Dictionary<DamageType, double>(
+            entry.Member.DamageTypeWeaknesses
+        )
     );
 }

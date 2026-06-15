@@ -3,19 +3,12 @@
 [ext_resource type="Script" uid="uid://s84xq2vpflf5" path="res://src/battle/resources/BattleReactionConditionResource.cs" id="1_4enes"]
 [ext_resource type="Script" uid="uid://cidn5h6e6ryfc" path="res://src/battle/resources/BattleReactionResource.cs" id="1_reaction"]
 [ext_resource type="Script" uid="uid://d15qt4arepe31" path="res://src/battle/resources/OwnerHasStatusReactionConditionResource.cs" id="2_condition"]
-[ext_resource type="Script" uid="uid://l7mkr8b1xxgu" path="res://src/battle/resources/HealBattleEffectResource.cs" id="3_heal"]
-[ext_resource type="Script" uid="uid://gwug75hcnrr3" path="res://src/battle/resources/BattleEffectResource.cs" id="3_wem67"]
+[ext_resource type="Script" uid="uid://gwug75hcnrr3" path="res://src/battle/resources/effect_resources/BattleEffectResource.cs" id="3_1dnx2"]
 
 [sub_resource type="Resource" id="Resource_condition"]
 script = ExtResource("2_condition")
 StatusId = "poison"
 metadata/_custom_type_script = "uid://d15qt4arepe31"
-
-[sub_resource type="Resource" id="Resource_heal"]
-script = ExtResource("3_heal")
-Amount = 5
-ScaleBySourceStatusId = "poison"
-metadata/_custom_type_script = "uid://l7mkr8b1xxgu"
 
 [resource]
 script = ExtResource("1_reaction")
@@ -23,5 +16,4 @@ Id = "toxic_recovery"
 Trigger = 1
 Schedule = 2
 Conditions = Array[ExtResource("1_4enes")]([SubResource("Resource_condition")])
-Effects = Array[ExtResource("3_wem67")]([SubResource("Resource_heal")])
 metadata/_custom_type_script = "uid://cidn5h6e6ryfc"
