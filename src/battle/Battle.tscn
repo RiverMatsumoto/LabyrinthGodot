@@ -71,7 +71,7 @@ custom_minimum_size = Vector2(0, 96)
 layout_mode = 2
 mouse_filter = 2
 script = ExtResource("2_presenter")
-BaseSpeed = 0.25
+BaseSpeed = 0.5
 
 [node name="Message" type="Label" parent="Panel/Margin/Layout/Presenter" unique_id=982144203]
 unique_name_in_owner = true

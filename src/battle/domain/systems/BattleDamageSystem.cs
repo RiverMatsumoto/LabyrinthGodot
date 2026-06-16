@@ -40,7 +40,7 @@ internal sealed class BattleDamageSystem(BattleRuntime runtime)
                 damage,
                 BattlePopupKind.Damage
             ));
-            reactiveEffectEvents.Add(new WindowOperation(new ReactiveEffectEvent(
+            reactiveEffectEvents.Add(new TriggerReactiveEffectsOperation(new ReactiveEffectEvent(
                 runtime.NextCauseId(),
                 ReactiveEffectTrigger.Damage,
                 source.Id,
@@ -53,7 +53,7 @@ internal sealed class BattleDamageSystem(BattleRuntime runtime)
         var followUps = new List<BattleOperation>();
         if (popups.Count > 0)
         {
-            followUps.Add(new CueOperation([
+            followUps.Add(new VisualCueOperation([
                 new PopupBatchCue(popups),
             ]));
         }

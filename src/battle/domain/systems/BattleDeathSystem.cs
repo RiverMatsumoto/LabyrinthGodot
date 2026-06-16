@@ -25,7 +25,7 @@ internal sealed class BattleDeathSystem(
 
         var operations = new List<BattleOperation>
         {
-            new CueOperation(
+            new VisualCueOperation(
                 newlyDead
                     .Select(unit =>
                         (BattleCue)new DeathCue(unit.Id))
@@ -33,7 +33,7 @@ internal sealed class BattleDeathSystem(
             ),
         };
         operations.AddRange(newlyDead.Select(unit =>
-            (BattleOperation)new WindowOperation(new ReactiveEffectEvent(
+            (BattleOperation)new TriggerReactiveEffectsOperation(new ReactiveEffectEvent(
                 runtime.NextCauseId(),
                 ReactiveEffectTrigger.Defeat,
                 operation.SourceId,

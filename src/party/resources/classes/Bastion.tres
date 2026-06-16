@@ -6,7 +6,7 @@
 [ext_resource type="Script" uid="uid://w7prxgfy8udc" path="res://src/battle/resources/DamageTypeResistanceResource.cs" id="3_hap2o"]
 [ext_resource type="Resource" uid="uid://cutdclklat13l" path="res://src/battle/resources/actions/BasicAttack.tres" id="4_basic"]
 [ext_resource type="Script" uid="uid://bftd8hkll8s6r" path="res://src/battle/resources/DamageTypeWeaknessResource.cs" id="4_k6qkp"]
-[ext_resource type="Script" path="res://src/battle/resources/BattleReactiveEffectResource.cs" id="5_2ikfc"]
+[ext_resource type="Script" uid="uid://cidn5h6e6ryfc" path="res://src/battle/resources/BattleReactiveEffectResource.cs" id="5_2ikfc"]
 [ext_resource type="Script" uid="uid://bolb43snulv2k" path="res://src/battle/resources/StatusResistanceResource.cs" id="7_yo6hh"]
 [ext_resource type="Script" uid="uid://bsx7mfygk2d3i" path="res://src/battle/resources/StatusWeaknessResource.cs" id="8_pu8tp"]
 

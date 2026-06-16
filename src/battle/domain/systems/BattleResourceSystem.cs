@@ -49,7 +49,7 @@ internal sealed class BattleResourceSystem(BattleRuntime runtime)
         if (popups.Count > 0)
         {
             runtime.InsertFront([
-                new CueOperation([new PopupBatchCue(popups)]),
+                new VisualCueOperation([new PopupBatchCue(popups)]),
                 new DeathCheckOperation(
                     operation.Context.SourceId,
                     operation.Context.ActionId,

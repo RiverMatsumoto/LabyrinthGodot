@@ -21,7 +21,7 @@ public partial class BattlePresenter : Control, IBattlePresenter
 {
     public override void _Notification(int what) => this.Notify(what);
 
-    [Export(PropertyHint.Range, "0.25,4,0.25")]
+    [Export(PropertyHint.Range, "0.25,4,0.1")]
     public double BaseSpeed { get; set; } = 1;
 
     [Node] public Label Message { get; set; } = default!;

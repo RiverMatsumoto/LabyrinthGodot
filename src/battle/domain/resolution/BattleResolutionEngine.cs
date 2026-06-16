@@ -102,7 +102,7 @@ internal sealed class BattleResolutionEngine(
         runtime.Operations.Clear();
         runtime.AfterActionFlushStarted = false;
         runtime.EndTurnFlushStarted = false;
-        runtime.Operations.AddLast(new WindowOperation(
+        runtime.Operations.AddLast(new TriggerReactiveEffectsOperation(
             new ReactiveEffectEvent(
                 runtime.NextCauseId(),
                 ReactiveEffectTrigger.TurnStarted
@@ -114,7 +114,7 @@ internal sealed class BattleResolutionEngine(
                 new ExecuteActionOperation(command)
             );
         }
-        runtime.Operations.AddLast(new WindowOperation(
+        runtime.Operations.AddLast(new TriggerReactiveEffectsOperation(
             new ReactiveEffectEvent(
                 runtime.NextCauseId(),
                 ReactiveEffectTrigger.TurnEnded
@@ -163,7 +163,7 @@ internal sealed class BattleResolutionEngine(
             var operation = runtime.Operations.First.Value;
             runtime.Operations.RemoveFirst();
 
-            if (operation is CueOperation cue)
+            if (operation is VisualCueOperation cue)
             {
                 runtime.AwaitingCueBatchId =
                     runtime.NextCueBatchId();

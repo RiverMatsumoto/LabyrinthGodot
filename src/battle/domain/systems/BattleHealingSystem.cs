@@ -30,7 +30,7 @@ internal sealed class BattleHealingSystem(BattleRuntime runtime)
                 healed,
                 BattlePopupKind.Heal
             ));
-            reactiveEffectEvents.Add(new WindowOperation(new ReactiveEffectEvent(
+            reactiveEffectEvents.Add(new TriggerReactiveEffectsOperation(new ReactiveEffectEvent(
                 runtime.NextCauseId(),
                 ReactiveEffectTrigger.Healing,
                 operation.Context.SourceId,
@@ -43,7 +43,7 @@ internal sealed class BattleHealingSystem(BattleRuntime runtime)
         var followUps = new List<BattleOperation>();
         if (popups.Count > 0)
         {
-            followUps.Add(new CueOperation([
+            followUps.Add(new VisualCueOperation([
                 new PopupBatchCue(popups),
             ]));
         }

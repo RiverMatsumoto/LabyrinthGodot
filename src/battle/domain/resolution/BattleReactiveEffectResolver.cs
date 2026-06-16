@@ -174,7 +174,7 @@ internal sealed class BattleReactiveEffectResolver(
                 )
             )
             {
-                operations.Add(new WindowOperation(new ReactiveEffectEvent(
+                operations.Add(new TriggerReactiveEffectsOperation(new ReactiveEffectEvent(
                     runtime.NextCauseId(),
                     ReactiveEffectTrigger.StatusTriggered,
                     invocation.ReactiveEffect.OwnerId,

@@ -24,7 +24,7 @@ internal sealed class BattleOperationExecutor(
             case ExecuteActionOperation execute:
                 ExecuteAction(execute.Command);
                 break;
-            case WindowOperation window:
+            case TriggerReactiveEffectsOperation window:
                 reactiveEffects.Trigger(window.Event);
                 break;
             case DamageOperation damageOperation:
@@ -132,7 +132,7 @@ internal sealed class BattleOperationExecutor(
         );
         var operations = new List<BattleOperation>
         {
-            new WindowOperation(new ReactiveEffectEvent(
+            new TriggerReactiveEffectsOperation(new ReactiveEffectEvent(
                 runtime.NextCauseId(),
                 ReactiveEffectTrigger.ActionStarted,
                 actor.Id,
@@ -152,7 +152,7 @@ internal sealed class BattleOperationExecutor(
     private void EndAction(ActionEndOperation operation)
     {
         runtime.InsertFront([
-            new WindowOperation(new ReactiveEffectEvent(
+            new TriggerReactiveEffectsOperation(new ReactiveEffectEvent(
                 runtime.NextCauseId(),
                 ReactiveEffectTrigger.ActionFinished,
                 operation.Context.SourceId,

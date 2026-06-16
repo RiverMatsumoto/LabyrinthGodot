@@ -12,7 +12,7 @@ internal sealed class BattleEffectOperationBuilder(BattleRuntime runtime)
     {
         var operations = new List<BattleOperation>
         {
-            new WindowOperation(new ReactiveEffectEvent(
+            new TriggerReactiveEffectsOperation(new ReactiveEffectEvent(
                 runtime.NextCauseId(),
                 ReactiveEffectTrigger.BeforeEffect,
                 context.SourceId,
@@ -35,7 +35,7 @@ internal sealed class BattleEffectOperationBuilder(BattleRuntime runtime)
                 };
                 if (!string.IsNullOrWhiteSpace(damage.AnimationId))
                 {
-                    operations.Add(new CueOperation([
+                    operations.Add(new VisualCueOperation([
                         new AnimationCue(
                             damage.AnimationId,
                             context.SourceId,
@@ -51,7 +51,7 @@ internal sealed class BattleEffectOperationBuilder(BattleRuntime runtime)
             case HealEffectDefinition heal:
                 if (!string.IsNullOrWhiteSpace(heal.AnimationId))
                 {
-                    operations.Add(new CueOperation([
+                    operations.Add(new VisualCueOperation([
                         new AnimationCue(
                             heal.AnimationId,
                             context.SourceId,
@@ -85,7 +85,7 @@ internal sealed class BattleEffectOperationBuilder(BattleRuntime runtime)
                 ));
                 break;
             case PlayAnimationEffectDefinition animation:
-                operations.Add(new CueOperation([
+                operations.Add(new VisualCueOperation([
                     new AnimationCue(
                         animation.AnimationId,
                         context.SourceId,
@@ -94,7 +94,7 @@ internal sealed class BattleEffectOperationBuilder(BattleRuntime runtime)
                 ]));
                 break;
             case WaitEffectDefinition wait:
-                operations.Add(new CueOperation([
+                operations.Add(new VisualCueOperation([
                     new WaitCue(Math.Max(0, wait.Seconds)),
                 ]));
                 break;
@@ -110,7 +110,7 @@ internal sealed class BattleEffectOperationBuilder(BattleRuntime runtime)
                 );
         }
 
-        operations.Add(new WindowOperation(new ReactiveEffectEvent(
+        operations.Add(new TriggerReactiveEffectsOperation(new ReactiveEffectEvent(
             runtime.NextCauseId(),
             ReactiveEffectTrigger.AfterEffect,
             context.SourceId,
@@ -121,37 +121,47 @@ internal sealed class BattleEffectOperationBuilder(BattleRuntime runtime)
         return operations;
     }
 
-    private static BattlerId FirstTarget(EffectContext context) =>
-        context.TargetIds.Count > 0
-            ? context.TargetIds[0]
-            : default;
+    private static BattlerId FirstTarget(EffectContext context)
+    {
+        if (context.TargetIds.Count > 0)
+        {
+            return context.TargetIds[0];
+        }
+        return default;
+    }
 
     private static double ResolvePower(
         EffectContext context,
         DamageEffectDefinition damage
-    ) => damage.PowerSource switch
+    )
     {
-        EffectPowerSource.SourceStatusPower => context.StatusPower,
-        EffectPowerSource.FixedTimesSourceStatusPower =>
-            damage.Spec.Power * context.StatusPower,
-        EffectPowerSource.SourceStatusPowerTimesStacks =>
-            context.StatusPower * context.StatusStacks,
-        EffectPowerSource.FixedTimesSourceStatusPowerTimesStacks =>
-            damage.Spec.Power
-            * context.StatusPower
-            * context.StatusStacks,
-        _ => damage.Spec.Power,
-    };
+        return damage.PowerSource switch
+        {
+            EffectPowerSource.SourceStatusPower => context.StatusPower,
+            EffectPowerSource.FixedTimesSourceStatusPower =>
+                damage.Spec.Power * context.StatusPower,
+            EffectPowerSource.SourceStatusPowerTimesStacks =>
+                context.StatusPower * context.StatusStacks,
+            EffectPowerSource.FixedTimesSourceStatusPowerTimesStacks =>
+                damage.Spec.Power
+                * context.StatusPower
+                * context.StatusStacks,
+            EffectPowerSource.Fixed => throw new NotImplementedException(),
+            _ => damage.Spec.Power,
+        };
+    }
 
     private int ScaleAmount(
         EffectContext context,
         int amount,
-        StatusStackScaleDefinition? scale
-    ) => (int)Math.Round(ScaleAmount(
-        context,
-        (double)amount,
-        scale
-    ));
+        StatusStackScaleDefinition? scale)
+    {
+        return (int)Math.Round(ScaleAmount(
+            context,
+            (double)amount,
+            scale
+        ));
+    }
 
     private double ScaleAmount(
         EffectContext context,
@@ -173,8 +183,10 @@ internal sealed class BattleEffectOperationBuilder(BattleRuntime runtime)
         {
             return amount * status.Stacks;
         }
-        return context.StatusId == scale.StatusId
-            ? amount * context.StatusStacks
-            : 0;
+        if (context.StatusId == scale.StatusId)
+        {
+            return amount * context.StatusStacks;
+        }
+        return 0;
     }
 }

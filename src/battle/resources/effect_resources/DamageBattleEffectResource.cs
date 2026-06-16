@@ -10,7 +10,7 @@ public partial class DamageBattleEffectResource : BattleEffectResource
     [Export] public DamageMode Mode { get; set; }
     [Export] public double Power { get; set; } = 1;
     [Export] public bool CanCrit { get; set; }
-    [Export] public double CritMultiplier { get; set; } = 1.8;
+    [Export] public double CritMultiplier { get; set; } = 2.5;
     [Export] public string AnimationId { get; set; } = "";
     [Export] public string ScaleBySourceStatusId { get; set; } = "";
     [Export] public EffectPowerSource PowerSource { get; set; }

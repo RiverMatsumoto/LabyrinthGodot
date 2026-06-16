@@ -87,7 +87,7 @@ internal sealed class BattleStatusSystem(
                 );
             }
 
-            followUps.Add(new CueOperation([
+            followUps.Add(new VisualCueOperation([
                 new StatusCue(
                     target.Id,
                     definition.Id,
@@ -95,7 +95,7 @@ internal sealed class BattleStatusSystem(
                     status.Stacks
                 ),
             ]));
-            followUps.Add(new WindowOperation(new ReactiveEffectEvent(
+            followUps.Add(new TriggerReactiveEffectsOperation(new ReactiveEffectEvent(
                 runtime.NextCauseId(),
                 ReactiveEffectTrigger.StatusApplied,
                 operation.Context.SourceId,
@@ -123,7 +123,7 @@ internal sealed class BattleStatusSystem(
                 )
             )
             {
-                followUps.Add(new CueOperation([
+                followUps.Add(new VisualCueOperation([
                     new StatusCue(
                         target.Id,
                         operation.StatusId,
@@ -131,7 +131,7 @@ internal sealed class BattleStatusSystem(
                         0
                     ),
                 ]));
-                followUps.Add(new WindowOperation(new ReactiveEffectEvent(
+                followUps.Add(new TriggerReactiveEffectsOperation(new ReactiveEffectEvent(
                     runtime.NextCauseId(),
                     ReactiveEffectTrigger.StatusRemoved,
                     operation.Context.SourceId,
@@ -166,7 +166,7 @@ internal sealed class BattleStatusSystem(
                     continue;
                 }
                 unit.Statuses.Remove(status.Id);
-                operations.Add(new CueOperation([
+                operations.Add(new VisualCueOperation([
                     new StatusCue(
                         unit.Id,
                         status.Id,
@@ -174,7 +174,7 @@ internal sealed class BattleStatusSystem(
                         0
                     ),
                 ]));
-                operations.Add(new WindowOperation(new ReactiveEffectEvent(
+                operations.Add(new TriggerReactiveEffectsOperation(new ReactiveEffectEvent(
                     runtime.NextCauseId(),
                     ReactiveEffectTrigger.StatusRemoved,
                     unit.Id,

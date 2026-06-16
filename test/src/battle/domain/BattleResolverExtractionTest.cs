@@ -170,10 +170,10 @@ public class BattleResolverExtractionTest(Node testScene)
             )
         );
 
-        operations[0].ShouldBeOfType<WindowOperation>();
-        operations[1].ShouldBeOfType<CueOperation>();
+        operations[0].ShouldBeOfType<TriggerReactiveEffectsOperation>();
+        operations[1].ShouldBeOfType<VisualCueOperation>();
         operations[2].ShouldBeOfType<DamageOperation>();
-        operations[3].ShouldBeOfType<WindowOperation>();
+        operations[3].ShouldBeOfType<TriggerReactiveEffectsOperation>();
     }
 
     [Test]

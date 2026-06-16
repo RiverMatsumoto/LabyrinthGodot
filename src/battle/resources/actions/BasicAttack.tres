@@ -17,6 +17,6 @@ script = ExtResource("3_action")
 Id = "basic_attack"
 DisplayName = "Attack"
 TargetRule = 2
-Range = 1
+Range = 3
 Effects = Array[ExtResource("1_effect")]([SubResource("Damage_basic_attack")])
 metadata/_custom_type_script = "uid://w8j6cwe8vpbk"
