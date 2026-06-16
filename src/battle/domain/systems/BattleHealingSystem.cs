@@ -8,7 +8,7 @@ internal sealed class BattleHealingSystem(BattleRuntime runtime)
     public void Apply(HealOperation operation)
     {
         var popups = new List<BattlePopup>();
-        var reactionEvents = new List<BattleOperation>();
+        var reactiveEffectEvents = new List<BattleOperation>();
         foreach (var targetId in operation.Context.TargetIds)
         {
             if (
@@ -30,13 +30,13 @@ internal sealed class BattleHealingSystem(BattleRuntime runtime)
                 healed,
                 BattlePopupKind.Heal
             ));
-            reactionEvents.Add(new WindowOperation(new ReactionEvent(
+            reactiveEffectEvents.Add(new WindowOperation(new ReactiveEffectEvent(
                 runtime.NextCauseId(),
-                ReactionTrigger.Healing,
+                ReactiveEffectTrigger.Healing,
                 operation.Context.SourceId,
                 target.Id,
                 operation.Context.ActionId,
-                Depth: operation.Context.ReactionDepth
+                Depth: operation.Context.ReactiveEffectDepth
             )));
         }
 
@@ -47,7 +47,7 @@ internal sealed class BattleHealingSystem(BattleRuntime runtime)
                 new PopupBatchCue(popups),
             ]));
         }
-        followUps.AddRange(reactionEvents);
+        followUps.AddRange(reactiveEffectEvents);
         runtime.InsertFront(followUps);
     }
 }

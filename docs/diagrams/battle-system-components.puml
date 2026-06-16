@@ -36,7 +36,7 @@ Battle --> Logic : acknowledge cue batch
 note right of Repo
   Authoritative runtime state:
   units, turns, operations,
-  effects, reactions, outcome
+  effects, reactive effects, outcome
 end note
 
 note right of Presenter

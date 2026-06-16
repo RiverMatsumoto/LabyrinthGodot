@@ -6,7 +6,7 @@ using Godot;
 using Godot.Collections;
 
 /// <summary>
-/// Authors action prevention, duration, stacking, and status-owned reactions.
+/// Authors action prevention, duration, stacking, and status-owned reactive effects.
 /// </summary>
 [GlobalClass]
 public partial class BattleStatusResource : Resource
@@ -16,7 +16,7 @@ public partial class BattleStatusResource : Resource
     [Export] public bool PreventsAction { get; set; }
     [Export] public int DefaultDuration { get; set; } = 1;
     [Export] public int MaxStacks { get; set; } = 1;
-    [Export] public Array<string> ReactionIds { get; set; } = [];
+    [Export] public Array<string> ReactiveEffectIds { get; set; } = [];
 
     public StatusDefinition Compile()
     {
@@ -30,7 +30,7 @@ public partial class BattleStatusResource : Resource
             PreventsAction,
             Math.Max(1, DefaultDuration),
             Math.Max(1, MaxStacks),
-            ReactionIds.Select(id => new ReactionId(id)).ToArray()
+            ReactiveEffectIds.Select(id => new ReactiveEffectId(id)).ToArray()
         );
     }
 }

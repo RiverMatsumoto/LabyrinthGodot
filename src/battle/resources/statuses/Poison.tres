@@ -1,4 +1,4 @@
-[gd_resource type="Resource" script_class="BattleStatusResource" format=3]
+[gd_resource type="Resource" script_class="BattleStatusResource" format=3 uid="uid://6kadg4lq2hxa"]
 
 [ext_resource type="Script" uid="uid://b3nq66we03b8c" path="res://src/battle/resources/BattleStatusResource.cs" id="1_status"]
 
@@ -8,5 +8,5 @@ Id = "poison"
 DisplayName = "Poison"
 DefaultDuration = 3
 MaxStacks = 3
-ReactionIds = Array[String](["poison_tick"])
+ReactiveEffectIds = Array[String](["poison_tick"])
 metadata/_custom_type_script = "uid://b3nq66we03b8c"

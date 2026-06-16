@@ -7,7 +7,7 @@ internal sealed class BattleRuntime
 {
     private long _nextCueBatchId;
     private long _nextCauseId;
-    private long _nextReactionRegistrationId;
+    private long _nextReactiveEffectRegistrationId;
 
     public BattleRuntime(BattleCatalog catalog)
     {
@@ -19,10 +19,10 @@ internal sealed class BattleRuntime
     public Dictionary<BattlerId, BattleCommand> PlayerCommands { get; } = [];
     public List<BattlerId> CommandOrder { get; } = [];
     public LinkedList<BattleOperation> Operations { get; } = [];
-    public List<ReactionInvocation> AfterActionReactions { get; } = [];
-    public List<ReactionInvocation> EndTurnReactions { get; } = [];
-    public List<RuntimeReaction> Reactions { get; } = [];
-    public HashSet<(long RegistrationId, long CauseId)> ReactionGuards
+    public List<ReactiveEffectInvocation> AfterActionReactiveEffects { get; } = [];
+    public List<ReactiveEffectInvocation> EndTurnReactiveEffects { get; } = [];
+    public List<RuntimeReactiveEffect> ReactiveEffects { get; } = [];
+    public HashSet<(long RegistrationId, long CauseId)> ReactiveEffectGuards
         { get; } = [];
     public HashSet<BattlerId> HandledDeaths { get; } = [];
 
@@ -38,8 +38,8 @@ internal sealed class BattleRuntime
 
     public long NextCueBatchId() => ++_nextCueBatchId;
     public long NextCauseId() => ++_nextCauseId;
-    public long NextReactionRegistrationId() =>
-        ++_nextReactionRegistrationId;
+    public long NextReactiveEffectRegistrationId() =>
+        ++_nextReactiveEffectRegistrationId;
 
     public void InsertFront(IEnumerable<BattleOperation> operations)
     {
@@ -67,10 +67,10 @@ internal sealed class BattleRuntime
         PlayerCommands.Clear();
         CommandOrder.Clear();
         Operations.Clear();
-        AfterActionReactions.Clear();
-        EndTurnReactions.Clear();
-        Reactions.Clear();
-        ReactionGuards.Clear();
+        AfterActionReactiveEffects.Clear();
+        EndTurnReactiveEffects.Clear();
+        ReactiveEffects.Clear();
+        ReactiveEffectGuards.Clear();
         HandledDeaths.Clear();
 
         Setup = null;
@@ -84,6 +84,6 @@ internal sealed class BattleRuntime
 
         _nextCueBatchId = 0;
         _nextCauseId = 0;
-        _nextReactionRegistrationId = 0;
+        _nextReactiveEffectRegistrationId = 0;
     }
 }

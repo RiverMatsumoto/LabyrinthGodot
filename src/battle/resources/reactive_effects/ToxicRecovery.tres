@@ -1,0 +1,19 @@
+[gd_resource type="Resource" script_class="BattleReactiveEffectResource" format=3 uid="uid://b1qm8lf0oqysj"]
+
+[ext_resource type="Script" path="res://src/battle/resources/BattleReactiveEffectConditionResource.cs" id="1_4enes"]
+[ext_resource type="Script" path="res://src/battle/resources/BattleReactiveEffectResource.cs" id="1_reactiveEffect"]
+[ext_resource type="Script" path="res://src/battle/resources/OwnerHasStatusReactiveEffectConditionResource.cs" id="2_condition"]
+[ext_resource type="Script" uid="uid://gwug75hcnrr3" path="res://src/battle/resources/effect_resources/BattleEffectResource.cs" id="3_1dnx2"]
+
+[sub_resource type="Resource" id="Resource_condition"]
+script = ExtResource("2_condition")
+StatusId = "poison"
+metadata/_custom_type_script = "uid://d15qt4arepe31"
+
+[resource]
+script = ExtResource("1_reactiveEffect")
+Id = "toxic_recovery"
+Trigger = 1
+Schedule = 2
+Conditions = Array[ExtResource("1_4enes")]([SubResource("Resource_condition")])
+metadata/_custom_type_script = "uid://cidn5h6e6ryfc"

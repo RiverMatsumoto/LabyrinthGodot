@@ -18,7 +18,7 @@ internal sealed class BattleDamageSystem(BattleRuntime runtime)
         }
 
         var popups = new List<BattlePopup>();
-        var reactionEvents = new List<BattleOperation>();
+        var reactiveEffectEvents = new List<BattleOperation>();
         foreach (var targetId in operation.Context.TargetIds)
         {
             if (
@@ -40,13 +40,13 @@ internal sealed class BattleDamageSystem(BattleRuntime runtime)
                 damage,
                 BattlePopupKind.Damage
             ));
-            reactionEvents.Add(new WindowOperation(new ReactionEvent(
+            reactiveEffectEvents.Add(new WindowOperation(new ReactiveEffectEvent(
                 runtime.NextCauseId(),
-                ReactionTrigger.Damage,
+                ReactiveEffectTrigger.Damage,
                 source.Id,
                 target.Id,
                 operation.Context.ActionId,
-                Depth: operation.Context.ReactionDepth
+                Depth: operation.Context.ReactiveEffectDepth
             )));
         }
 
@@ -57,11 +57,11 @@ internal sealed class BattleDamageSystem(BattleRuntime runtime)
                 new PopupBatchCue(popups),
             ]));
         }
-        followUps.AddRange(reactionEvents);
+        followUps.AddRange(reactiveEffectEvents);
         followUps.Add(new DeathCheckOperation(
             operation.Context.SourceId,
             operation.Context.ActionId,
-            operation.Context.ReactionDepth
+            operation.Context.ReactiveEffectDepth
         ));
         runtime.InsertFront(followUps);
     }

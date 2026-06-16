@@ -59,7 +59,7 @@ public sealed class BattleSession(
         Hp: entry.Member.Hp,
         Tp: entry.Member.Tp,
         ActionIds: entry.Member.LearnedActions.ToArray(),
-        ReactionIdList: entry.Member.PassiveReactionIds.ToArray(),
+        ReactiveEffectIdList: entry.Member.PassiveReactiveEffectIds.ToArray(),
         StatusResistances: new Dictionary<StatusId, double>(
             entry.Member.StatusResistances
         ),

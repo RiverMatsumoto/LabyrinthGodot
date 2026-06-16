@@ -16,6 +16,7 @@ script = ExtResource("3_status")
 StatusId = "poison"
 Duration = 3
 BaseChance = 0.75
+Power = 10.0
 
 [resource]
 script = ExtResource("4_action")

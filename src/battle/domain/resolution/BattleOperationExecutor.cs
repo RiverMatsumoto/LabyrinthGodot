@@ -8,7 +8,7 @@ internal sealed class BattleOperationExecutor(
     BattleRuntime runtime,
     BattleTargetResolver targeting,
     BattleEffectOperationBuilder effects,
-    BattleReactionResolver reactions,
+    BattleReactiveEffectResolver reactiveEffects,
     BattleOutcomeResolver outcome,
     BattleDamageSystem damage,
     BattleHealingSystem healing,
@@ -25,7 +25,7 @@ internal sealed class BattleOperationExecutor(
                 ExecuteAction(execute.Command);
                 break;
             case WindowOperation window:
-                reactions.Trigger(window.Event);
+                reactiveEffects.Trigger(window.Event);
                 break;
             case DamageOperation damageOperation:
                 damage.Apply(damageOperation);
@@ -42,11 +42,11 @@ internal sealed class BattleOperationExecutor(
             case RemoveStatusOperation remove:
                 statuses.Remove(remove);
                 break;
-            case RegisterReactionOperation register:
-                reactions.Register(register);
+            case RegisterReactiveEffectOperation register:
+                reactiveEffects.Register(register);
                 break;
-            case UnregisterStatusReactionsOperation unregister:
-                reactions.UnregisterStatusReactions(
+            case UnregisterStatusReactiveEffectsOperation unregister:
+                reactiveEffects.UnregisterStatusReactiveEffects(
                     unregister.OwnerId,
                     unregister.StatusId
                 );
@@ -54,17 +54,17 @@ internal sealed class BattleOperationExecutor(
             case ActionEndOperation actionEnd:
                 EndAction(actionEnd);
                 break;
-            case FlushAfterActionReactionsOperation:
+            case FlushAfterActionReactiveEffectsOperation:
                 runtime.AfterActionFlushStarted = true;
-                reactions.Flush(
-                    runtime.AfterActionReactions,
+                reactiveEffects.Flush(
+                    runtime.AfterActionReactiveEffects,
                     repeat: false
                 );
                 break;
-            case FlushEndTurnReactionsOperation:
+            case FlushEndTurnReactiveEffectsOperation:
                 runtime.EndTurnFlushStarted = true;
-                reactions.Flush(
-                    runtime.EndTurnReactions,
+                reactiveEffects.Flush(
+                    runtime.EndTurnReactiveEffects,
                     repeat: true
                 );
                 break;
@@ -127,13 +127,14 @@ internal sealed class BattleOperationExecutor(
             action.Id,
             0,
             null,
+            0,
             0
         );
         var operations = new List<BattleOperation>
         {
-            new WindowOperation(new ReactionEvent(
+            new WindowOperation(new ReactiveEffectEvent(
                 runtime.NextCauseId(),
-                ReactionTrigger.ActionStarted,
+                ReactiveEffectTrigger.ActionStarted,
                 actor.Id,
                 targets[0].Id,
                 action.Id,
@@ -151,17 +152,17 @@ internal sealed class BattleOperationExecutor(
     private void EndAction(ActionEndOperation operation)
     {
         runtime.InsertFront([
-            new WindowOperation(new ReactionEvent(
+            new WindowOperation(new ReactiveEffectEvent(
                 runtime.NextCauseId(),
-                ReactionTrigger.ActionFinished,
+                ReactiveEffectTrigger.ActionFinished,
                 operation.Context.SourceId,
                 operation.Context.TargetIds.Count > 0
                     ? operation.Context.TargetIds[0]
                     : default,
                 operation.Context.ActionId,
-                Depth: operation.Context.ReactionDepth
+                Depth: operation.Context.ReactiveEffectDepth
             )),
-            new FlushAfterActionReactionsOperation(),
+            new FlushAfterActionReactiveEffectsOperation(),
         ]);
     }
 }

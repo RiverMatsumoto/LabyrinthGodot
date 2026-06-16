@@ -16,7 +16,7 @@ internal sealed class BattleUnit
         Hp = Math.Clamp(seed.Hp, 0, seed.Stats.MaxHp);
         Tp = Math.Clamp(seed.Tp, 0, seed.Stats.MaxTp);
         ActionIds = seed.ActionIds.ToArray();
-        ReactionIds = seed.ReactionIds.ToArray();
+        ReactiveEffectIds = seed.ReactiveEffectIds.ToArray();
         StatusResistances = new Dictionary<StatusId, double>(
             seed.StatusResistanceValues
         );
@@ -39,7 +39,7 @@ internal sealed class BattleUnit
     public int Hp { get; set; }
     public int Tp { get; set; }
     public IReadOnlyList<ActionId> ActionIds { get; }
-    public IReadOnlyList<ReactionId> ReactionIds { get; }
+    public IReadOnlyList<ReactiveEffectId> ReactiveEffectIds { get; }
     public Dictionary<StatusId, double> StatusResistances { get; }
     public Dictionary<StatusId, double> StatusWeaknesses { get; }
     public Dictionary<DamageType, double> DamageTypeResistances { get; }
@@ -65,24 +65,26 @@ internal sealed class BattleUnit
 internal sealed class RuntimeStatus(
     StatusId id,
     int stacks,
-    int remainingTurns
+    int remainingTurns,
+    double power
 )
 {
     public StatusId Id { get; } = id;
     public int Stacks { get; set; } = stacks;
     public int RemainingTurns { get; set; } = remainingTurns;
+    public double Power { get; set; } = power;
 }
 
-internal sealed class RuntimeReaction(
+internal sealed class RuntimeReactiveEffect(
     long registrationId,
     BattlerId ownerId,
-    ReactionDefinition definition,
+    ReactiveEffectDefinition definition,
     StatusId? sourceStatusId
 )
 {
     public long RegistrationId { get; } = registrationId;
     public BattlerId OwnerId { get; } = ownerId;
-    public ReactionDefinition Definition { get; } = definition;
+    public ReactiveEffectDefinition Definition { get; } = definition;
     public StatusId? SourceStatusId { get; } = sourceStatusId;
     public int RemainingUses { get; private set; } = definition.Uses;
     public bool HasUses => RemainingUses != 0;

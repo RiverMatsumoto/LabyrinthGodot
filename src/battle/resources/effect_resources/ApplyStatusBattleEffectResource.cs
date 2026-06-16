@@ -12,12 +12,14 @@ public partial class ApplyStatusBattleEffectResource :
     [Export] public int Duration { get; set; }
     [Export(PropertyHint.Range, "0,1,0.01")]
     public double BaseChance { get; set; } = 1;
+    [Export] public double Power { get; set; }
 
     public override BattleEffectDefinition Compile() =>
         new ApplyStatusEffectDefinition(
             new StatusId(StatusId),
             Math.Max(1, Stacks),
             Math.Max(0, Duration),
-            Math.Clamp(BaseChance, 0, 1)
+            Math.Clamp(BaseChance, 0, 1),
+            Math.Max(0, Power)
         );
 }

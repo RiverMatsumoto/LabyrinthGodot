@@ -59,8 +59,10 @@ public partial record PartyMemberData
     public DamageAffinityData[] DamageResistances { get; init; } = [];
     [Save("damage_weaknesses")]
     public DamageAffinityData[] DamageWeaknesses { get; init; } = [];
+    [Save("passive_reactive_effects")]
+    public string[] PassiveReactiveEffects { get; init; } = [];
     [Save("passive_reactions")]
-    public string[] PassiveReactions { get; init; } = [];
+    public string[] LegacyPassiveReactiveEffects { get; init; } = [];
 
     public PartyMember ToDomain()
     {
@@ -101,8 +103,11 @@ public partial record PartyMemberData
             member.DamageTypeWeaknesses[weakness.DamageType] =
                 weakness.Value;
         }
-        member.PassiveReactionIds.AddRange(
-            PassiveReactions.Select(id => new ReactionId(id))
+        var passiveReactiveEffects = PassiveReactiveEffects.Length > 0
+            ? PassiveReactiveEffects
+            : LegacyPassiveReactiveEffects;
+        member.PassiveReactiveEffectIds.AddRange(
+            passiveReactiveEffects.Select(id => new ReactiveEffectId(id))
         );
         return member;
     }
@@ -151,7 +156,7 @@ public partial record PartyMemberData
                 Value = pair.Value,
             })
             .ToArray(),
-        PassiveReactions = entry.Member.PassiveReactionIds
+        PassiveReactiveEffects = entry.Member.PassiveReactiveEffectIds
             .Select(id => id.Value)
             .ToArray(),
     };

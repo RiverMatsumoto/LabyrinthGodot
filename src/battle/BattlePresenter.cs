@@ -2,6 +2,7 @@ namespace Labyrinth;
 
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using Chickensoft.AutoInject;
 using Chickensoft.Introspection;
 using Godot;
@@ -28,8 +29,8 @@ public partial class BattlePresenter : Control, IBattlePresenter
 
     public bool IsPlaying => _cues is not null;
     public double EffectiveSpeed => CalculateEffectiveSpeed(
-      BaseSpeed,
-      Input.IsActionPressed(GameInputs.UiAccept)
+        BaseSpeed,
+        Input.IsActionPressed(GameInputs.UiAccept)
     );
 
     private IReadOnlyList<BattleCue>? _cues;
@@ -91,8 +92,8 @@ public partial class BattlePresenter : Control, IBattlePresenter
     public void OnExitTree() => Cancel();
 
     public static double CalculateEffectiveSpeed(
-      double baseSpeed,
-      bool fastForward
+        double baseSpeed,
+        bool fastForward
     ) => Math.Max(0.01, baseSpeed) * (fastForward ? 2.0 : 1.0);
 
     private void BeginCue()
@@ -149,16 +150,16 @@ public partial class BattlePresenter : Control, IBattlePresenter
     }
 
     private static string PopupText(BattlePopup popup) =>
-      popup.Kind switch
-      {
-          BattlePopupKind.Damage =>
-          $"{popup.TargetId}: -{popup.Amount} HP",
-          BattlePopupKind.Heal =>
-          $"{popup.TargetId}: +{popup.Amount} HP",
-          BattlePopupKind.Tp =>
-          $"{popup.TargetId}: {popup.Amount:+#;-#;0} TP",
-          _ => popup.Amount.ToString(),
-      };
+        popup.Kind switch
+        {
+            BattlePopupKind.Damage =>
+            $"{popup.TargetId}: -{popup.Amount} HP",
+            BattlePopupKind.Heal =>
+            $"{popup.TargetId}: +{popup.Amount} HP",
+            BattlePopupKind.Tp =>
+            $"{popup.TargetId}: {popup.Amount:+#;-#;0} TP",
+            _ => popup.Amount.ToString(CultureInfo.InvariantCulture),
+        };
 
     private void ClearPopups()
     {

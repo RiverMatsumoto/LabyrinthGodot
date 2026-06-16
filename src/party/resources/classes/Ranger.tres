@@ -8,7 +8,7 @@
 [ext_resource type="Script" uid="uid://w7prxgfy8udc" path="res://src/battle/resources/DamageTypeResistanceResource.cs" id="5_javte"]
 [ext_resource type="Script" uid="uid://bftd8hkll8s6r" path="res://src/battle/resources/DamageTypeWeaknessResource.cs" id="6_5s8o8"]
 [ext_resource type="Resource" uid="uid://dl5cl8itc1ops" path="res://src/battle/resources/actions/PoisonStrike.tres" id="6_poison"]
-[ext_resource type="Script" uid="uid://cidn5h6e6ryfc" path="res://src/battle/resources/BattleReactionResource.cs" id="7_w2ka1"]
+[ext_resource type="Script" path="res://src/battle/resources/BattleReactiveEffectResource.cs" id="7_w2ka1"]
 [ext_resource type="Script" uid="uid://bolb43snulv2k" path="res://src/battle/resources/StatusResistanceResource.cs" id="9_vw2bq"]
 [ext_resource type="Script" uid="uid://bsx7mfygk2d3i" path="res://src/battle/resources/StatusWeaknessResource.cs" id="10_31b2b"]
 

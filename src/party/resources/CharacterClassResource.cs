@@ -18,7 +18,7 @@ public partial class CharacterClassResource : Resource
     [Export] public BattleStatsResource Stats { get; set; } = new();
     [Export] public Array<BattleActionResource> Actions { get; set; } = [];
     [Export]
-    public Array<BattleReactionResource> PassiveReactions { get; set; } = [];
+    public Array<BattleReactiveEffectResource> PassiveReactiveEffects { get; set; } = [];
     [Export]
     public Array<StatusResistanceResource> StatusResistances { get; set; } = [];
     [Export]
@@ -45,13 +45,13 @@ public partial class CharacterClassResource : Resource
         ArgumentNullException.ThrowIfNull(Stats);
 
         var actionIds = CompileActions(catalog);
-        var reactionIds = CompileReactions(catalog);
+        var reactiveEffectIds = CompileReactiveEffects(catalog);
         return new CharacterClassDefinition(
             new CharacterClassId(Id),
             string.IsNullOrWhiteSpace(DisplayName) ? Id : DisplayName,
             Stats.Compile(),
             actionIds,
-            reactionIds,
+            reactiveEffectIds,
             CompileStatusAffinities(
                 catalog,
                 StatusResistances,
@@ -108,22 +108,22 @@ public partial class CharacterClassResource : Resource
         return ids;
     }
 
-    private ReactionId[] CompileReactions(BattleCatalog catalog)
+    private ReactiveEffectId[] CompileReactiveEffects(BattleCatalog catalog)
     {
-        var ids = new List<ReactionId>();
-        foreach (var reaction in PassiveReactions)
+        var ids = new List<ReactiveEffectId>();
+        foreach (var reactiveEffect in PassiveReactiveEffects)
         {
-            if (reaction is null)
+            if (reactiveEffect is null)
             {
                 throw new InvalidOperationException(
-                    $"Character class '{Id}' has a missing passive reaction."
+                    $"Character class '{Id}' has a missing passive reactive effect."
                 );
             }
-            var id = new ReactionId(reaction.Id);
-            _ = catalog.GetReaction(id);
+            var id = new ReactiveEffectId(reactiveEffect.Id);
+            _ = catalog.GetReactiveEffect(id);
             ids.Add(id);
         }
-        return RequireUnique(ids, "passive reaction");
+        return RequireUnique(ids, "passive reactive effect");
     }
 
     private SystemDictionary CompileStatusAffinities<T>(

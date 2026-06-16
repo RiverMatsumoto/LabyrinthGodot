@@ -13,6 +13,7 @@ public partial class DamageBattleEffectResource : BattleEffectResource
     [Export] public double CritMultiplier { get; set; } = 1.8;
     [Export] public string AnimationId { get; set; } = "";
     [Export] public string ScaleBySourceStatusId { get; set; } = "";
+    [Export] public EffectPowerSource PowerSource { get; set; }
 
     public override BattleEffectDefinition Compile() =>
         new DamageEffectDefinition(
@@ -28,6 +29,7 @@ public partial class DamageBattleEffectResource : BattleEffectResource
                 ? null
                 : new StatusStackScaleDefinition(
                     new StatusId(ScaleBySourceStatusId)
-                )
+                ),
+            PowerSource
         );
 }

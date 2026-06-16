@@ -59,8 +59,17 @@ public enum BattleResource
     Tp,
 }
 
-/// <summary>Battle event metadata that can activate a reaction.</summary>
-public enum ReactionTrigger
+public enum EffectPowerSource
+{
+    Fixed,
+    SourceStatusPower,
+    FixedTimesSourceStatusPower,
+    SourceStatusPowerTimesStacks,
+    FixedTimesSourceStatusPowerTimesStacks,
+}
+
+/// <summary>Battle event metadata that can activate a reactive effect.</summary>
+public enum ReactiveEffectTrigger
 {
     TurnStarted,
     TurnEnded,
@@ -76,24 +85,24 @@ public enum ReactionTrigger
     Defeat,
 }
 
-/// <summary>Controls when a matched reaction enters the resolver queue.</summary>
-public enum ReactionSchedule
+/// <summary>Controls when a matched reactive effect enters the resolver queue.</summary>
+public enum ReactiveEffectSchedule
 {
     Immediate,
     AfterCurrentAction,
     EndOfTurn,
 }
 
-/// <summary>Selects the battler affected by reaction effects.</summary>
-public enum ReactionTargetPolicy
+/// <summary>Selects the battler affected by reactive effect effects.</summary>
+public enum ReactiveEffectTargetPolicy
 {
     Owner,
     EventSource,
     EventTarget,
 }
 
-/// <summary>Tests whether the reaction owner participated in an event.</summary>
-public enum ReactionOwnerRelation
+/// <summary>Tests whether the reactive effect owner participated in an event.</summary>
+public enum ReactiveEffectOwnerRelation
 {
     EventSource,
     EventTarget,
@@ -117,7 +126,8 @@ public sealed record StatusStackScaleDefinition(StatusId StatusId);
 public sealed record DamageEffectDefinition(
     DamageSpec Spec,
     string AnimationId = "",
-    StatusStackScaleDefinition? Scale = null
+    StatusStackScaleDefinition? Scale = null,
+    EffectPowerSource PowerSource = EffectPowerSource.Fixed
 ) : BattleEffectDefinition;
 
 public sealed record HealEffectDefinition(
@@ -136,7 +146,8 @@ public sealed record ApplyStatusEffectDefinition(
     StatusId StatusId,
     int Stacks = 1,
     int Duration = 0,
-    double BaseChance = 1.0
+    double BaseChance = 1.0,
+    double Power = 0
 ) : BattleEffectDefinition;
 
 public sealed record RemoveStatusEffectDefinition(StatusId StatusId)
@@ -150,35 +161,35 @@ public sealed record PlayAnimationEffectDefinition(
 public sealed record WaitEffectDefinition(double Seconds)
     : BattleEffectDefinition;
 
-public sealed record RegisterReactionEffectDefinition(ReactionId ReactionId)
+public sealed record RegisterReactiveEffectEffectDefinition(ReactiveEffectId ReactiveEffectId)
     : BattleEffectDefinition;
 
-/// <summary>Base contract for AND-combined reaction predicates.</summary>
-public abstract record ReactionConditionDefinition;
+/// <summary>Base contract for AND-combined reactive effect predicates.</summary>
+public abstract record ReactiveEffectConditionDefinition;
 
 public sealed record OwnerHasStatusConditionDefinition(
     StatusId StatusId,
     int MinimumStacks = 1
-) : ReactionConditionDefinition;
+) : ReactiveEffectConditionDefinition;
 
 public sealed record TriggerActionConditionDefinition(ActionId ActionId)
-    : ReactionConditionDefinition;
+    : ReactiveEffectConditionDefinition;
 
 public sealed record TriggerStatusConditionDefinition(StatusId StatusId)
-    : ReactionConditionDefinition;
+    : ReactiveEffectConditionDefinition;
 
 public sealed record OwnerRelationConditionDefinition(
-    ReactionOwnerRelation Relation
-) : ReactionConditionDefinition;
+    ReactiveEffectOwnerRelation Relation
+) : ReactiveEffectConditionDefinition;
 
-/// <summary>Compiled catalog reaction shared by authored references.</summary>
-public sealed record ReactionDefinition(
-    ReactionId Id,
-    ReactionTrigger Trigger,
-    ReactionSchedule Schedule,
-    ReactionTargetPolicy TargetPolicy,
+/// <summary>Compiled catalog reactive effect shared by authored references.</summary>
+public sealed record ReactiveEffectDefinition(
+    ReactiveEffectId Id,
+    ReactiveEffectTrigger Trigger,
+    ReactiveEffectSchedule Schedule,
+    ReactiveEffectTargetPolicy TargetPolicy,
     int Priority,
-    IReadOnlyList<ReactionConditionDefinition> Conditions,
+    IReadOnlyList<ReactiveEffectConditionDefinition> Conditions,
     IReadOnlyList<BattleEffectDefinition> Effects,
     int Uses = -1
 );
@@ -195,7 +206,7 @@ public sealed record BattleActionDefinition(
 );
 
 /// <summary>
-/// Data-driven status behavior and reactions; runtime stacks are battle state.
+/// Data-driven status behavior and reactive effects; runtime stacks are battle state.
 /// </summary>
 public sealed record StatusDefinition(
     StatusId Id,
@@ -203,10 +214,10 @@ public sealed record StatusDefinition(
     bool PreventsAction,
     int DefaultDuration,
     int MaxStacks = 1,
-    IReadOnlyList<ReactionId>? ReactionIdList = null
+    IReadOnlyList<ReactiveEffectId>? ReactiveEffectIdList = null
 )
 {
-    public IReadOnlyList<ReactionId> ReactionIds => ReactionIdList ?? [];
+    public IReadOnlyList<ReactiveEffectId> ReactiveEffectIds => ReactiveEffectIdList ?? [];
 }
 
 /// <summary>
@@ -219,14 +230,14 @@ public sealed record BattleEnemyDefinition(
     int Hp,
     int Tp,
     IReadOnlyList<ActionId> ActionIds,
-    IReadOnlyList<ReactionId>? ReactionIdList = null,
+    IReadOnlyList<ReactiveEffectId>? ReactiveEffectIdList = null,
     IReadOnlyDictionary<StatusId, double>? StatusResistances = null,
     IReadOnlyDictionary<StatusId, double>? StatusWeaknesses = null,
     IReadOnlyDictionary<DamageType, double>? DamageTypeResistances = null,
     IReadOnlyDictionary<DamageType, double>? DamageTypeWeaknesses = null
 )
 {
-    public IReadOnlyList<ReactionId> ReactionIds => ReactionIdList ?? [];
+    public IReadOnlyList<ReactiveEffectId> ReactiveEffectIds => ReactiveEffectIdList ?? [];
     public IReadOnlyDictionary<StatusId, double> StatusResistanceValues =>
         StatusResistances ?? new Dictionary<StatusId, double>();
     public IReadOnlyDictionary<StatusId, double> StatusWeaknessValues =>
@@ -276,14 +287,14 @@ public sealed record BattleBattlerSeed(
     int Hp,
     int Tp,
     IReadOnlyList<ActionId> ActionIds,
-    IReadOnlyList<ReactionId>? ReactionIdList = null,
+    IReadOnlyList<ReactiveEffectId>? ReactiveEffectIdList = null,
     IReadOnlyDictionary<StatusId, double>? StatusResistances = null,
     IReadOnlyDictionary<StatusId, double>? StatusWeaknesses = null,
     IReadOnlyDictionary<DamageType, double>? DamageTypeResistances = null,
     IReadOnlyDictionary<DamageType, double>? DamageTypeWeaknesses = null
 )
 {
-    public IReadOnlyList<ReactionId> ReactionIds => ReactionIdList ?? [];
+    public IReadOnlyList<ReactiveEffectId> ReactiveEffectIds => ReactiveEffectIdList ?? [];
     public IReadOnlyDictionary<StatusId, double> StatusResistanceValues =>
         StatusResistances ?? new Dictionary<StatusId, double>();
     public IReadOnlyDictionary<StatusId, double> StatusWeaknessValues =>
@@ -304,7 +315,7 @@ public sealed record BattleBattlerSeed(
         Hp: placement.Enemy.Hp,
         Tp: placement.Enemy.Tp,
         ActionIds: placement.Enemy.ActionIds,
-        ReactionIdList: placement.Enemy.ReactionIds,
+        ReactiveEffectIdList: placement.Enemy.ReactiveEffectIds,
         StatusResistances: placement.Enemy.StatusResistanceValues,
         StatusWeaknesses: placement.Enemy.StatusWeaknessValues,
         DamageTypeResistances: placement.Enemy.DamageResistanceValues,
@@ -324,12 +335,12 @@ public sealed class BattleCatalog
 {
     private readonly Dictionary<ActionId, BattleActionDefinition> _actions;
     private readonly Dictionary<StatusId, StatusDefinition> _statuses;
-    private readonly Dictionary<ReactionId, ReactionDefinition> _reactions;
+    private readonly Dictionary<ReactiveEffectId, ReactiveEffectDefinition> _reactiveEffects;
 
     public BattleCatalog(
         IEnumerable<BattleActionDefinition> actions,
         IEnumerable<StatusDefinition> statuses,
-        IEnumerable<ReactionDefinition>? reactions = null
+        IEnumerable<ReactiveEffectDefinition>? reactiveEffects = null
     )
     {
         _actions = ToUniqueDictionary(
@@ -342,10 +353,10 @@ public sealed class BattleCatalog
             status => status.Id,
             "status"
         );
-        _reactions = ToUniqueDictionary(
-            reactions ?? [],
-            reaction => reaction.Id,
-            "reaction"
+        _reactiveEffects = ToUniqueDictionary(
+            reactiveEffects ?? [],
+            reactiveEffect => reactiveEffect.Id,
+            "reactive effect"
         );
         ValidateReferences();
     }
@@ -354,8 +365,8 @@ public sealed class BattleCatalog
         _actions.Values;
     public IReadOnlyCollection<StatusDefinition> Statuses =>
         _statuses.Values;
-    public IReadOnlyCollection<ReactionDefinition> Reactions =>
-        _reactions.Values;
+    public IReadOnlyCollection<ReactiveEffectDefinition> ReactiveEffects =>
+        _reactiveEffects.Values;
 
     public BattleActionDefinition GetAction(ActionId id) =>
         _actions.TryGetValue(id, out var action)
@@ -377,15 +388,15 @@ public sealed class BattleCatalog
         out StatusDefinition status
     ) => _statuses.TryGetValue(id, out status!);
 
-    public ReactionDefinition GetReaction(ReactionId id) =>
-        _reactions.TryGetValue(id, out var reaction)
-            ? reaction
-            : throw new KeyNotFoundException($"Unknown reaction '{id}'.");
+    public ReactiveEffectDefinition GetReactiveEffect(ReactiveEffectId id) =>
+        _reactiveEffects.TryGetValue(id, out var reactiveEffect)
+            ? reactiveEffect
+            : throw new KeyNotFoundException($"Unknown reactive effect '{id}'.");
 
-    public bool TryGetReaction(
-        ReactionId id,
-        out ReactionDefinition reaction
-    ) => _reactions.TryGetValue(id, out reaction!);
+    public bool TryGetReactiveEffect(
+        ReactiveEffectId id,
+        out ReactiveEffectDefinition reactiveEffect
+    ) => _reactiveEffects.TryGetValue(id, out reactiveEffect!);
 
     private void ValidateReferences()
     {
@@ -395,18 +406,18 @@ public sealed class BattleCatalog
         }
         foreach (var status in _statuses.Values)
         {
-            foreach (var reactionId in status.ReactionIds)
+            foreach (var reactiveEffectId in status.ReactiveEffectIds)
             {
-                RequireReaction(reactionId, $"status '{status.Id}'");
+                RequireReactiveEffect(reactiveEffectId, $"status '{status.Id}'");
             }
         }
-        foreach (var reaction in _reactions.Values)
+        foreach (var reactiveEffect in _reactiveEffects.Values)
         {
             ValidateConditions(
-                reaction.Conditions,
-                $"reaction '{reaction.Id}'"
+                reactiveEffect.Conditions,
+                $"reactive effect '{reactiveEffect.Id}'"
             );
-            ValidateEffects(reaction.Effects, $"reaction '{reaction.Id}'");
+            ValidateEffects(reactiveEffect.Effects, $"reactive effect '{reactiveEffect.Id}'");
         }
     }
 
@@ -431,8 +442,8 @@ public sealed class BattleCatalog
                         $"{owner} references unknown status "
                             + $"'{remove.StatusId}'."
                     );
-                case RegisterReactionEffectDefinition register:
-                    RequireReaction(register.ReactionId, owner);
+                case RegisterReactiveEffectEffectDefinition register:
+                    RequireReactiveEffect(register.ReactiveEffectId, owner);
                     break;
                 case DamageEffectDefinition { Scale: { } scale }:
                     RequireStatus(scale.StatusId, owner);
@@ -448,7 +459,7 @@ public sealed class BattleCatalog
     }
 
     private void ValidateConditions(
-        IEnumerable<ReactionConditionDefinition> conditions,
+        IEnumerable<ReactiveEffectConditionDefinition> conditions,
         string owner
     )
     {
@@ -482,12 +493,12 @@ public sealed class BattleCatalog
         }
     }
 
-    private void RequireReaction(ReactionId id, string owner)
+    private void RequireReactiveEffect(ReactiveEffectId id, string owner)
     {
-        if (!_reactions.ContainsKey(id))
+        if (!_reactiveEffects.ContainsKey(id))
         {
             throw new InvalidOperationException(
-                $"{owner} references unknown reaction '{id}'."
+                $"{owner} references unknown reactive effect '{id}'."
             );
         }
     }
@@ -524,11 +535,11 @@ public static class BattleContent
     public static readonly StatusId PoisonId = new("poison");
     public static readonly StatusId StunId = new("stun");
     public static readonly StatusId RegenId = new("regen");
-    public static readonly ReactionId PoisonTickReactionId =
+    public static readonly ReactiveEffectId PoisonTickReactiveEffectId =
         new("poison_tick");
-    public static readonly ReactionId RegenTickReactionId =
+    public static readonly ReactiveEffectId RegenTickReactiveEffectId =
         new("regen_tick");
-    public static readonly ReactionId ToxicRecoveryReactionId =
+    public static readonly ReactiveEffectId ToxicRecoveryReactiveEffectId =
         new("toxic_recovery");
 
     public static BattleCatalog CreateDefaultCatalog() => new(
@@ -585,7 +596,8 @@ public static class BattleContent
                     new ApplyStatusEffectDefinition(
                         PoisonId,
                         Duration: 3,
-                        BaseChance: 0.75
+                        BaseChance: 0.75,
+                        Power: 10
                     ),
                 ],
                 TpCost: 3,
@@ -609,7 +621,7 @@ public static class BattleContent
                 PreventsAction: false,
                 DefaultDuration: 3,
                 MaxStacks: 3,
-                ReactionIdList: [PoisonTickReactionId]
+                ReactiveEffectIdList: [PoisonTickReactiveEffectId]
             ),
             new StatusDefinition(
                 StunId,
@@ -623,15 +635,15 @@ public static class BattleContent
                 PreventsAction: false,
                 DefaultDuration: 3,
                 MaxStacks: 3,
-                ReactionIdList: [RegenTickReactionId]
+                ReactiveEffectIdList: [RegenTickReactiveEffectId]
             ),
         ],
         [
-            new ReactionDefinition(
-                PoisonTickReactionId,
-                ReactionTrigger.TurnEnded,
-                ReactionSchedule.EndOfTurn,
-                ReactionTargetPolicy.Owner,
+            new ReactiveEffectDefinition(
+                PoisonTickReactiveEffectId,
+                ReactiveEffectTrigger.TurnEnded,
+                ReactiveEffectSchedule.EndOfTurn,
+                ReactiveEffectTargetPolicy.Owner,
                 Priority: 10,
                 Conditions: [],
                 Effects:
@@ -640,17 +652,18 @@ public static class BattleContent
                         new DamageSpec(
                             DamageType.True,
                             DamageMode.Fixed,
-                            5
+                            10
                         ),
-                        Scale: new StatusStackScaleDefinition(PoisonId)
+                        PowerSource:
+                            EffectPowerSource.FixedTimesSourceStatusPower
                     ),
                 ]
             ),
-            new ReactionDefinition(
-                RegenTickReactionId,
-                ReactionTrigger.TurnEnded,
-                ReactionSchedule.EndOfTurn,
-                ReactionTargetPolicy.Owner,
+            new ReactiveEffectDefinition(
+                RegenTickReactiveEffectId,
+                ReactiveEffectTrigger.TurnEnded,
+                ReactiveEffectSchedule.EndOfTurn,
+                ReactiveEffectTargetPolicy.Owner,
                 Priority: 0,
                 Conditions: [],
                 Effects:
@@ -661,11 +674,11 @@ public static class BattleContent
                     ),
                 ]
             ),
-            new ReactionDefinition(
-                ToxicRecoveryReactionId,
-                ReactionTrigger.TurnEnded,
-                ReactionSchedule.EndOfTurn,
-                ReactionTargetPolicy.Owner,
+            new ReactiveEffectDefinition(
+                ToxicRecoveryReactiveEffectId,
+                ReactiveEffectTrigger.TurnEnded,
+                ReactiveEffectSchedule.EndOfTurn,
+                ReactiveEffectTargetPolicy.Owner,
                 Priority: 0,
                 Conditions:
                 [

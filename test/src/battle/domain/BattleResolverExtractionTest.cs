@@ -30,7 +30,7 @@ public class BattleResolverExtractionTest(Node testScene)
         runtime.Operations.AddLast(new FinishTurnOperation());
         runtime.NextCauseId();
         runtime.NextCueBatchId();
-        runtime.NextReactionRegistrationId();
+        runtime.NextReactiveEffectRegistrationId();
         runtime.Turn = 3;
         runtime.Phase = BattleDomainPhase.ResolvingTurn;
 
@@ -44,7 +44,7 @@ public class BattleResolverExtractionTest(Node testScene)
         runtime.Phase.ShouldBe(BattleDomainPhase.Disabled);
         runtime.NextCauseId().ShouldBe(1);
         runtime.NextCueBatchId().ShouldBe(1);
-        runtime.NextReactionRegistrationId().ShouldBe(1);
+        runtime.NextReactiveEffectRegistrationId().ShouldBe(1);
     }
 
     [Test]
@@ -165,6 +165,7 @@ public class BattleResolverExtractionTest(Node testScene)
                 AttackId,
                 0,
                 null,
+                0,
                 0
             )
         );
@@ -176,14 +177,14 @@ public class BattleResolverExtractionTest(Node testScene)
     }
 
     [Test]
-    public void ReactionResolverDefersAfterActionReactions()
+    public void ReactiveEffectResolverDefersAfterActionReactiveEffects()
     {
-        var reactionId = new ReactionId("counter");
-        var reaction = new ReactionDefinition(
-            reactionId,
-            ReactionTrigger.Damage,
-            ReactionSchedule.AfterCurrentAction,
-            ReactionTargetPolicy.Owner,
+        var reactiveEffectId = new ReactiveEffectId("counter");
+        var reactiveEffect = new ReactiveEffectDefinition(
+            reactiveEffectId,
+            ReactiveEffectTrigger.Damage,
+            ReactiveEffectSchedule.AfterCurrentAction,
+            ReactiveEffectTargetPolicy.Owner,
             Priority: 0,
             Conditions: [],
             Effects: [new HealEffectDefinition(1)]
@@ -191,28 +192,28 @@ public class BattleResolverExtractionTest(Node testScene)
         var runtime = new BattleRuntime(new BattleCatalog(
             [Action()],
             [],
-            [reaction]
+            [reactiveEffect]
         ));
         var owner = Unit("enemy", BattleTeam.Enemy);
         runtime.Units.Add(owner.Id, owner);
         var targeting = new BattleTargetResolver(runtime);
         var effects = new BattleEffectOperationBuilder(runtime);
-        var reactions = new BattleReactionResolver(
+        var reactiveEffects = new BattleReactiveEffectResolver(
             runtime,
             effects,
             targeting
         );
-        reactions.Register(owner.Id, reactionId, null);
+        reactiveEffects.Register(owner.Id, reactiveEffectId, null);
 
-        reactions.Trigger(new ReactionEvent(
+        reactiveEffects.Trigger(new ReactiveEffectEvent(
             runtime.NextCauseId(),
-            ReactionTrigger.Damage,
+            ReactiveEffectTrigger.Damage,
             new BattlerId("hero"),
             owner.Id,
             AttackId
         ));
 
-        runtime.AfterActionReactions.Count.ShouldBe(1);
+        runtime.AfterActionReactiveEffects.Count.ShouldBe(1);
         runtime.Operations.ShouldBeEmpty();
     }
 

@@ -1,7 +1,7 @@
 [gd_scene format=3 uid="uid://bds5grrhgtmic"]
 
 [ext_resource type="Script" uid="uid://cs40hrsd76ys1" path="res://src/battle/Battle.cs" id="1_battle"]
-[ext_resource type="Script" uid="uid://dv48glfkgmjom" path="res://src/game/BattlePresenter.cs" id="2_presenter"]
+[ext_resource type="Script" uid="uid://dv48glfkgmjom" path="res://src/battle/BattlePresenter.cs" id="2_presenter"]
 [ext_resource type="Resource" uid="uid://b6pulfqapkhaa" path="res://src/battle/resources/BattleContent.tres" id="3_content"]
 [ext_resource type="Resource" path="res://src/party/resources/PartyContent.tres" id="4_party_content"]
 
@@ -71,6 +71,7 @@ custom_minimum_size = Vector2(0, 96)
 layout_mode = 2
 mouse_filter = 2
 script = ExtResource("2_presenter")
+BaseSpeed = 0.25
 
 [node name="Message" type="Label" parent="Panel/Margin/Layout/Presenter" unique_id=982144203]
 unique_name_in_owner = true

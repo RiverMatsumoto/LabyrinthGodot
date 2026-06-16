@@ -53,7 +53,7 @@ internal sealed class BattleResourceSystem(BattleRuntime runtime)
                 new DeathCheckOperation(
                     operation.Context.SourceId,
                     operation.Context.ActionId,
-                    operation.Context.ReactionDepth
+                    operation.Context.ReactiveEffectDepth
                 ),
             ]);
         }

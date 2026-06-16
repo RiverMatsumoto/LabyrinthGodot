@@ -14,7 +14,7 @@ PlantUML sources:
 
 - [Component relationships](diagrams/battle-system-components.puml)
 - [Battle and turn sequence](diagrams/battle-turn-sequence.puml)
-- [Reaction operation flow](diagrams/battle-reaction-flow.puml)
+- [ReactiveEffect operation flow](diagrams/battle-reactive-effect-flow.puml)
 - [Generated logic state diagram](../src/battle/state/BattleLogicState.g.puml)
 
 ## Responsibilities
@@ -23,9 +23,9 @@ PlantUML sources:
 | --- | --- | --- |
 | [`Battle`](../src/battle/Battle.cs) | Scene wiring, command controls, game/party integration, presenter callbacks | Combat rules or authoritative battle state |
 | [`BattleLogic`](../src/battle/BattleLogic.cs) | LogicBlocks inputs, outputs, and state transitions | HP, TP, statuses, operation ordering, or cue timing |
-| [`BattleRepo`](../src/battle/domain/BattleRepo.cs) | Runtime units, commands, turns, effects, reactions, outcomes, operation queue | Godot controls or frame-based playback |
+| [`BattleRepo`](../src/battle/domain/BattleRepo.cs) | Runtime units, commands, turns, effects, reactive effects, outcomes, operation queue | Godot controls or frame-based playback |
 | [`BattlePresenter`](../src/battle/presentation/BattlePresenter.cs) | Sequential cue timing and temporary cue UI | Battle mutations or state transitions |
-| [`BattleContentResource`](../src/battle/resources/BattleContentResource.cs) | Godot-authored actions, statuses, reactions, encounters, enemies, and equipment | Runtime battle state |
+| [`BattleContentResource`](../src/battle/resources/BattleContentResource.cs) | Godot-authored actions, statuses, reactive effects, encounters, enemies, and equipment | Runtime battle state |
 | `GameLogic` / `GameRepo` | Entering battle, requested encounter, seed, and return mode | Battle resolution |
 | `PartyRepo` | Persistent party members and post-battle HP/TP | Temporary enemy or status state |
 
@@ -101,11 +101,11 @@ Commands are ordered by:
 
 `BeginResolution` seeds the operation queue in this order:
 
-1. Turn-start reaction trigger.
+1. Turn-start reactive effect trigger.
 2. One action operation per ordered command.
-3. Turn-end reaction trigger.
-4. Deferred end-of-turn reactions.
-5. Status expiration and status-reaction removal.
+3. Turn-end reactive effect trigger.
+4. Deferred end-of-turn reactive effects.
+5. Status expiration and status-reactive effect removal.
 6. Turn completion.
 
 `BattleRepo.AdvanceResolution` executes operations synchronously until it
@@ -119,14 +119,14 @@ An action expands into `ActionStarted`, effect operations, and
 `ActionFinished`. Effects emit `BeforeEffect` and `AfterEffect`; mutations may
 also emit damage, healing, defeat, and status events.
 
-Reactions carry source, target, action, status, and stack metadata. Their
+ReactiveEffects carry source, target, action, status, and stack metadata. Their
 typed conditions are AND-combined. Matches are ordered by priority and
 registration order, then scheduled as `Immediate`, `AfterCurrentAction`, or
-`EndOfTurn`. Cause guards and `BattleRepo.MaxReactionDepth` bound recursion.
+`EndOfTurn`. Cause guards and `BattleRepo.MaxReactiveEffectDepth` bound recursion.
 
-Innate party/enemy reactions register at battle start. Status reactions exist
-only while their status exists. Register-reaction effects add catalog
-reactions dynamically.
+Innate party/enemy reactive effects register at battle start. Status reactive effects exist
+only while their status exists. Register reactive effect effects add catalog
+reactive effects dynamically.
 
 ### Cue Playback Handshake
 
@@ -185,7 +185,7 @@ debug party exist only to keep a development battle runnable without authored
 content.
 
 See [Battle Authoring](battle-authoring.md) for every resource field, enemy
-placement, affinities, reactions, and creation workflows.
+placement, affinities, reactive effects, and creation workflows.
 
 ## Where to Make Changes
 
@@ -193,7 +193,7 @@ placement, affinities, reactions, and creation workflows.
 | --- | --- |
 | Add an action using existing effects | Battle `.tres` content and resource classes |
 | Add a new effect type | Effect definition, matching resource compiler, and `BattleRepo.BuildEffectOperations` |
-| Add status behavior | Status resource plus catalog reactions/effects |
+| Add status behavior | Status resource plus catalog reactive effects/effects |
 | Change enemy decisions | Implement and inject `IEnemyCommandPlanner` |
 | Add a visual/audio instruction | Add a `BattleCue`, produce it in resolution, handle it in `BattlePresenter` |
 | Change command-selection flow | `BattleLogicState.Input`, state records, outputs, and `Battle` bindings |
@@ -210,7 +210,7 @@ calling Godot presentation code from the resolver.
   command-resolution-cue acknowledgement state flow.
 - [`BattleRepoTest`](../test/src/battle/domain/BattleRepoTest.cs) verifies command
   validation, enemy planning, operation ordering, effects, rows, statuses,
-  reactions, and cue sequencing.
+  reactive effects, and cue sequencing.
 
 When changing a domain rule, add a repository test. When changing which input
 or output occurs next, add a logic test.

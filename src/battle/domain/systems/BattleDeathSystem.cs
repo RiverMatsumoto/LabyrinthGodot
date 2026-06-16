@@ -33,13 +33,13 @@ internal sealed class BattleDeathSystem(
             ),
         };
         operations.AddRange(newlyDead.Select(unit =>
-            (BattleOperation)new WindowOperation(new ReactionEvent(
+            (BattleOperation)new WindowOperation(new ReactiveEffectEvent(
                 runtime.NextCauseId(),
-                ReactionTrigger.Defeat,
+                ReactiveEffectTrigger.Defeat,
                 operation.SourceId,
                 unit.Id,
                 operation.ActionId,
-                Depth: operation.ReactionDepth
+                Depth: operation.ReactiveEffectDepth
             ))
         ));
 

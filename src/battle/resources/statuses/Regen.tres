@@ -8,5 +8,5 @@ Id = "regen"
 DisplayName = "Regen"
 DefaultDuration = 3
 MaxStacks = 3
-ReactionIds = Array[String](["regen_tick"])
+ReactiveEffectIds = Array[String](["regen_tick"])
 metadata/_custom_type_script = "uid://b3nq66we03b8c"

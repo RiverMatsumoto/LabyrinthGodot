@@ -12,13 +12,13 @@ internal sealed class BattleEffectOperationBuilder(BattleRuntime runtime)
     {
         var operations = new List<BattleOperation>
         {
-            new WindowOperation(new ReactionEvent(
+            new WindowOperation(new ReactiveEffectEvent(
                 runtime.NextCauseId(),
-                ReactionTrigger.BeforeEffect,
+                ReactiveEffectTrigger.BeforeEffect,
                 context.SourceId,
                 FirstTarget(context),
                 context.ActionId,
-                Depth: context.ReactionDepth
+                Depth: context.ReactiveEffectDepth
             )),
         };
 
@@ -29,7 +29,7 @@ internal sealed class BattleEffectOperationBuilder(BattleRuntime runtime)
                 {
                     Power = ScaleAmount(
                         context,
-                        damage.Spec.Power,
+                        ResolvePower(context, damage),
                         damage.Scale
                     ),
                 };
@@ -98,10 +98,10 @@ internal sealed class BattleEffectOperationBuilder(BattleRuntime runtime)
                     new WaitCue(Math.Max(0, wait.Seconds)),
                 ]));
                 break;
-            case RegisterReactionEffectDefinition register:
-                operations.Add(new RegisterReactionOperation(
+            case RegisterReactiveEffectEffectDefinition register:
+                operations.Add(new RegisterReactiveEffectOperation(
                     context,
-                    register.ReactionId
+                    register.ReactiveEffectId
                 ));
                 break;
             default:
@@ -110,13 +110,13 @@ internal sealed class BattleEffectOperationBuilder(BattleRuntime runtime)
                 );
         }
 
-        operations.Add(new WindowOperation(new ReactionEvent(
+        operations.Add(new WindowOperation(new ReactiveEffectEvent(
             runtime.NextCauseId(),
-            ReactionTrigger.AfterEffect,
+            ReactiveEffectTrigger.AfterEffect,
             context.SourceId,
             FirstTarget(context),
             context.ActionId,
-            Depth: context.ReactionDepth
+            Depth: context.ReactiveEffectDepth
         )));
         return operations;
     }
@@ -125,6 +125,23 @@ internal sealed class BattleEffectOperationBuilder(BattleRuntime runtime)
         context.TargetIds.Count > 0
             ? context.TargetIds[0]
             : default;
+
+    private static double ResolvePower(
+        EffectContext context,
+        DamageEffectDefinition damage
+    ) => damage.PowerSource switch
+    {
+        EffectPowerSource.SourceStatusPower => context.StatusPower,
+        EffectPowerSource.FixedTimesSourceStatusPower =>
+            damage.Spec.Power * context.StatusPower,
+        EffectPowerSource.SourceStatusPowerTimesStacks =>
+            context.StatusPower * context.StatusStacks,
+        EffectPowerSource.FixedTimesSourceStatusPowerTimesStacks =>
+            damage.Spec.Power
+            * context.StatusPower
+            * context.StatusStacks,
+        _ => damage.Spec.Power,
+    };
 
     private int ScaleAmount(
         EffectContext context,

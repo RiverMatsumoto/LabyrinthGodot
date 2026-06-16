@@ -229,7 +229,7 @@ public class BattleRepoTest : TestClass
                 ),
             ],
             DefaultStatuses(),
-            DefaultReactions()
+            DefaultReactiveEffects()
         );
 
         using var poisonRepo = new BattleRepo(catalog);
@@ -300,15 +300,88 @@ public class BattleRepoTest : TestClass
     }
 
     [Test]
-    public void BoundsRecursiveReactions()
+    public void PoisonTickMultipliesBasePowerByAppliedStatusPower()
+    {
+        var weakId = new ActionId("weak_poison");
+        var strongId = new ActionId("strong_poison");
+        var waitId = new ActionId("wait");
+        var catalog = new BattleCatalog(
+            [
+                PoisonAction(weakId, power: 4),
+                PoisonAction(strongId, power: 10),
+                new BattleActionDefinition(
+                    waitId,
+                    "Wait",
+                    BattleTargetRule.Self,
+                    []
+                ),
+            ],
+            [
+                new StatusDefinition(
+                    BattleContent.PoisonId,
+                    "Poison",
+                    PreventsAction: false,
+                    DefaultDuration: 3,
+                    MaxStacks: 3,
+                    ReactiveEffectIdList: [BattleContent.PoisonTickReactiveEffectId]
+                ),
+            ],
+            [
+                new ReactiveEffectDefinition(
+                    BattleContent.PoisonTickReactiveEffectId,
+                    ReactiveEffectTrigger.TurnEnded,
+                    ReactiveEffectSchedule.EndOfTurn,
+                    ReactiveEffectTargetPolicy.Owner,
+                    Priority: 10,
+                    Conditions: [],
+                    Effects:
+                    [
+                        new DamageEffectDefinition(
+                            new DamageSpec(
+                                DamageType.True,
+                                DamageMode.Fixed,
+                                10
+                            ),
+                            PowerSource: EffectPowerSource
+                                .FixedTimesSourceStatusPower
+                        ),
+                    ]
+                ),
+            ]
+        );
+        using var repo = new BattleRepo(catalog);
+        repo.Start(Setup(
+            [
+                Seed(
+                    "hero",
+                    BattleTeam.Player,
+                    weakId,
+                    extraActions: [strongId]
+                ),
+            ],
+            [Seed("enemy", BattleTeam.Enemy, waitId, hp: 1000)]
+        ));
+
+        SubmitAndResolve(repo, weakId, "enemy");
+        Unit(repo, "enemy").Hp.ShouldBe(960);
+
+        SubmitAndResolve(repo, strongId, "enemy");
+        Unit(repo, "enemy").Hp.ShouldBe(860);
+
+        SubmitAndResolve(repo, weakId, "enemy");
+        Unit(repo, "enemy").Hp.ShouldBe(760);
+    }
+
+    [Test]
+    public void BoundsRecursiveReactiveEffects()
     {
         var actionId = new ActionId("reactive");
-        var reactionId = new ReactionId("echo_damage");
-        var reaction = new ReactionDefinition(
-            reactionId,
-            ReactionTrigger.Damage,
-            ReactionSchedule.Immediate,
-            ReactionTargetPolicy.EventTarget,
+        var reactiveEffectId = new ReactiveEffectId("echo_damage");
+        var reactiveEffect = new ReactiveEffectDefinition(
+            reactiveEffectId,
+            ReactiveEffectTrigger.Damage,
+            ReactiveEffectSchedule.Immediate,
+            ReactiveEffectTargetPolicy.EventTarget,
             Priority: 0,
             Conditions: [],
             Effects: [FixedDamage(1)]
@@ -320,14 +393,14 @@ public class BattleRepoTest : TestClass
                     "Reactive",
                     BattleTargetRule.SingleEnemy,
                     [
-                        new RegisterReactionEffectDefinition(reactionId),
+                        new RegisterReactiveEffectEffectDefinition(reactiveEffectId),
                         FixedDamage(1),
                     ],
                     RetargetPolicy: RetargetPolicy.NearestValid
                 ),
             ],
             DefaultStatuses(),
-            DefaultReactions().Append(reaction)
+            DefaultReactiveEffects().Append(reactiveEffect)
         );
         using var repo = new BattleRepo(catalog);
         repo.Start(Setup(
@@ -376,33 +449,43 @@ public class BattleRepoTest : TestClass
         resource.ShouldNotBeNull();
         var content = resource.Compile();
         content.Catalog.GetStatus(BattleContent.PoisonId)
-            .ReactionIds.ShouldContain(
-                BattleContent.PoisonTickReactionId
+            .ReactiveEffectIds.ShouldContain(
+                BattleContent.PoisonTickReactiveEffectId
             );
-        content.Catalog.GetReaction(
-            BattleContent.ToxicRecoveryReactionId
+        content.Catalog.GetReactiveEffect(
+            BattleContent.ToxicRecoveryReactiveEffectId
         ).Conditions.ShouldNotBeEmpty();
-          content.GetEncounter(new EncounterId("floor_1_squirrel"))
-              .Enemies.Single().Id.ShouldBe(new BattlerId("squirrel_1"));
-          content.Catalog.GetAction(BattleContent.BasicAttackId)
-              .TargetRule.ShouldBe(BattleTargetRule.SingleEnemy);
-      }
+        content.GetEncounter(new EncounterId("floor_1_squirrel"))
+            .Enemies.Single().Id.ShouldBe(new BattlerId("squirrel_1"));
+        content.Catalog.GetAction(BattleContent.BasicAttackId)
+            .TargetRule.ShouldBe(BattleTargetRule.SingleEnemy);
 
-      [Test]
-      public void RejectsEnemyActionMissingFromCatalog()
-      {
-          var enemy = new BattleEnemyResource
-          {
-              Id = "invalid",
-              Actions =
-              [
-                  new BattleActionResource { Id = "missing" },
-              ],
-          };
+        ResourceLoader.Load<BattleReactiveEffectResource>(
+            "res://src/battle/resources/reactive_effects/PoisonTick.tres"
+        ).ShouldNotBeNull();
+        ResourceLoader.Load<BattleReactiveEffectResource>(
+            "res://src/battle/resources/reactive_effects/RegenTick.tres"
+        ).ShouldNotBeNull();
+        ResourceLoader.Load<BattleReactiveEffectResource>(
+            "res://src/battle/resources/reactive_effects/ToxicRecovery.tres"
+        ).ShouldNotBeNull();
+    }
 
-          Should.Throw<KeyNotFoundException>(() =>
-              enemy.Compile(BattleContent.CreateDefaultCatalog()));
-      }
+    [Test]
+    public void RejectsEnemyActionMissingFromCatalog()
+    {
+        var enemy = new BattleEnemyResource
+        {
+            Id = "invalid",
+            Actions =
+            [
+                new BattleActionResource { Id = "missing" },
+            ],
+        };
+
+        Should.Throw<KeyNotFoundException>(() =>
+            enemy.Compile(BattleContent.CreateDefaultCatalog()));
+    }
 
     [Test]
     public void RejectsInvalidEncounterPlacements()
@@ -437,22 +520,22 @@ public class BattleRepoTest : TestClass
     }
 
     [Test]
-    public void FiltersInnateReactionsByActionAndOwnerRelation()
+    public void FiltersInnateReactiveEffectsByActionAndOwnerRelation()
     {
         var markedId = new ActionId("marked");
         var otherId = new ActionId("other");
-        var reactionId = new ReactionId("marked_target_recovery");
-        var reaction = new ReactionDefinition(
-            reactionId,
-            ReactionTrigger.Damage,
-            ReactionSchedule.Immediate,
-            ReactionTargetPolicy.Owner,
+        var reactiveEffectId = new ReactiveEffectId("marked_target_recovery");
+        var reactiveEffect = new ReactiveEffectDefinition(
+            reactiveEffectId,
+            ReactiveEffectTrigger.Damage,
+            ReactiveEffectSchedule.Immediate,
+            ReactiveEffectTargetPolicy.Owner,
             Priority: 0,
             Conditions:
             [
                 new TriggerActionConditionDefinition(markedId),
                 new OwnerRelationConditionDefinition(
-                    ReactionOwnerRelation.EventTarget
+                    ReactiveEffectOwnerRelation.EventTarget
                 ),
             ],
             Effects: [new HealEffectDefinition(5)]
@@ -463,7 +546,7 @@ public class BattleRepoTest : TestClass
                 DamageAction(otherId, 10),
             ],
             DefaultStatuses(),
-            DefaultReactions().Append(reaction)
+            DefaultReactiveEffects().Append(reactiveEffect)
         );
         using var repo = new BattleRepo(catalog);
         repo.Start(Setup(
@@ -480,7 +563,7 @@ public class BattleRepoTest : TestClass
                     "enemy",
                     BattleTeam.Enemy,
                     markedId,
-                    reactions: [reactionId]
+                    reactiveEffects: [reactiveEffectId]
                 ),
             ]
         ));
@@ -492,15 +575,15 @@ public class BattleRepoTest : TestClass
     }
 
     [Test]
-    public void FiltersReactionsByStatusAndEventSource()
+    public void FiltersReactiveEffectsByStatusAndEventSource()
     {
         var poisonActionId = new ActionId("self_poison");
-        var reactionId = new ReactionId("status_apply_recovery");
-        var reaction = new ReactionDefinition(
-            reactionId,
-            ReactionTrigger.StatusApplied,
-            ReactionSchedule.Immediate,
-            ReactionTargetPolicy.Owner,
+        var reactiveEffectId = new ReactiveEffectId("status_apply_recovery");
+        var reactiveEffect = new ReactiveEffectDefinition(
+            reactiveEffectId,
+            ReactiveEffectTrigger.StatusApplied,
+            ReactiveEffectSchedule.Immediate,
+            ReactiveEffectTargetPolicy.Owner,
             Priority: 0,
             Conditions:
             [
@@ -511,7 +594,7 @@ public class BattleRepoTest : TestClass
                     BattleContent.PoisonId
                 ),
                 new OwnerRelationConditionDefinition(
-                    ReactionOwnerRelation.EventSource
+                    ReactiveEffectOwnerRelation.EventSource
                 ),
             ],
             Effects: [new HealEffectDefinition(7)]
@@ -529,7 +612,7 @@ public class BattleRepoTest : TestClass
                 ),
             ],
             DefaultStatuses(),
-            DefaultReactions().Append(reaction)
+            DefaultReactiveEffects().Append(reactiveEffect)
         );
         using var repo = new BattleRepo(catalog);
         repo.Start(Setup(
@@ -539,7 +622,7 @@ public class BattleRepoTest : TestClass
                     BattleTeam.Player,
                     poisonActionId,
                     hp: 50,
-                    reactions: [reactionId]
+                    reactiveEffects: [reactiveEffectId]
                 ),
             ],
             [Seed("enemy", BattleTeam.Enemy, poisonActionId)]
@@ -551,37 +634,37 @@ public class BattleRepoTest : TestClass
     }
 
     [Test]
-    public void HonorsReactionPriorityUsesAndScheduling()
+    public void HonorsReactiveEffectPriorityUsesAndScheduling()
     {
-        ScheduledReactionResult(ReactionSchedule.Immediate)
+        ScheduledReactiveEffectResult(ReactiveEffectSchedule.Immediate)
             .ShouldBe(90);
-        ScheduledReactionResult(ReactionSchedule.AfterCurrentAction)
+        ScheduledReactiveEffectResult(ReactiveEffectSchedule.AfterCurrentAction)
             .ShouldBe(95);
-        ScheduledReactionResult(ReactionSchedule.EndOfTurn)
+        ScheduledReactiveEffectResult(ReactiveEffectSchedule.EndOfTurn)
             .ShouldBe(95);
 
         var actionId = new ActionId("priority_hit");
-        var healId = new ReactionId("priority_heal");
-        var damageId = new ReactionId("priority_damage");
+        var healId = new ReactiveEffectId("priority_heal");
+        var damageId = new ReactiveEffectId("priority_damage");
         var catalog = new BattleCatalog(
             [DamageAction(actionId, 10)],
             DefaultStatuses(),
-            DefaultReactions().Concat([
-                new ReactionDefinition(
+            DefaultReactiveEffects().Concat([
+                new ReactiveEffectDefinition(
                     healId,
-                    ReactionTrigger.Damage,
-                    ReactionSchedule.Immediate,
-                    ReactionTargetPolicy.Owner,
+                    ReactiveEffectTrigger.Damage,
+                    ReactiveEffectSchedule.Immediate,
+                    ReactiveEffectTargetPolicy.Owner,
                     Priority: 10,
                     Conditions: [],
                     Effects: [new HealEffectDefinition(20)],
                     Uses: 1
                 ),
-                new ReactionDefinition(
+                new ReactiveEffectDefinition(
                     damageId,
-                    ReactionTrigger.Damage,
-                    ReactionSchedule.Immediate,
-                    ReactionTargetPolicy.Owner,
+                    ReactiveEffectTrigger.Damage,
+                    ReactiveEffectSchedule.Immediate,
+                    ReactiveEffectTargetPolicy.Owner,
                     Priority: 0,
                     Conditions: [],
                     Effects:
@@ -603,7 +686,7 @@ public class BattleRepoTest : TestClass
                     "enemy",
                     BattleTeam.Enemy,
                     actionId,
-                    reactions: [damageId, healId]
+                    reactiveEffects: [damageId, healId]
                 ),
             ]
         ));
@@ -614,39 +697,39 @@ public class BattleRepoTest : TestClass
     }
 
     [Test]
-    public void DrainsDeferredReactionsWithinCurrentBoundary()
+    public void DrainsDeferredReactiveEffectsWithinCurrentBoundary()
     {
         var actionId = new ActionId("after_chain");
-        var healId = new ReactionId("after_heal");
-        var costId = new ReactionId("after_heal_cost");
+        var healId = new ReactiveEffectId("after_heal");
+        var costId = new ReactiveEffectId("after_heal_cost");
         var catalog = new BattleCatalog(
             [DamageAction(actionId, 10)],
             DefaultStatuses(),
-            DefaultReactions().Concat([
-                new ReactionDefinition(
+            DefaultReactiveEffects().Concat([
+                new ReactiveEffectDefinition(
                     healId,
-                    ReactionTrigger.Damage,
-                    ReactionSchedule.AfterCurrentAction,
-                    ReactionTargetPolicy.Owner,
+                    ReactiveEffectTrigger.Damage,
+                    ReactiveEffectSchedule.AfterCurrentAction,
+                    ReactiveEffectTargetPolicy.Owner,
                     Priority: 0,
                     Conditions:
                     [
                         new OwnerRelationConditionDefinition(
-                            ReactionOwnerRelation.EventTarget
+                            ReactiveEffectOwnerRelation.EventTarget
                         ),
                     ],
                     Effects: [new HealEffectDefinition(20)]
                 ),
-                new ReactionDefinition(
+                new ReactiveEffectDefinition(
                     costId,
-                    ReactionTrigger.Healing,
-                    ReactionSchedule.AfterCurrentAction,
-                    ReactionTargetPolicy.Owner,
+                    ReactiveEffectTrigger.Healing,
+                    ReactiveEffectSchedule.AfterCurrentAction,
+                    ReactiveEffectTargetPolicy.Owner,
                     Priority: 0,
                     Conditions:
                     [
                         new OwnerRelationConditionDefinition(
-                            ReactionOwnerRelation.EventTarget
+                            ReactiveEffectOwnerRelation.EventTarget
                         ),
                     ],
                     Effects:
@@ -667,7 +750,7 @@ public class BattleRepoTest : TestClass
                     "enemy",
                     BattleTeam.Enemy,
                     actionId,
-                    reactions: [healId, costId]
+                    reactiveEffects: [healId, costId]
                 ),
             ]
         ));
@@ -678,7 +761,7 @@ public class BattleRepoTest : TestClass
 
         var statusId = new StatusId("brief");
         var applyId = new ActionId("apply_brief");
-        var removalId = new ReactionId("brief_removed");
+        var removalId = new ReactiveEffectId("brief_removed");
         var expirationCatalog = new BattleCatalog(
             [
                 new BattleActionDefinition(
@@ -694,17 +777,17 @@ public class BattleRepoTest : TestClass
                 PreventsAction: false,
                 DefaultDuration: 1
             )),
-            DefaultReactions().Append(new ReactionDefinition(
+            DefaultReactiveEffects().Append(new ReactiveEffectDefinition(
                 removalId,
-                ReactionTrigger.StatusRemoved,
-                ReactionSchedule.EndOfTurn,
-                ReactionTargetPolicy.Owner,
+                ReactiveEffectTrigger.StatusRemoved,
+                ReactiveEffectSchedule.EndOfTurn,
+                ReactiveEffectTargetPolicy.Owner,
                 Priority: 0,
                 Conditions:
                 [
                     new TriggerStatusConditionDefinition(statusId),
                     new OwnerRelationConditionDefinition(
-                        ReactionOwnerRelation.EventTarget
+                        ReactiveEffectOwnerRelation.EventTarget
                     ),
                 ],
                 Effects:
@@ -723,7 +806,7 @@ public class BattleRepoTest : TestClass
                     "hero",
                     BattleTeam.Player,
                     applyId,
-                    reactions: [removalId]
+                    reactiveEffects: [removalId]
                 ),
             ],
             [Seed("enemy", BattleTeam.Enemy, applyId)]
@@ -735,7 +818,7 @@ public class BattleRepoTest : TestClass
     }
 
     [Test]
-    public void ScalesStatusReactionsAndRemovesThemOnExpiration()
+    public void ScalesStatusReactiveEffectsAndRemovesThemOnExpiration()
     {
         var poisonId = new ActionId("double_poison");
         var waitId = new ActionId("wait");
@@ -761,7 +844,7 @@ public class BattleRepoTest : TestClass
                 ),
             ],
             DefaultStatuses(),
-            DefaultReactions()
+            DefaultReactiveEffects()
         );
         using var repo = new BattleRepo(catalog);
         repo.Start(Setup(
@@ -805,7 +888,7 @@ public class BattleRepoTest : TestClass
                 ),
             ],
             DefaultStatuses(),
-            DefaultReactions()
+            DefaultReactiveEffects()
         );
 
         using var fireRepo = AffinityRepo(catalog, fireId);
@@ -936,17 +1019,32 @@ public class BattleRepoTest : TestClass
         RetargetPolicy: RetargetPolicy.NearestValid
     );
 
-    private static int ScheduledReactionResult(
-        ReactionSchedule schedule
+    private static BattleActionDefinition PoisonAction(
+        ActionId id,
+        double power
+    ) => new(
+        id,
+        id.Value,
+        BattleTargetRule.SingleEnemy,
+        [new ApplyStatusEffectDefinition(
+            BattleContent.PoisonId,
+            Duration: 3,
+            Power: power
+        )],
+        RetargetPolicy: RetargetPolicy.NearestValid
+    );
+
+    private static int ScheduledReactiveEffectResult(
+        ReactiveEffectSchedule schedule
     )
     {
         var actionId = new ActionId($"schedule_{schedule}");
-        var reactionId = new ReactionId($"schedule_{schedule}");
-        var reaction = new ReactionDefinition(
-            reactionId,
-            ReactionTrigger.Damage,
+        var reactiveEffectId = new ReactiveEffectId($"schedule_{schedule}");
+        var reactiveEffect = new ReactiveEffectDefinition(
+            reactiveEffectId,
+            ReactiveEffectTrigger.Damage,
             schedule,
-            ReactionTargetPolicy.Owner,
+            ReactiveEffectTargetPolicy.Owner,
             Priority: 0,
             Conditions: [],
             Effects: [new HealEffectDefinition(15)],
@@ -963,7 +1061,7 @@ public class BattleRepoTest : TestClass
                 ),
             ],
             DefaultStatuses(),
-            DefaultReactions().Append(reaction)
+            DefaultReactiveEffects().Append(reactiveEffect)
         );
         using var repo = new BattleRepo(catalog);
         repo.Start(Setup(
@@ -973,7 +1071,7 @@ public class BattleRepoTest : TestClass
                     "enemy",
                     BattleTeam.Enemy,
                     actionId,
-                    reactions: [reactionId]
+                    reactiveEffects: [reactiveEffectId]
                 ),
             ]
         ));
@@ -1063,7 +1161,7 @@ public class BattleRepoTest : TestClass
 
     private static BattleCatalog Catalog(
         params BattleActionDefinition[] actions
-    ) => new(actions, DefaultStatuses(), DefaultReactions());
+    ) => new(actions, DefaultStatuses(), DefaultReactiveEffects());
 
     private static StatusDefinition[] DefaultStatuses() =>
     [
@@ -1073,7 +1171,7 @@ public class BattleRepoTest : TestClass
             PreventsAction: false,
             DefaultDuration: 3,
             MaxStacks: 3,
-            ReactionIdList: [BattleContent.PoisonTickReactionId]
+            ReactiveEffectIdList: [BattleContent.PoisonTickReactiveEffectId]
         ),
         new(
             BattleContent.StunId,
@@ -1087,17 +1185,17 @@ public class BattleRepoTest : TestClass
             PreventsAction: false,
             DefaultDuration: 3,
             MaxStacks: 3,
-            ReactionIdList: [BattleContent.RegenTickReactionId]
+            ReactiveEffectIdList: [BattleContent.RegenTickReactiveEffectId]
         ),
     ];
 
-    private static ReactionDefinition[] DefaultReactions() =>
+    private static ReactiveEffectDefinition[] DefaultReactiveEffects() =>
     [
         new(
-            BattleContent.PoisonTickReactionId,
-            ReactionTrigger.TurnEnded,
-            ReactionSchedule.EndOfTurn,
-            ReactionTargetPolicy.Owner,
+            BattleContent.PoisonTickReactiveEffectId,
+            ReactiveEffectTrigger.TurnEnded,
+            ReactiveEffectSchedule.EndOfTurn,
+            ReactiveEffectTargetPolicy.Owner,
             Priority: 10,
             Conditions: [],
             Effects:
@@ -1115,10 +1213,10 @@ public class BattleRepoTest : TestClass
             ]
         ),
         new(
-            BattleContent.RegenTickReactionId,
-            ReactionTrigger.TurnEnded,
-            ReactionSchedule.EndOfTurn,
-            ReactionTargetPolicy.Owner,
+            BattleContent.RegenTickReactiveEffectId,
+            ReactiveEffectTrigger.TurnEnded,
+            ReactiveEffectSchedule.EndOfTurn,
+            ReactiveEffectTargetPolicy.Owner,
             Priority: 0,
             Conditions: [],
             Effects:
@@ -1132,10 +1230,10 @@ public class BattleRepoTest : TestClass
             ]
         ),
         new(
-            BattleContent.ToxicRecoveryReactionId,
-            ReactionTrigger.TurnEnded,
-            ReactionSchedule.EndOfTurn,
-            ReactionTargetPolicy.Owner,
+            BattleContent.ToxicRecoveryReactiveEffectId,
+            ReactiveEffectTrigger.TurnEnded,
+            ReactiveEffectSchedule.EndOfTurn,
+            ReactiveEffectTargetPolicy.Owner,
             Priority: 0,
             Conditions:
             [
@@ -1176,7 +1274,7 @@ public class BattleRepoTest : TestClass
         int slot = 0,
         IReadOnlyList<ActionId>? extraActions = null,
         IReadOnlyDictionary<StatusId, double>? resistances = null,
-        IReadOnlyList<ReactionId>? reactions = null,
+        IReadOnlyList<ReactiveEffectId>? reactiveEffects = null,
         IReadOnlyDictionary<StatusId, double>?
             statusResistances = null,
         IReadOnlyDictionary<StatusId, double>?
@@ -1198,7 +1296,7 @@ public class BattleRepoTest : TestClass
         hp,
         100,
         new[] { actionId }.Concat(extraActions ?? []).ToArray(),
-        ReactionIdList: reactions,
+        ReactiveEffectIdList: reactiveEffects,
         StatusResistances: statusResistances ?? resistances,
         StatusWeaknesses: statusWeaknesses,
         DamageTypeResistances: damageResistances,

@@ -6,7 +6,7 @@ using System.Linq;
 internal sealed class BattleResolutionEngine(
     BattleRuntime runtime,
     BattleCommandService commands,
-    BattleReactionResolver reactions,
+    BattleReactiveEffectResolver reactiveEffects,
     BattleOperationExecutor executor
 )
 {
@@ -62,16 +62,16 @@ internal sealed class BattleResolutionEngine(
             {
                 _ = runtime.Catalog.GetAction(actionId);
             }
-            foreach (var reactionId in seed.ReactionIds)
+            foreach (var reactiveEffectId in seed.ReactiveEffectIds)
             {
-                _ = runtime.Catalog.GetReaction(reactionId);
+                _ = runtime.Catalog.GetReactiveEffect(reactiveEffectId);
             }
         }
         foreach (var unit in runtime.Units.Values)
         {
-            foreach (var reactionId in unit.ReactionIds)
+            foreach (var reactiveEffectId in unit.ReactiveEffectIds)
             {
-                reactions.Register(unit.Id, reactionId, null);
+                reactiveEffects.Register(unit.Id, reactiveEffectId, null);
             }
         }
 
@@ -103,9 +103,9 @@ internal sealed class BattleResolutionEngine(
         runtime.AfterActionFlushStarted = false;
         runtime.EndTurnFlushStarted = false;
         runtime.Operations.AddLast(new WindowOperation(
-            new ReactionEvent(
+            new ReactiveEffectEvent(
                 runtime.NextCauseId(),
-                ReactionTrigger.TurnStarted
+                ReactiveEffectTrigger.TurnStarted
             )
         ));
         foreach (var command in ordered)
@@ -115,14 +115,12 @@ internal sealed class BattleResolutionEngine(
             );
         }
         runtime.Operations.AddLast(new WindowOperation(
-            new ReactionEvent(
+            new ReactiveEffectEvent(
                 runtime.NextCauseId(),
-                ReactionTrigger.TurnEnded
+                ReactiveEffectTrigger.TurnEnded
             )
         ));
-        runtime.Operations.AddLast(
-            new FlushEndTurnReactionsOperation()
-        );
+        runtime.Operations.AddLast(new FlushEndTurnReactiveEffectsOperation());
         runtime.Operations.AddLast(new ExpireStatusesOperation());
         runtime.Operations.AddLast(new FinishTurnOperation());
         runtime.Phase = BattleDomainPhase.ResolvingTurn;

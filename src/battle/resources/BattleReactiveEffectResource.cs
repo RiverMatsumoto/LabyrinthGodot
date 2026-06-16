@@ -6,30 +6,30 @@ using Godot;
 using Godot.Collections;
 
 /// <summary>
-/// Authors a catalog reaction with trigger metadata, conditions, and effects.
+/// Authors a catalog reactive effect with trigger metadata, conditions, and effects.
 /// </summary>
 [GlobalClass]
-public partial class BattleReactionResource : Resource
+public partial class BattleReactiveEffectResource : Resource
 {
     [Export] public string Id { get; set; } = "";
-    [Export] public ReactionTrigger Trigger { get; set; }
-    [Export] public ReactionSchedule Schedule { get; set; }
-    [Export] public ReactionTargetPolicy TargetPolicy { get; set; }
+    [Export] public ReactiveEffectTrigger Trigger { get; set; }
+    [Export] public ReactiveEffectSchedule Schedule { get; set; }
+    [Export] public ReactiveEffectTargetPolicy TargetPolicy { get; set; }
     [Export] public int Priority { get; set; }
     [Export] public int Uses { get; set; } = -1;
     [Export]
-    public Array<BattleReactionConditionResource> Conditions { get; set; } = [];
+    public Array<BattleReactiveEffectConditionResource> Conditions { get; set; } = [];
     [Export]
     public Array<BattleEffectResource> Effects { get; set; } = [];
 
-    public ReactionDefinition Compile()
+    public ReactiveEffectDefinition Compile()
     {
         if (string.IsNullOrWhiteSpace(Id))
         {
-            throw new InvalidOperationException("Reaction id is required.");
+            throw new InvalidOperationException("ReactiveEffect id is required.");
         }
-        return new ReactionDefinition(
-            new ReactionId(Id),
+        return new ReactiveEffectDefinition(
+            new ReactiveEffectId(Id),
             Trigger,
             Schedule,
             TargetPolicy,

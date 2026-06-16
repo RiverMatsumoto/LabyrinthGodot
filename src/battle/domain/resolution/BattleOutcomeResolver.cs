@@ -33,7 +33,7 @@ internal sealed class BattleOutcomeResolver(BattleRuntime runtime)
 
         runtime.PlayerCommands.Clear();
         runtime.CommandOrder.Clear();
-        runtime.ReactionGuards.Clear();
+        runtime.ReactiveEffectGuards.Clear();
         runtime.AfterActionFlushStarted = false;
         runtime.EndTurnFlushStarted = false;
         runtime.Turn++;

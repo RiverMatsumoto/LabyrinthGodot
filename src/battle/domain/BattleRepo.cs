@@ -8,8 +8,8 @@ using System.Collections.Generic;
 /// </summary>
 public sealed class BattleRepo : IBattleRepo
 {
-    public const int MaxReactionDepth =
-        BattleRules.MaxReactionDepth;
+    public const int MaxReactiveEffectDepth =
+        BattleRules.MaxReactiveEffectDepth;
     public const double BackRowMeleeMultiplier =
         BattleRules.BackRowMeleeMultiplier;
 
@@ -29,7 +29,7 @@ public sealed class BattleRepo : IBattleRepo
         _commands = new BattleCommandService(_runtime, _targeting);
 
         var effects = new BattleEffectOperationBuilder(_runtime);
-        var reactions = new BattleReactionResolver(
+        var reactiveEffects = new BattleReactiveEffectResolver(
             _runtime,
             effects,
             _targeting
@@ -39,13 +39,13 @@ public sealed class BattleRepo : IBattleRepo
         var damage = new BattleDamageSystem(_runtime);
         var healing = new BattleHealingSystem(_runtime);
         var resources = new BattleResourceSystem(_runtime);
-        var statuses = new BattleStatusSystem(_runtime, reactions);
+        var statuses = new BattleStatusSystem(_runtime, reactiveEffects);
         var deaths = new BattleDeathSystem(_runtime, _outcome);
         var executor = new BattleOperationExecutor(
             _runtime,
             _targeting,
             effects,
-            reactions,
+            reactiveEffects,
             _outcome,
             damage,
             healing,
@@ -57,7 +57,7 @@ public sealed class BattleRepo : IBattleRepo
         _resolution = new BattleResolutionEngine(
             _runtime,
             _commands,
-            reactions,
+            reactiveEffects,
             executor
         );
     }

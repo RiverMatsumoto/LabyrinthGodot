@@ -72,16 +72,16 @@ internal sealed class BattleTargetResolver(BattleRuntime runtime)
         return [selected];
     }
 
-    public IReadOnlyList<BattlerId> ResolveReactionTargets(
-        ReactionInvocation invocation
+    public IReadOnlyList<BattlerId> ResolveReactiveEffectTargets(
+        ReactiveEffectInvocation invocation
     )
     {
-        var target = invocation.Reaction.Definition.TargetPolicy switch
+        var target = invocation.ReactiveEffect.Definition.TargetPolicy switch
         {
-            ReactionTargetPolicy.Owner => invocation.Reaction.OwnerId,
-            ReactionTargetPolicy.EventSource =>
+            ReactiveEffectTargetPolicy.Owner => invocation.ReactiveEffect.OwnerId,
+            ReactiveEffectTargetPolicy.EventSource =>
                 invocation.Event.SourceId,
-            ReactionTargetPolicy.EventTarget =>
+            ReactiveEffectTargetPolicy.EventTarget =>
                 invocation.Event.TargetId,
             _ => null,
         };

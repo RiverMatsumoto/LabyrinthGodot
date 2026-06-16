@@ -7,25 +7,27 @@ internal sealed record EffectContext(
     IReadOnlyList<BattlerId> TargetIds,
     BattleRange Range,
     ActionId? ActionId,
-    int ReactionDepth,
+    int ReactiveEffectDepth,
     StatusId? StatusId,
-    int StatusStacks
+    int StatusStacks,
+    double StatusPower
 );
 
-internal sealed record ReactionEvent(
+internal sealed record ReactiveEffectEvent(
     long CauseId,
-    ReactionTrigger Trigger,
+    ReactiveEffectTrigger Trigger,
     BattlerId? SourceId = null,
     BattlerId? TargetId = null,
     ActionId? ActionId = null,
     StatusId? StatusId = null,
     int StatusStacks = 0,
+    double StatusPower = 0,
     int Depth = 0
 );
 
-internal sealed record ReactionInvocation(
-    RuntimeReaction Reaction,
-    ReactionEvent Event
+internal sealed record ReactiveEffectInvocation(
+    RuntimeReactiveEffect ReactiveEffect,
+    ReactiveEffectEvent Event
 );
 
 internal abstract record BattleOperation;
@@ -36,7 +38,7 @@ internal sealed record CueOperation(IReadOnlyList<BattleCue> Cues)
 internal sealed record ExecuteActionOperation(BattleCommand Command)
     : BattleOperation;
 
-internal sealed record WindowOperation(ReactionEvent Event)
+internal sealed record WindowOperation(ReactiveEffectEvent Event)
     : BattleOperation;
 
 internal sealed record DamageOperation(
@@ -65,12 +67,12 @@ internal sealed record RemoveStatusOperation(
     StatusId StatusId
 ) : BattleOperation;
 
-internal sealed record RegisterReactionOperation(
+internal sealed record RegisterReactiveEffectOperation(
     EffectContext Context,
-    ReactionId ReactionId
+    ReactiveEffectId ReactiveEffectId
 ) : BattleOperation;
 
-internal sealed record UnregisterStatusReactionsOperation(
+internal sealed record UnregisterStatusReactiveEffectsOperation(
     BattlerId OwnerId,
     StatusId StatusId
 ) : BattleOperation;
@@ -78,10 +80,10 @@ internal sealed record UnregisterStatusReactionsOperation(
 internal sealed record ActionEndOperation(EffectContext Context)
     : BattleOperation;
 
-internal sealed record FlushAfterActionReactionsOperation
+internal sealed record FlushAfterActionReactiveEffectsOperation
     : BattleOperation;
 
-internal sealed record FlushEndTurnReactionsOperation
+internal sealed record FlushEndTurnReactiveEffectsOperation
     : BattleOperation;
 
 internal sealed record ExpireStatusesOperation : BattleOperation;
@@ -89,7 +91,7 @@ internal sealed record ExpireStatusesOperation : BattleOperation;
 internal sealed record DeathCheckOperation(
     BattlerId? SourceId,
     ActionId? ActionId,
-    int ReactionDepth
+    int ReactiveEffectDepth
 ) : BattleOperation;
 
 internal sealed record FinishTurnOperation : BattleOperation;

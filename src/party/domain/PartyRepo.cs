@@ -20,7 +20,7 @@ public sealed class PartyMember
     public Dictionary<StatusId, double> StatusWeakness { get; } = [];
     public Dictionary<DamageType, double> DamageTypeResistances { get; } = [];
     public Dictionary<DamageType, double> DamageTypeWeaknesses { get; } = [];
-    public List<ReactionId> PassiveReactionIds { get; } = [];
+    public List<ReactiveEffectId> PassiveReactiveEffectIds { get; } = [];
 
     public BattleStats EffectiveStats => BaseStats.Apply(EquipmentModifiers);
     public bool IsAlive => Hp > 0;
@@ -56,7 +56,7 @@ public sealed class PartyMember
         {
             clone.DamageTypeWeaknesses[pair.Key] = pair.Value;
         }
-        clone.PassiveReactionIds.AddRange(PassiveReactionIds);
+        clone.PassiveReactiveEffectIds.AddRange(PassiveReactiveEffectIds);
         return clone;
     }
 }

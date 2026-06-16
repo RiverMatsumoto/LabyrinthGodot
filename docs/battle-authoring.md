@@ -17,12 +17,12 @@ domain definitions before a battle starts.
 | --- | --- |
 | `Actions` | Unique `BattleActionResource.Id` values |
 | `Statuses` | Unique `BattleStatusResource.Id` values |
-| `Reactions` | Unique `BattleReactionResource.Id` values |
+| `ReactiveEffects` | Unique `BattleReactiveEffectResource.Id` values |
 | `Encounters` | Unique `BattleEncounterResource.Id` values |
 | `Equipment` | Unique `BattleEquipmentResource.Id` values |
 
 Compilation rejects duplicate IDs and references to missing actions, statuses,
-or reactions.
+or reactive effects.
 
 ## Actions
 
@@ -30,7 +30,7 @@ or reactions.
 
 | Field | Meaning |
 | --- | --- |
-| `Id` | Stable action ID used by battlers and reaction conditions |
+| `Id` | Stable action ID used by battlers and reactive effect conditions |
 | `DisplayName` | UI name; falls back to `Id` |
 | `TargetRule` | Self, one target, one row, or all targets |
 | `TpCost` | TP removed when execution begins |
@@ -43,17 +43,17 @@ Effects execute in authored order:
 
 | Resource | Fields |
 | --- | --- |
-| [`DamageBattleEffectResource`](../src/battle/resources/DamageBattleEffectResource.cs) | Damage type, fixed/stat mode, power, crit settings, animation, optional status-stack scaling |
-| [`HealBattleEffectResource`](../src/battle/resources/HealBattleEffectResource.cs) | Amount, animation, optional status-stack scaling |
-| [`ModifyResourceBattleEffectResource`](../src/battle/resources/ModifyResourceBattleEffectResource.cs) | HP/TP, signed amount, optional status-stack scaling |
-| [`ApplyStatusBattleEffectResource`](../src/battle/resources/ApplyStatusBattleEffectResource.cs) | Status ID, stacks, duration override, base chance |
-| [`RemoveStatusBattleEffectResource`](../src/battle/resources/RemoveStatusBattleEffectResource.cs) | Status ID |
-| [`AnimationBattleEffectResource`](../src/battle/resources/AnimationBattleEffectResource.cs) | Animation ID and wait flag |
-| [`WaitBattleEffectResource`](../src/battle/resources/WaitBattleEffectResource.cs) | Seconds |
-| [`RegisterReactionBattleEffectResource`](../src/battle/resources/RegisterReactionBattleEffectResource.cs) | Catalog reaction ID to register on the acting battler |
+| [`DamageBattleEffectResource`](../src/battle/resources/effect_resources/DamageBattleEffectResource.cs) | Damage type, fixed/stat mode, power, crit settings, animation, optional status-stack scaling |
+| [`HealBattleEffectResource`](../src/battle/resources/effect_resources/HealBattleEffectResource.cs) | Amount, animation, optional status-stack scaling |
+| [`ModifyResourceBattleEffectResource`](../src/battle/resources/effect_resources/ModifyResourceBattleEffectResource.cs) | HP/TP, signed amount, optional status-stack scaling |
+| [`ApplyStatusBattleEffectResource`](../src/battle/resources/effect_resources/ApplyStatusBattleEffectResource.cs) | Status ID, stacks, duration override, base chance |
+| [`RemoveStatusBattleEffectResource`](../src/battle/resources/effect_resources/RemoveStatusBattleEffectResource.cs) | Status ID |
+| [`AnimationBattleEffectResource`](../src/battle/resources/effect_resources/AnimationBattleEffectResource.cs) | Animation ID and wait flag |
+| [`WaitBattleEffectResource`](../src/battle/resources/effect_resources/WaitBattleEffectResource.cs) | Seconds |
+| [`RegisterReactiveEffectBattleEffectResource`](../src/battle/resources/effect_resources/RegisterReactiveEffectBattleEffectResource.cs) | Catalog reactive effect ID to register on the acting battler |
 
 `ScaleBySourceStatusId` multiplies the authored amount or power by that
-status's stack count. A status-owned reaction retains the triggering stack
+status's stack count. A status-owned reactive effect retains the triggering stack
 count during removal.
 
 ### Create an Action
@@ -77,7 +77,7 @@ Enemy species data and encounter placement are separate.
 | `Stats` | Base battle stats |
 | `Hp`, `Tp` | Starting resources |
 | `Actions` | External `BattleActionResource` references |
-| `ReactionIds` | Innate catalog reactions |
+| `ReactiveEffectIds` | Innate catalog reactive effects |
 | `StatusResistances`, `StatusWeaknesses` | Status affinity values by status ID |
 | `DamageTypeResistances`, `DamageTypeWeaknesses` | Damage affinity values by type |
 
@@ -106,7 +106,7 @@ and positions. See
 ### Create an Enemy Encounter
 
 1. Create one reusable `BattleEnemyResource`.
-2. Reference valid action resources and reaction IDs.
+2. Reference valid action resources and reactive effect IDs.
 3. Add affinity entries as needed.
 4. Create an encounter.
 5. Add one placement per enemy instance.
@@ -123,10 +123,10 @@ and positions. See
 | `PreventsAction` | Actor skips command execution while status exists |
 | `DefaultDuration` | Turns used when an effect does not override duration |
 | `MaxStacks` | Stack cap |
-| `ReactionIds` | Reactions registered while the status exists |
+| `ReactiveEffectIds` | Reactive effects registered while the status exists |
 
-Status behavior is entirely composed from these fields and reactions.
-Expiration removes all reactions registered by that status.
+Status behavior is entirely composed from these fields and reactive effects.
+Expiration removes all reactive effects registered by that status.
 
 Authored examples:
 
@@ -137,17 +137,17 @@ Authored examples:
 - [`Stun.tres`](../src/battle/resources/statuses/Stun.tres) sets
   `PreventsAction`.
 
-## Reactions
+## ReactiveEffects
 
-[`BattleReactionResource`](../src/battle/resources/BattleReactionResource.cs):
+[`BattleReactiveEffectResource`](../src/battle/resources/BattleReactiveEffectResource.cs):
 
 | Field | Meaning |
 | --- | --- |
-| `Id` | Stable catalog reaction ID |
+| `Id` | Stable catalog reactive effect ID |
 | `Trigger` | Event type to match |
 | `Schedule` | Queue insertion timing |
 | `TargetPolicy` | Owner, event source, or event target |
-| `Priority` | Higher matched reactions schedule first |
+| `Priority` | Higher matched reactive effects schedule first |
 | `Uses` | `-1` for unlimited; positive values are consumed on match |
 | `Conditions` | Typed predicates; all must pass |
 | `Effects` | Effects scheduled when matched |
@@ -164,40 +164,40 @@ Conditions:
 
 | Resource | Match |
 | --- | --- |
-| [`OwnerHasStatusReactionConditionResource`](../src/battle/resources/OwnerHasStatusReactionConditionResource.cs) | Owner has a status with at least the requested stacks |
-| [`TriggerActionReactionConditionResource`](../src/battle/resources/TriggerActionReactionConditionResource.cs) | Event action ID matches |
-| [`TriggerStatusReactionConditionResource`](../src/battle/resources/TriggerStatusReactionConditionResource.cs) | Event status ID matches |
-| [`OwnerRelationReactionConditionResource`](../src/battle/resources/OwnerRelationReactionConditionResource.cs) | Owner is the event source or target |
+| [`OwnerHasStatusReactiveEffectConditionResource`](../src/battle/resources/OwnerHasStatusReactiveEffectConditionResource.cs) | Owner has a status with at least the requested stacks |
+| [`TriggerActionReactiveEffectConditionResource`](../src/battle/resources/TriggerActionReactiveEffectConditionResource.cs) | Event action ID matches |
+| [`TriggerStatusReactiveEffectConditionResource`](../src/battle/resources/TriggerStatusReactiveEffectConditionResource.cs) | Event status ID matches |
+| [`OwnerRelationReactiveEffectConditionResource`](../src/battle/resources/OwnerRelationReactiveEffectConditionResource.cs) | Owner is the event source or target |
 
 Conditions are AND-combined. Event metadata carries action ID, status ID,
-status stacks, source, target, cause, and reaction depth when applicable.
+status stacks, source, target, cause, and reactive effect depth when applicable.
 
 Schedules:
 
 - `Immediate`: insert effects at the operation queue front.
 - `AfterCurrentAction`: defer until `ActionFinished`; execute immediately when
   the event has no active action.
-- `EndOfTurn`: flush after `TurnEnded` and before status expiration. Reactions
+- `EndOfTurn`: flush after `TurnEnded` and before status expiration. Reactive effects
   created during this flush are drained before expiration.
 
 Matching preserves priority, then registration order. Cause guards prevent one
-registration from handling the same cause twice. Reaction depth is capped by
-`BattleRepo.MaxReactionDepth`.
+registration from handling the same cause twice. Reactive effect depth is capped by
+`BattleRepo.MaxReactiveEffectDepth`.
 
-### Reaction Ownership
+### ReactiveEffect Ownership
 
-Reactions enter battle through four paths:
+ReactiveEffects enter battle through four paths:
 
-- Party `PassiveReactionIds`: registered at battle start.
-- Enemy `ReactionIds`: registered at battle start.
-- Status `ReactionIds`: registered on first application and removed with the
+- Party `PassiveReactiveEffectIds`: registered at battle start.
+- Enemy `ReactiveEffectIds`: registered at battle start.
+- Status `ReactiveEffectIds`: registered on first application and removed with the
   status.
-- `RegisterReactionBattleEffectResource`: dynamically registered on the
+- `RegisterReactiveEffectBattleEffectResource`: dynamically registered on the
   effect source; catalog `Uses` still applies.
 
 ### Poison and Toxic Recovery
 
-[`PoisonTick.tres`](../src/battle/resources/reactions/PoisonTick.tres):
+[`PoisonTick.tres`](../src/battle/resources/reactive_effects/PoisonTick.tres):
 
 1. `Poison` registers `poison_tick`.
 2. `TurnEnded` matches it.
@@ -205,10 +205,10 @@ Reactions enter battle through four paths:
 4. Damage power is multiplied by Poison stacks.
 5. The status then loses duration and may expire.
 
-[`ToxicRecovery.tres`](../src/battle/resources/reactions/ToxicRecovery.tres)
+[`ToxicRecovery.tres`](../src/battle/resources/reactive_effects/ToxicRecovery.tres)
 is a party passive example:
 
-1. Add `toxic_recovery` to a party member's passive reaction IDs.
+1. Add `toxic_recovery` to a party member's passive reactive effect IDs.
 2. `TurnEnded` checks `OwnerHasStatus(poison, 1)`.
 3. It targets the owner.
 4. Healing scales with Poison stacks.
@@ -231,7 +231,7 @@ computedDamage * (1 - resistance) * (1 + weakness)
 
 `True` damage bypasses damage affinities. Party members persist status
 resistances, status weaknesses, damage resistances, damage weaknesses, and
-passive reaction IDs through
+passive reactive effect IDs through
 [`PartyData`](../src/party/domain/PartyData.cs).
 
 ## Stats and Equipment
@@ -251,5 +251,5 @@ Resolver and authoring tests are in
 [`BattleRepoTest`](../test/src/battle/domain/BattleRepoTest.cs). Party persistence tests are
 in [`PartyRepoTest`](../test/src/party/domain/PartyRepoTest.cs).
 
-The reaction operation flow is shown in
-[`battle-reaction-flow.puml`](diagrams/battle-reaction-flow.puml).
+The reactive effect operation flow is shown in
+[`battle-reactive-effect-flow.puml`](diagrams/battle-reactive-effect-flow.puml).

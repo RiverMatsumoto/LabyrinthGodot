@@ -13,7 +13,7 @@ public sealed record CharacterClassDefinition(
     string Name,
     BattleStats Stats,
     IReadOnlyList<ActionId> ActionIds,
-    IReadOnlyList<ReactionId> PassiveReactionIds,
+    IReadOnlyList<ReactiveEffectId> PassiveReactiveEffectIds,
     IReadOnlyDictionary<StatusId, double> StatusResistances,
     IReadOnlyDictionary<StatusId, double> StatusWeaknesses,
     IReadOnlyDictionary<DamageType, double> DamageTypeResistances,
@@ -41,7 +41,7 @@ public sealed record BattleCharacterDefinition(
             Tp = Class.Stats.MaxTp,
         };
         member.LearnedActions.AddRange(Class.ActionIds);
-        member.PassiveReactionIds.AddRange(Class.PassiveReactionIds);
+        member.PassiveReactiveEffectIds.AddRange(Class.PassiveReactiveEffectIds);
         foreach (var affinity in Class.StatusResistances)
         {
             member.StatusResistances[affinity.Key] = affinity.Value;

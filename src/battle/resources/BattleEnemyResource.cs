@@ -17,7 +17,7 @@ public partial class BattleEnemyResource : Resource
     [Export] public int Hp { get; set; } = 100;
     [Export] public int Tp { get; set; } = 20;
     [Export] public Array<BattleActionResource> Actions { get; set; } = [];
-    [Export] public Array<string> ReactionIds { get; set; } = [];
+    [Export] public Array<string> ReactiveEffectIds { get; set; } = [];
     [Export]
     public Array<StatusResistanceResource> StatusResistances { get; set; } = [];
     [Export]
@@ -61,12 +61,12 @@ public partial class BattleEnemyResource : Resource
         {
             _ = catalog.GetAction(actionId);
         }
-        var reactions = ReactionIds
-            .Select(id => new ReactionId(id))
+        var reactiveEffects = ReactiveEffectIds
+            .Select(id => new ReactiveEffectId(id))
             .ToArray();
-        foreach (var reactionId in reactions)
+        foreach (var reactiveEffectId in reactiveEffects)
         {
-            _ = catalog.GetReaction(reactionId);
+            _ = catalog.GetReactiveEffect(reactiveEffectId);
         }
         foreach (var affinity in StatusResistances)
         {
@@ -83,7 +83,7 @@ public partial class BattleEnemyResource : Resource
             Hp,
             Tp,
             actions,
-            reactions,
+            reactiveEffects,
             StatusResistances.ToDictionary(
                 resistance => new StatusId(resistance.StatusId),
                 resistance => Math.Clamp(resistance.Multiplier, 0, 1)

@@ -45,7 +45,7 @@ public readonly record struct EnemyId(string Value)
     public override string ToString() => Value;
 }
 
-public readonly record struct ReactionId(string Value)
+public readonly record struct ReactiveEffectId(string Value)
 {
     public bool IsEmpty => string.IsNullOrWhiteSpace(Value);
     public override string ToString() => Value;

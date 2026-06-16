@@ -51,8 +51,8 @@ public class PartyRepoTest : TestClass
         member.StatusWeakness[BattleContent.StunId].ShouldBe(0.5);
         member.DamageTypeResistances[DamageType.Fire].ShouldBe(0.2);
         member.DamageTypeWeaknesses[DamageType.Ice].ShouldBe(0.4);
-        member.PassiveReactionIds.Single().ShouldBe(
-            BattleContent.ToxicRecoveryReactionId
+        member.PassiveReactiveEffectIds.Single().ShouldBe(
+            BattleContent.ToxicRecoveryReactiveEffectId
         );
     }
 
@@ -89,10 +89,43 @@ public class PartyRepoTest : TestClass
 
         repo.TryGet(new BattlerId("legacy"), out var member)
             .ShouldBeTrue();
-        member.PassiveReactionIds.ShouldBeEmpty();
+        member.PassiveReactiveEffectIds.ShouldBeEmpty();
         member.StatusWeakness.ShouldBeEmpty();
         member.DamageTypeResistances.ShouldBeEmpty();
         member.DamageTypeWeaknesses.ShouldBeEmpty();
+    }
+
+    [Test]
+    public void LegacyPassiveReactiveEffectSaveFieldMigrates()
+    {
+        var legacy = new PartyData
+        {
+            Version = 2,
+            Members =
+            [
+                new PartyMemberData
+                {
+                    Id = "legacy",
+                    Name = "Legacy",
+                    Hp = 100,
+                    Tp = 20,
+                    Stats = BattleStatsData.From(BattleStats.Default),
+                    LegacyPassiveReactiveEffects =
+                    [
+                        BattleContent.ToxicRecoveryReactiveEffectId.Value,
+                    ],
+                },
+            ],
+        };
+        using var repo = new PartyRepo();
+
+        repo.Load(legacy);
+
+        repo.TryGet(new BattlerId("legacy"), out var member)
+            .ShouldBeTrue();
+        member.PassiveReactiveEffectIds.Single().ShouldBe(
+            BattleContent.ToxicRecoveryReactiveEffectId
+        );
     }
 
     private static PartyMember CreateMember(int index)
@@ -114,8 +147,8 @@ public class PartyRepoTest : TestClass
         member.StatusWeakness[BattleContent.StunId] = 0.5;
         member.DamageTypeResistances[DamageType.Fire] = 0.2;
         member.DamageTypeWeaknesses[DamageType.Ice] = 0.4;
-        member.PassiveReactionIds.Add(
-            BattleContent.ToxicRecoveryReactionId
+        member.PassiveReactiveEffectIds.Add(
+            BattleContent.ToxicRecoveryReactiveEffectId
         );
         return member;
     }

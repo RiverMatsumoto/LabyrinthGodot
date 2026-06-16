@@ -6,7 +6,7 @@ using System.Linq;
 
 internal sealed class BattleStatusSystem(
     BattleRuntime runtime,
-    BattleReactionResolver reactions
+    BattleReactiveEffectResolver reactiveEffects
 )
 {
     public void Apply(ApplyStatusOperation operation)
@@ -63,6 +63,10 @@ internal sealed class BattleStatusSystem(
                     existingStatus.RemainingTurns,
                     duration
                 );
+                existingStatus.Power = Math.Max(
+                    existingStatus.Power,
+                    operation.Effect.Power
+                );
                 status = existingStatus;
             }
             else
@@ -73,10 +77,11 @@ internal sealed class BattleStatusSystem(
                         definition.MaxStacks,
                         Math.Max(1, operation.Effect.Stacks)
                     ),
-                    duration
+                    duration,
+                    operation.Effect.Power
                 );
                 target.Statuses.Add(definition.Id, status);
-                reactions.RegisterStatusReactions(
+                reactiveEffects.RegisterStatusReactiveEffects(
                     target.Id,
                     definition
                 );
@@ -90,15 +95,16 @@ internal sealed class BattleStatusSystem(
                     status.Stacks
                 ),
             ]));
-            followUps.Add(new WindowOperation(new ReactionEvent(
+            followUps.Add(new WindowOperation(new ReactiveEffectEvent(
                 runtime.NextCauseId(),
-                ReactionTrigger.StatusApplied,
+                ReactiveEffectTrigger.StatusApplied,
                 operation.Context.SourceId,
                 target.Id,
                 operation.Context.ActionId,
                 definition.Id,
                 status.Stacks,
-                operation.Context.ReactionDepth
+                status.Power,
+                operation.Context.ReactiveEffectDepth
             )));
         }
         runtime.InsertFront(followUps);
@@ -125,18 +131,19 @@ internal sealed class BattleStatusSystem(
                         0
                     ),
                 ]));
-                followUps.Add(new WindowOperation(new ReactionEvent(
+                followUps.Add(new WindowOperation(new ReactiveEffectEvent(
                     runtime.NextCauseId(),
-                    ReactionTrigger.StatusRemoved,
+                    ReactiveEffectTrigger.StatusRemoved,
                     operation.Context.SourceId,
                     target.Id,
                     operation.Context.ActionId,
                     operation.StatusId,
                     removed.Stacks,
-                    operation.Context.ReactionDepth
+                    removed.Power,
+                    operation.Context.ReactiveEffectDepth
                 )));
                 followUps.Add(
-                    new UnregisterStatusReactionsOperation(
+                    new UnregisterStatusReactiveEffectsOperation(
                         target.Id,
                         operation.StatusId
                     )
@@ -167,16 +174,17 @@ internal sealed class BattleStatusSystem(
                         0
                     ),
                 ]));
-                operations.Add(new WindowOperation(new ReactionEvent(
+                operations.Add(new WindowOperation(new ReactiveEffectEvent(
                     runtime.NextCauseId(),
-                    ReactionTrigger.StatusRemoved,
+                    ReactiveEffectTrigger.StatusRemoved,
                     unit.Id,
                     unit.Id,
                     StatusId: status.Id,
-                    StatusStacks: status.Stacks
+                    StatusStacks: status.Stacks,
+                    StatusPower: status.Power
                 )));
                 operations.Add(
-                    new UnregisterStatusReactionsOperation(
+                    new UnregisterStatusReactiveEffectsOperation(
                         unit.Id,
                         status.Id
                     )
