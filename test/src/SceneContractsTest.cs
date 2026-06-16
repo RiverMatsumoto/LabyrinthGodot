@@ -15,7 +15,14 @@ public class SceneContractsTest(Node testScene) : TestClass(testScene) {
       BattleContent.DefaultEncounterId
     ).ShouldNotBeNull();
     battle.GetNode("%Presenter").ShouldNotBeNull();
-    battle.GetNode("%Action").ShouldNotBeNull();
+    battle.GetNode("%Attack").ShouldNotBeNull();
+    battle.GetNode("%Skill").ShouldNotBeNull();
+    battle.GetNode("%Item").ShouldNotBeNull();
+    battle.GetNode("%Defence").ShouldNotBeNull();
+    battle.GetNode("%Move").ShouldNotBeNull();
+    battle.GetNode("%Escape").ShouldNotBeNull();
+    battle.GetNode("%SkillActions").ShouldNotBeNull();
+    battle.GetNode("%Target").ShouldNotBeNull();
     battle.GetNode("%Message").ShouldNotBeNull();
     battle.Free();
   }

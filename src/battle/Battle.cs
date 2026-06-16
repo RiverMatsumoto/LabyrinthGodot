@@ -31,14 +31,6 @@ public partial class Battle : Control, IBattle
     [Dependency] public IPartyRepo PartyRepo => this.DependOn<IPartyRepo>();
 
     [Node] public BattlePresenter Presenter { get; set; } = default!;
-    [Node] public Label Turn { get; set; } = default!;
-    [Node] public Label Party { get; set; } = default!;
-    [Node] public Label Enemies { get; set; } = default!;
-    [Node] public OptionButton Action { get; set; } = default!;
-    [Node] public OptionButton Target { get; set; } = default!;
-    [Node] public Button Confirm { get; set; } = default!;
-    [Node] public Button Undo { get; set; } = default!;
-    [Node] public Button Flee { get; set; } = default!;
 
     public IBattleRepo BattleRepo { get; set; } = default!;
     public IBattleLogic BattleLogic { get; set; } = default!;
@@ -47,9 +39,6 @@ public partial class Battle : Control, IBattle
     IBattleRepo IProvide<IBattleRepo>.Value() => BattleRepo;
     IBattleLogic IProvide<IBattleLogic>.Value() => BattleLogic;
 
-    private readonly List<ActionId> _actionIds = [];
-    private readonly List<BattlerId> _targetIds = [];
-    private BattlerId? _currentBattlerId;
     private BattleLogic.Binding? _battleBinding;
     private LogicBlock.Binding? _gameBinding;
 
@@ -83,10 +72,9 @@ public partial class Battle : Control, IBattle
 
     public void OnResolved()
     {
-        Action.ItemSelected += OnActionSelected;
-        Confirm.Pressed += ConfirmCommand;
-        Undo.Pressed += BattleLogic.UndoCommand;
-        Flee.Pressed += BattleLogic.Flee;
+        Presenter.CommandSubmitted += BattleLogic.SubmitCommand;
+        Presenter.UndoRequested += BattleLogic.UndoCommand;
+        Presenter.EscapeRequested += BattleLogic.Flee;
 
         _battleBinding = ((BattleLogic)BattleLogic).Bind()
             .OnOutput((
@@ -94,7 +82,7 @@ public partial class Battle : Control, IBattle
             ) => ShowCommand(output.ActorId))
             .OnOutput((
                 in BattleLogicState.Output.CommandRejected output
-            ) => Turn.Text = output.Error)
+            ) => Presenter.ShowError(output.Error))
             .OnOutput((
                 in BattleLogicState.Output.CuePlaybackRequested output
             ) => PlayCues(output.CueBatchId, output.Cues))
@@ -126,10 +114,9 @@ public partial class Battle : Control, IBattle
 
     public void OnExitTree()
     {
-        Action.ItemSelected -= OnActionSelected;
-        Confirm.Pressed -= ConfirmCommand;
-        Undo.Pressed -= BattleLogic.UndoCommand;
-        Flee.Pressed -= BattleLogic.Flee;
+        Presenter.CommandSubmitted -= BattleLogic.SubmitCommand;
+        Presenter.UndoRequested -= BattleLogic.UndoCommand;
+        Presenter.EscapeRequested -= BattleLogic.Flee;
         Presenter.Cancel();
         _battleBinding?.Dispose();
         _gameBinding?.Dispose();
@@ -142,86 +129,15 @@ public partial class Battle : Control, IBattle
         Visible = true;
         MouseFilter = MouseFilterEnum.Stop;
         BattleLogic.StartRequestedBattle();
-        RefreshBattleState();
+        Presenter.Render(BuildScreen(null));
     }
 
     private void ShowCommand(BattlerId battlerId)
     {
-        _currentBattlerId = battlerId;
-        _actionIds.Clear();
-        Action.Clear();
-        var battler = BattleRepo.Snapshot().Units.First(unit =>
-          unit.Id == battlerId);
-
-        foreach (var actionId in battler.ActionIds)
-        {
-            var action = BattleRepo.Catalog.GetAction(actionId);
-            _actionIds.Add(actionId);
-            Action.AddItem($"{action.Name} ({action.TpCost} TP)");
-        }
-
-        Action.Disabled = _actionIds.Count == 0;
-        Confirm.Disabled = _actionIds.Count == 0;
-        if (_actionIds.Count > 0)
-        {
-            Action.Select(0);
-            PopulateTargets(_actionIds[0]);
-        }
-
-        Turn.Text = $"Turn {BattleRepo.Turn}: {battler.Name}";
-        SetCommandControlsEnabled(true);
-        RefreshBattleState();
-    }
-
-    private void OnActionSelected(long index)
-    {
-        if (index >= 0 && index < _actionIds.Count)
-        {
-            PopulateTargets(_actionIds[(int)index]);
-        }
-    }
-
-    private void PopulateTargets(ActionId actionId)
-    {
-        _targetIds.Clear();
-        Target.Clear();
-        if (_currentBattlerId is not { } actorId)
-        {
-            return;
-        }
-
-        var snapshot = BattleRepo.Snapshot();
-        foreach (var id in BattleRepo.GetValidTargets(actorId, actionId))
-        {
-            var unit = snapshot.Units.First(candidate => candidate.Id == id);
-            _targetIds.Add(id);
-            Target.AddItem(unit.Name);
-        }
-
-        Target.Disabled = _targetIds.Count <= 1;
-        Confirm.Disabled = _targetIds.Count == 0;
-    }
-
-    private void ConfirmCommand()
-    {
-        if (
-            _currentBattlerId is not { } actorId
-            || Action.Selected < 0
-            || Action.Selected >= _actionIds.Count
-        )
-        {
-            return;
-        }
-
-        var target = Target.Selected >= 0
-            && Target.Selected < _targetIds.Count
-            ? _targetIds[Target.Selected]
-            : (BattlerId?)null;
-        BattleLogic.SubmitCommand(new BattleCommand(
-            actorId,
-            _actionIds[Action.Selected],
-            target
-        ));
+        Presenter.ShowCommandPrompt(
+            BuildScreen(battlerId),
+            BuildPrompt(battlerId)
+        );
     }
 
     private void PlayCues(
@@ -229,9 +145,8 @@ public partial class Battle : Control, IBattle
         IReadOnlyList<BattleCue> cues
     )
     {
-        SetCommandControlsEnabled(false);
-        RefreshBattleState();
-        Presenter.Play(
+        Presenter.PlayCueBatch(
+            BuildScreen(null),
             cues,
             () => BattleLogic.AcknowledgeCuePlayback(cueBatchId)
         );
@@ -239,7 +154,7 @@ public partial class Battle : Control, IBattle
 
     private void CompleteBattle()
     {
-        RefreshBattleState();
+        Presenter.Render(BuildScreen(null));
         HideBattle();
     }
 
@@ -263,32 +178,78 @@ public partial class Battle : Control, IBattle
         }
     }
 
-    private void RefreshBattleState()
+    private BattleScreenView BuildScreen(BattlerId? activeActorId)
     {
         var snapshot = BattleRepo.Snapshot();
-        Party.Text = FormatTeam(snapshot, BattleTeam.Player);
-        Enemies.Text = FormatTeam(snapshot, BattleTeam.Enemy);
+        return new BattleScreenView(
+            snapshot.Turn,
+            activeActorId,
+            snapshot.Units
+                .Select(unit => new BattleUnitViewModel(
+                    unit.Id,
+                    unit.Name,
+                    unit.Team,
+                    unit.Position,
+                    unit.Hp,
+                    unit.Stats.MaxHp,
+                    unit.Tp,
+                    unit.Stats.MaxTp,
+                    unit.IsAlive
+                ))
+                .ToArray()
+        );
     }
 
-    private static string FormatTeam(
-        BattleSnapshot snapshot,
-        BattleTeam team
-        ) => string.Join(
-        "\n",
-        snapshot.Units
-            .Where(unit => unit.Team == team)
-            .Select(unit =>
-            $"{unit.Name}  HP {unit.Hp}/{unit.Stats.MaxHp}  "
-            + $"TP {unit.Tp}/{unit.Stats.MaxTp}")
-    );
-
-    private void SetCommandControlsEnabled(bool enabled)
+    private BattleCommandPrompt BuildPrompt(BattlerId actorId)
     {
-        Action.Disabled = !enabled || _actionIds.Count == 0;
-        Target.Disabled = !enabled || _targetIds.Count <= 1;
-        Confirm.Disabled = !enabled || _targetIds.Count == 0;
-        Undo.Disabled = !enabled;
-        Flee.Disabled = !enabled;
+        var snapshot = BattleRepo.Snapshot();
+        var actor = snapshot.Units.First(unit => unit.Id == actorId);
+        var options = actor.ActionIds
+            .Select(actionId => BuildActionOption(actorId, snapshot, actionId))
+            .Where(option => option is not null)
+            .Cast<BattleActionOption>()
+            .ToArray();
+        return new BattleCommandPrompt(
+            actorId,
+            options.FirstOrDefault(option =>
+                option.ActionId == BattleContent.BasicAttackId),
+            options
+                .Where(option =>
+                    option.ActionId != BattleContent.BasicAttackId)
+                .ToArray()
+        );
+    }
+
+    private BattleActionOption? BuildActionOption(
+        BattlerId actorId,
+        BattleSnapshot snapshot,
+        ActionId actionId
+    )
+    {
+        if (!BattleRepo.Catalog.TryGetAction(actionId, out var action))
+        {
+            return null;
+        }
+
+        var targets = BattleRepo.GetValidTargets(actorId, actionId)
+            .Select(id =>
+            {
+                var unit = snapshot.Units.First(candidate =>
+                    candidate.Id == id);
+                return new BattleTargetOption(id, unit.Name);
+            })
+            .ToArray();
+        if (targets.Length == 0)
+        {
+            return null;
+        }
+
+        return new BattleActionOption(
+            action.Id,
+            action.Name,
+            action.TpCost,
+            targets
+        );
     }
 
     private void HideBattle()
@@ -296,6 +257,5 @@ public partial class Battle : Control, IBattle
         Presenter.Cancel();
         Visible = false;
         MouseFilter = MouseFilterEnum.Ignore;
-        _currentBattlerId = null;
     }
 }

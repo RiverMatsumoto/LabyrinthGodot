@@ -146,7 +146,7 @@ internal sealed class BattleEffectOperationBuilder(BattleRuntime runtime)
                 damage.Spec.Power
                 * context.StatusPower
                 * context.StatusStacks,
-            EffectPowerSource.Fixed => throw new NotImplementedException(),
+            EffectPowerSource.Fixed => damage.Spec.Power,
             _ => damage.Spec.Power,
         };
     }
