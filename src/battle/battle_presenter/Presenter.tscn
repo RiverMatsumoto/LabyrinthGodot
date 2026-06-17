@@ -1,0 +1,162 @@
+[gd_scene format=3 uid="uid://bmmu5ntd3f6xy"]
+
+[ext_resource type="Script" uid="uid://dv48glfkgmjom" path="res://src/battle/battle_presenter/BattlePresenter.cs" id="1_uq71m"]
+
+[node name="Presenter" type="Control" unique_id=1857128426]
+custom_minimum_size = Vector2(0, 96)
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+script = ExtResource("1_uq71m")
+BaseSpeed = 0.5
+
+[node name="Panel" type="Panel" parent="." unique_id=1602606417]
+z_index = -10
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="Turn" type="Label" parent="." unique_id=2124146510]
+unique_name_in_owner = true
+layout_mode = 0
+offset_top = 305.0
+offset_right = 1216.0
+offset_bottom = 349.66666
+text = "Battle"
+horizontal_alignment = 1
+
+[node name="Teams" type="Control" parent="." unique_id=1648502553]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+size_flags_vertical = 3
+
+[node name="Party" type="Control" parent="Teams" unique_id=261802860]
+unique_name_in_owner = true
+layout_mode = 1
+anchors_preset = 7
+anchor_left = 0.5
+anchor_top = 1.0
+anchor_right = 0.5
+anchor_bottom = 1.0
+offset_left = -302.0
+offset_top = -44.666748
+offset_right = 302.0
+grow_horizontal = 2
+grow_vertical = 0
+size_flags_horizontal = 3
+
+[node name="Enemies" type="Control" parent="Teams" unique_id=84841449]
+unique_name_in_owner = true
+layout_mode = 1
+anchor_left = 0.252
+anchor_right = 0.749
+anchor_bottom = 0.19500001
+offset_left = 0.56799316
+offset_top = 83.0
+offset_right = 0.21600342
+offset_bottom = -0.25334167
+grow_horizontal = 2
+size_flags_horizontal = 3
+
+[node name="ItemList" type="ItemList" parent="." unique_id=535588563]
+layout_mode = 1
+anchors_preset = -1
+anchor_top = 0.16700001
+anchor_bottom = 0.712
+offset_left = 50.0
+offset_top = -0.2400055
+offset_right = 300.0
+offset_bottom = 0.35998535
+grow_vertical = 2
+text_overrun_behavior = 0
+item_count = 7
+item_0/text = "ATTACK"
+item_1/text = "SKILL"
+item_2/text = "DEFEND"
+item_3/text = "MOVE"
+item_4/text = "ESCAPE"
+item_5/text = "Undo"
+item_6/text = "Confirm"
+
+[node name="Commands" type="VBoxContainer" parent="." unique_id=1213589346]
+visible = false
+layout_mode = 0
+offset_left = 42.0
+offset_top = 31.0
+offset_right = 346.0
+offset_bottom = 576.0
+theme_override_constants/separation = 8
+
+[node name="Attack" type="Button" parent="Commands" unique_id=358793077]
+unique_name_in_owner = true
+layout_mode = 2
+text = "ATTACK"
+
+[node name="Skill" type="Button" parent="Commands" unique_id=1424876736]
+unique_name_in_owner = true
+layout_mode = 2
+text = "SKILL"
+
+[node name="Item" type="Button" parent="Commands" unique_id=509863528]
+unique_name_in_owner = true
+layout_mode = 2
+disabled = true
+text = "ITEM"
+
+[node name="Defence" type="Button" parent="Commands" unique_id=1814556763]
+unique_name_in_owner = true
+layout_mode = 2
+disabled = true
+text = "DEFENCE"
+
+[node name="Move" type="Button" parent="Commands" unique_id=744621381]
+unique_name_in_owner = true
+layout_mode = 2
+disabled = true
+text = "MOVE"
+
+[node name="Escape" type="Button" parent="Commands" unique_id=2133569152]
+unique_name_in_owner = true
+layout_mode = 2
+text = "ESCAPE"
+
+[node name="Undo" type="Button" parent="Commands" unique_id=1157046025]
+unique_name_in_owner = true
+layout_mode = 2
+text = "UNDO"
+
+[node name="Confirm" type="Button" parent="Commands" unique_id=1992810099]
+unique_name_in_owner = true
+layout_mode = 2
+text = "CONFIRM"
+
+[node name="Panel2" type="Panel" parent="." unique_id=568316501]
+layout_mode = 1
+anchors_preset = -1
+anchor_right = 0.81600004
+anchor_bottom = 0.10700001
+offset_right = 0.51989746
+offset_bottom = -0.040008545
+grow_horizontal = 2
+
+[node name="Message" type="Label" parent="Panel2" unique_id=86610556]
+unique_name_in_owner = true
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+horizontal_alignment = 1
+vertical_alignment = 1
