@@ -106,4 +106,3 @@ public partial class BattlePresenterLogic
     public void Cancel() =>
         Input(new BattlePresenterLogicState.Input.Cancelled());
 }
-
