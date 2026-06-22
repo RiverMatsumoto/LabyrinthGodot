@@ -60,6 +60,10 @@ public partial class BattlePresenter : Control, IBattlePresenter
     [Node] public OptionButton SkillActions { get; set; } = default!;
     [Node] public OptionButton Target { get; set; } = default!;
 
+    // use for visualizing player's party members
+    private PackedScene _partyMemberUiScene =
+        GD.Load<PackedScene>("res://src/party_member_ui/PartyMemberUi.tscn");
+
     public bool IsPlaying => _finished is not null;
     public double EffectiveSpeed => CalculateEffectiveSpeed(
         BaseSpeed,

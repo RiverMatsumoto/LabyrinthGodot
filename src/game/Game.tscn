@@ -19,6 +19,8 @@ unique_name_in_owner = true
 
 [node name="MenuHub" parent="UiRoot" unique_id=781361827 instance=ExtResource("2_menu_hub")]
 unique_name_in_owner = true
+visible = false
 
 [node name="Battle" parent="UiRoot" unique_id=1524882212 instance=ExtResource("3_battle")]
 unique_name_in_owner = true
+visible = false

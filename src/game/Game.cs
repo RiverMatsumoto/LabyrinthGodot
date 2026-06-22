@@ -325,4 +325,5 @@ public partial class Game : Node, IGame
         _activeSaveSlot = -1;
         Interlocked.Exchange(ref _saveOperationInProgress, 0);
     }
+
 }

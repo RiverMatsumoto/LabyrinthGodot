@@ -42,6 +42,7 @@ public partial class Battle : Control, IBattle
     private BattleLogic.Binding? _battleBinding;
     private LogicBlock.Binding? _gameBinding;
 
+
     public void Setup()
     {
         var compiled = (
