@@ -41,7 +41,7 @@ grow_horizontal = 2
 grow_vertical = 2
 size_flags_vertical = 3
 
-[node name="Party" type="Control" parent="Teams" unique_id=261802860]
+[node name="Party" type="Label" parent="Teams" unique_id=896175758]
 unique_name_in_owner = true
 layout_mode = 1
 anchors_preset = 7
@@ -50,15 +50,16 @@ anchor_top = 1.0
 anchor_right = 0.5
 anchor_bottom = 1.0
 offset_left = -302.0
-offset_top = -44.666748
+offset_top = -45.0
 offset_right = 302.0
 grow_horizontal = 2
 grow_vertical = 0
 size_flags_horizontal = 3
 
-[node name="Enemies" type="Control" parent="Teams" unique_id=84841449]
+[node name="Enemies" type="Label" parent="Teams" unique_id=1594328564]
 unique_name_in_owner = true
 layout_mode = 1
+anchors_preset = -1
 anchor_left = 0.252
 anchor_right = 0.749
 anchor_bottom = 0.19500001
