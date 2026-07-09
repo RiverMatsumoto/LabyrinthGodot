@@ -25,7 +25,7 @@ PlantUML sources:
 | [`BattleLogic`](../src/battle/BattleLogic.cs) | LogicBlocks inputs, outputs, and state transitions | HP, TP, statuses, operation ordering, or cue timing |
 | [`BattleRepo`](../src/battle/domain/BattleRepo.cs) | Runtime units, commands, turns, effects, reactive effects, outcomes, operation queue | Godot controls or frame-based playback |
 | [`BattlePresenter`](../src/battle/battle_presenter/BattlePresenter.cs) | Battle UI controls, command presentation, cue timing, and temporary cue UI | Battle mutations or state transitions |
-| [`BattleContentResource`](../src/battle/resources/BattleContentResource.cs) | Godot-authored actions, statuses, reactive effects, encounters, enemies, and equipment | Runtime battle state |
+| [`BattleContentResource`](../src/battle/resources/catalog/BattleContentResource.cs) | Godot-authored actions, statuses, reactive effects, encounters, enemies, and equipment | Runtime battle state |
 | `GameLogic` / `GameRepo` | Entering battle, requested encounter, seed, and return mode | Battle resolution |
 | `PartyRepo` | Persistent party members and post-battle HP/TP | Temporary enemy or status state |
 

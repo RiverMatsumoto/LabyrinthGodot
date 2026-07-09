@@ -1,6 +1,6 @@
 [gd_resource type="Resource" script_class="BattleStatusResource" format=3 uid="uid://6kadg4lq2hxa"]
 
-[ext_resource type="Script" uid="uid://b3nq66we03b8c" path="res://src/battle/resources/BattleStatusResource.cs" id="1_status"]
+[ext_resource type="Script" uid="uid://b3nq66we03b8c" path="res://src/battle/resources/statuses/BattleStatusResource.cs" id="1_status"]
 
 [resource]
 script = ExtResource("1_status")

@@ -48,7 +48,7 @@ public partial class BattlePresenter : Control, IBattlePresenter
     [Node] public Label Party { get; set; } = default!;
     [Node] public Label Enemies { get; set; } = default!;
     [Node] public Label Message { get; set; } = default!;
-    [Node] public Control Popups { get; set; } = default!;
+    // [Node] public Control Popups { get; set; } = default!;
     [Node] public Button Attack { get; set; } = default!;
     [Node] public Button Skill { get; set; } = default!;
     [Node] public Button Item { get; set; } = default!;
@@ -298,14 +298,14 @@ public partial class BattlePresenter : Control, IBattlePresenter
             case PopupBatchCue batch:
                 foreach (var popup in batch.Popups)
                 {
-                    Popups.AddChild(new Label
-                    {
-                        Text = PopupText(popup),
-                        Position = new Vector2(
-                            16,
-                            32 * Popups.GetChildCount()
-                        ),
-                    });
+                    // Popups.AddChild(new Label
+                    // {
+                    //     Text = PopupText(popup),
+                    //     Position = new Vector2(
+                    //         16,
+                    //         32 * Popups.GetChildCount()
+                    //     ),
+                    // });
                 }
                 _duration = 0.5;
                 break;
@@ -363,10 +363,10 @@ public partial class BattlePresenter : Control, IBattlePresenter
         {
             Message.Text = "";
         }
-        if (IsInstanceValid(Popups))
-        {
-            ClearPopups();
-        }
+        // if (IsInstanceValid(Popups))
+        // {
+        //     ClearPopups();
+        // }
         SetProcess(false);
     }
 
@@ -399,9 +399,9 @@ public partial class BattlePresenter : Control, IBattlePresenter
 
     private void ClearPopups()
     {
-        foreach (var child in Popups.GetChildren())
-        {
-            child.QueueFree();
-        }
+        // foreach (var child in Popups.GetChildren())
+        // {
+        //     child.QueueFree();
+        // }
     }
 }

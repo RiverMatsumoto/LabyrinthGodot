@@ -1,15 +1,15 @@
 [gd_resource type="Resource" script_class="CharacterClassResource" format=3 uid="uid://dvds1r7w8fqkc"]
 
 [ext_resource type="Script" uid="uid://dofbgx7q0j8oi" path="res://src/party/resources/CharacterClassResource.cs" id="1_class"]
-[ext_resource type="Script" uid="uid://teltcxejb0pd" path="res://src/battle/resources/BattleStatsResource.cs" id="2_stats"]
-[ext_resource type="Script" uid="uid://w8j6cwe8vpbk" path="res://src/battle/resources/BattleActionResource.cs" id="3_action"]
+[ext_resource type="Script" uid="uid://teltcxejb0pd" path="res://src/battle/resources/stats/BattleStatsResource.cs" id="2_stats"]
+[ext_resource type="Script" uid="uid://w8j6cwe8vpbk" path="res://src/battle/resources/actions/BattleActionResource.cs" id="3_action"]
 [ext_resource type="Resource" uid="uid://cutdclklat13l" path="res://src/battle/resources/actions/BasicAttack.tres" id="4_basic"]
-[ext_resource type="Script" uid="uid://w7prxgfy8udc" path="res://src/battle/resources/DamageTypeResistanceResource.cs" id="4_c0lyl"]
+[ext_resource type="Script" uid="uid://w7prxgfy8udc" path="res://src/battle/resources/affinities/DamageTypeResistanceResource.cs" id="4_c0lyl"]
 [ext_resource type="Resource" uid="uid://dgitp22xcufmh" path="res://src/battle/resources/actions/Fire.tres" id="5_fire"]
-[ext_resource type="Script" uid="uid://bftd8hkll8s6r" path="res://src/battle/resources/DamageTypeWeaknessResource.cs" id="5_vkgdi"]
-[ext_resource type="Script" uid="uid://cidn5h6e6ryfc" path="res://src/battle/resources/BattleReactiveEffectResource.cs" id="6_20pbx"]
-[ext_resource type="Script" uid="uid://bolb43snulv2k" path="res://src/battle/resources/StatusResistanceResource.cs" id="8_rrnvo"]
-[ext_resource type="Script" uid="uid://bsx7mfygk2d3i" path="res://src/battle/resources/StatusWeaknessResource.cs" id="9_6r6kg"]
+[ext_resource type="Script" uid="uid://bftd8hkll8s6r" path="res://src/battle/resources/affinities/DamageTypeWeaknessResource.cs" id="5_vkgdi"]
+[ext_resource type="Script" uid="uid://cidn5h6e6ryfc" path="res://src/battle/resources/reactive_effects/BattleReactiveEffectResource.cs" id="6_20pbx"]
+[ext_resource type="Script" uid="uid://bolb43snulv2k" path="res://src/battle/resources/affinities/StatusResistanceResource.cs" id="8_rrnvo"]
+[ext_resource type="Script" uid="uid://bsx7mfygk2d3i" path="res://src/battle/resources/affinities/StatusWeaknessResource.cs" id="9_6r6kg"]
 
 [sub_resource type="Resource" id="Stats_arcanist"]
 script = ExtResource("2_stats")

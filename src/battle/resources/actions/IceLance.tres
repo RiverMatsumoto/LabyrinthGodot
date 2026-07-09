@@ -1,8 +1,8 @@
 [gd_resource type="Resource" script_class="BattleActionResource" format=3 uid="uid://02tqs3vdxtov"]
 
-[ext_resource type="Script" uid="uid://gwug75hcnrr3" path="res://src/battle/resources/effect_resources/BattleEffectResource.cs" id="1_hubtr"]
-[ext_resource type="Script" uid="uid://w8j6cwe8vpbk" path="res://src/battle/resources/BattleActionResource.cs" id="2_8t7hs"]
-[ext_resource type="Script" uid="uid://5fk70j1vvyu2" path="res://src/battle/resources/effect_resources/DamageBattleEffectResource.cs" id="2_84v5n"]
+[ext_resource type="Script" uid="uid://gwug75hcnrr3" path="res://src/battle/resources/effects/BattleEffectResource.cs" id="1_hubtr"]
+[ext_resource type="Script" uid="uid://w8j6cwe8vpbk" path="res://src/battle/resources/actions/BattleActionResource.cs" id="2_8t7hs"]
+[ext_resource type="Script" uid="uid://5fk70j1vvyu2" path="res://src/battle/resources/effects/DamageBattleEffectResource.cs" id="2_84v5n"]
 
 [sub_resource type="Resource" id="Resource_utpw0"]
 script = ExtResource("2_84v5n")
