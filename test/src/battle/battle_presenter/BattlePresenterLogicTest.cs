@@ -8,7 +8,7 @@ using Shouldly;
 public class BattlePresenterLogicTest(Node testScene) : TestClass(testScene)
 {
     [Test]
-    public void AttackSelectsTarget()
+    public void ActionMenuAttackSelectsTarget()
     {
         using var logic = StartedLogic();
         BattleActionOption? rendered = null;
@@ -18,7 +18,8 @@ public class BattlePresenterLogicTest(Node testScene) : TestClass(testScene)
             ) => rendered = output.Option);
 
         logic.ShowCommandPrompt(Screen(), Prompt());
-        logic.SelectAttack();
+        logic.SelectMenuAction(0);
+        logic.Confirm();
 
         logic.State.ShouldBeOfType<
             BattlePresenterLogicState.AttackSelectingTarget>();
@@ -27,26 +28,49 @@ public class BattlePresenterLogicTest(Node testScene) : TestClass(testScene)
     }
 
     [Test]
-    public void SkillSelectsActionThenTarget()
+    public void AttackAfterUndoSelectsTargetAgain()
     {
         using var logic = StartedLogic();
-        using var binding = logic.Bind();
+        var commands = new List<BattleCommand>();
+        var undoRequested = false;
+        using var binding = logic.Bind()
+            .OnOutput((
+                in BattlePresenterLogicState.Output.CommandSubmitted output
+            ) =>
+            {
+                commands.Add(output.Command);
+                logic.ShowCommandPrompt(Screen(), Prompt());
+            })
+            .OnOutput((
+                in BattlePresenterLogicState.Output.UndoRequested _
+            ) =>
+            {
+                undoRequested = true;
+                logic.ShowCommandPrompt(Screen(), Prompt());
+            });
 
         logic.ShowCommandPrompt(Screen(), Prompt());
-        logic.SelectSkill();
-
-        logic.State.ShouldBeOfType<
-            BattlePresenterLogicState.SkillSelectingAction>();
-
-        logic.SelectSkillAction(0);
+        logic.SelectMenuAction(0);
+        logic.Confirm();
         logic.Confirm();
 
         logic.State.ShouldBeOfType<
-            BattlePresenterLogicState.SkillSelectingTarget>();
+            BattlePresenterLogicState.CommandMenu>();
+
+        logic.RequestUndo();
+
+        undoRequested.ShouldBeTrue();
+
+        logic.SelectMenuAction(0);
+        logic.Confirm();
+
+        logic.State.ShouldBeOfType<
+            BattlePresenterLogicState.AttackSelectingTarget>();
+        commands.Count.ShouldBe(1);
     }
 
     [Test]
-    public void PlaceholdersDoNotSubmitCommand()
+    public void SkillSelectsActionThenTargetThenSubmits()
     {
         using var logic = StartedLogic();
         var commands = new List<BattleCommand>();
@@ -56,11 +80,230 @@ public class BattlePresenterLogicTest(Node testScene) : TestClass(testScene)
             ) => commands.Add(output.Command));
 
         logic.ShowCommandPrompt(Screen(), Prompt());
-        logic.SelectItem();
-        logic.SelectDefence();
-        logic.SelectMove();
+        logic.SelectMenuAction(1);
+        logic.Confirm();
+
+        logic.State.ShouldBeOfType<
+            BattlePresenterLogicState.SkillSelectingAction>();
+
+        logic.SelectSkillAction(0);
+        logic.Confirm();
+
+        logic.State.ShouldBeOfType<
+            BattlePresenterLogicState.SkillSelectingTarget>();
+
+        logic.Confirm();
+
+        commands.ShouldBe([
+            new BattleCommand(
+                new BattlerId("hero"),
+                BattleContent.FireId,
+                new BattlerId("enemy")
+            ),
+        ]);
+    }
+
+    [Test]
+    public void BackNavigatesLocallyBeforeUndo()
+    {
+        using var logic = StartedLogic();
+        var undoCount = 0;
+        using var binding = logic.Bind()
+            .OnOutput((
+                in BattlePresenterLogicState.Output.UndoRequested _
+            ) => undoCount++);
+
+        logic.ShowCommandPrompt(Screen(), Prompt());
+        logic.SelectMenuAction(1);
+        logic.Confirm();
+        logic.Confirm();
+        logic.State.ShouldBeOfType<
+            BattlePresenterLogicState.SkillSelectingTarget>();
+
+        logic.RequestUndo();
+        logic.State.ShouldBeOfType<
+            BattlePresenterLogicState.SkillSelectingAction>();
+        undoCount.ShouldBe(0);
+
+        logic.RequestUndo();
+        logic.State.ShouldBeOfType<BattlePresenterLogicState.CommandMenu>();
+        undoCount.ShouldBe(0);
+
+        logic.RequestUndo();
+        undoCount.ShouldBe(1);
+    }
+
+    [Test]
+    public void RemembersLastActionSkillAndTargetBetweenTurns()
+    {
+        using var logic = StartedLogic();
+        var selectedMenuIndex = -1;
+        var selectedSkillIndex = -1;
+        var selectedTargetIndex = -1;
+        using var binding = logic.Bind()
+            .OnOutput((
+                in BattlePresenterLogicState.Output.RenderCommandMenu output
+            ) => selectedMenuIndex = output.SelectedIndex)
+            .OnOutput((
+                in BattlePresenterLogicState.Output.RenderSkillActions output
+            ) => selectedSkillIndex = output.SelectedIndex)
+            .OnOutput((
+                in BattlePresenterLogicState.Output.RenderTargets output
+            ) => selectedTargetIndex = output.SelectedIndex);
+
+        logic.ShowCommandPrompt(Screen(), PromptWithTwoSkillsAndTargets());
+        logic.SelectMenuAction(1);
+        logic.Confirm();
+        logic.SelectSkillAction(1);
+        logic.Confirm();
+        logic.SelectTarget(1);
+        logic.Confirm();
+        logic.PlayCueBatch(Screen(), [new WaitCue(0)]);
+        logic.CueVisualFinished();
+
+        logic.State.ShouldBeOfType<BattlePresenterLogicState.Hidden>();
+
+        logic.ShowCommandPrompt(Screen(), PromptWithTwoSkillsAndTargets());
+        selectedMenuIndex.ShouldBe(1);
+
+        logic.Confirm();
+        selectedSkillIndex.ShouldBe(1);
+
+        logic.Confirm();
+        selectedTargetIndex.ShouldBe(1);
+    }
+
+    [Test]
+    public void RemembersSubmittedCommandsByActor()
+    {
+        using var logic = StartedLogic();
+        var selectedMenuIndex = -1;
+        var selectedSkillIndex = -1;
+        using var binding = logic.Bind()
+            .OnOutput((
+                in BattlePresenterLogicState.Output.RenderCommandMenu output
+            ) => selectedMenuIndex = output.SelectedIndex)
+            .OnOutput((
+                in BattlePresenterLogicState.Output.RenderSkillActions output
+            ) => selectedSkillIndex = output.SelectedIndex);
+
+        logic.ShowCommandPrompt(
+            Screen(),
+            PromptWithTwoSkillsAndTargets("hero")
+        );
+        logic.SelectMenuAction(1);
+        logic.Confirm();
+        logic.SelectSkillAction(1);
+        logic.Confirm();
+        logic.Confirm();
+
+        logic.ShowCommandPrompt(Screen(), Prompt("mage"));
+        selectedMenuIndex.ShouldBe(0);
+        logic.SelectMenuAction(0);
+        logic.Confirm();
+        logic.Confirm();
+
+        logic.ShowCommandPrompt(
+            Screen(),
+            PromptWithTwoSkillsAndTargets("hero")
+        );
+        selectedMenuIndex.ShouldBe(1);
+        logic.Confirm();
+        selectedSkillIndex.ShouldBe(1);
+
+        logic.ShowCommandPrompt(Screen(), Prompt("mage"));
+        selectedMenuIndex.ShouldBe(0);
+    }
+
+    [Test]
+    public void DoesNotReturnToRememberedActionWhenDisabled()
+    {
+        using var logic = StartedLogic();
+        var selectedMenuIndex = -1;
+        using var binding = logic.Bind()
+            .OnOutput((
+                in BattlePresenterLogicState.Output.RenderCommandMenu output
+            ) => selectedMenuIndex = output.SelectedIndex);
+
+        logic.ShowCommandPrompt(Screen(), PromptWithTwoSkillsAndTargets());
+        logic.SelectMenuAction(1);
+        logic.Confirm();
+        logic.SelectSkillAction(1);
+        logic.Confirm();
+        logic.Confirm();
+
+        logic.ShowCommandPrompt(Screen(), PromptWithDisabledIce());
+
+        selectedMenuIndex.ShouldBe(0);
+    }
+
+    [Test]
+    public void DisabledActionsDoNotSubmitCommand()
+    {
+        using var logic = StartedLogic();
+        var commands = new List<BattleCommand>();
+        using var binding = logic.Bind()
+            .OnOutput((
+                in BattlePresenterLogicState.Output.CommandSubmitted output
+            ) => commands.Add(output.Command));
+
+        logic.ShowCommandPrompt(Screen(), DisabledPrompt());
+        logic.SelectMenuAction(0);
+        logic.Confirm();
+        logic.SelectMenuAction(1);
+        logic.Confirm();
+        logic.SelectMenuAction(2);
+        logic.Confirm();
+        logic.SelectMenuAction(3);
+        logic.Confirm();
+        logic.SelectMenuAction(4);
+        logic.Confirm();
 
         commands.ShouldBeEmpty();
+    }
+
+    [Test]
+    public void TargetRulesSubmitExpectedPayloads()
+    {
+        using var logic = StartedLogic();
+        var commands = new List<BattleCommand>();
+        using var binding = logic.Bind()
+            .OnOutput((
+                in BattlePresenterLogicState.Output.CommandSubmitted output
+            ) => commands.Add(output.Command));
+
+        logic.ShowCommandPrompt(Screen(), RulePrompt(SelfAction()));
+        logic.SelectMenuAction(0);
+        logic.Confirm();
+        logic.Confirm();
+
+        logic.ShowCommandPrompt(Screen(), RulePrompt(AllAction()));
+        logic.SelectMenuAction(0);
+        logic.Confirm();
+        logic.Confirm();
+
+        logic.ShowCommandPrompt(Screen(), RulePrompt(RowAction()));
+        logic.SelectMenuAction(0);
+        logic.Confirm();
+        logic.Confirm();
+
+        commands.ShouldBe([
+            new BattleCommand(
+                new BattlerId("hero"),
+                new ActionId("self"),
+                null
+            ),
+            new BattleCommand(
+                new BattlerId("hero"),
+                new ActionId("all"),
+                null
+            ),
+            new BattleCommand(
+                new BattlerId("hero"),
+                new ActionId("row"),
+                new BattlerId("enemy")
+            ),
+        ]);
     }
 
     [Test]
@@ -74,7 +317,8 @@ public class BattlePresenterLogicTest(Node testScene) : TestClass(testScene)
             ) => requested = true);
 
         logic.ShowCommandPrompt(Screen(), Prompt());
-        logic.RequestEscape();
+        logic.SelectMenuAction(5);
+        logic.Confirm();
 
         requested.ShouldBeTrue();
     }
@@ -134,46 +378,190 @@ public class BattlePresenterLogicTest(Node testScene) : TestClass(testScene)
         1,
         new BattlerId("hero"),
         [
-            new BattleUnitViewModel(
-                new BattlerId("hero"),
-                "Hero",
-                BattleTeam.Player,
-                new PartyPosition(PartyRow.Front, 0),
-                100,
-                100,
-                20,
-                20,
-                true
-            ),
-            new BattleUnitViewModel(
-                new BattlerId("enemy"),
-                "Enemy",
-                BattleTeam.Enemy,
-                new PartyPosition(PartyRow.Front, 0),
-                100,
-                100,
-                20,
-                20,
-                true
-            ),
+            Unit("hero", "Hero", BattleTeam.Player, PartyRow.Front, 0),
+            Unit("enemy", "Enemy", BattleTeam.Enemy, PartyRow.Front, 0),
+            Unit("enemy_2", "Enemy 2", BattleTeam.Enemy, PartyRow.Front, 1),
         ]
     );
 
-    private static BattleCommandPrompt Prompt() => new(
-        new BattlerId("hero"),
-        new BattleActionOption(
-            BattleContent.BasicAttackId,
-            "Attack",
-            0,
-            [new BattleTargetOption(new BattlerId("enemy"), "Enemy")]
-        ),
+    private static BattleUnitViewModel Unit(
+        string id,
+        string name,
+        BattleTeam team,
+        PartyRow row,
+        int slot
+    ) => new(
+        new BattlerId(id),
+        name,
+        team,
+        new PartyPosition(row, slot),
+        100,
+        100,
+        20,
+        20,
+        true,
+        null
+    );
+
+    private static BattleCommandPrompt Prompt(string actorId = "hero") => new(
+        new BattlerId(actorId),
+        AttackAction(),
+        [FireAction()]
+    );
+
+    private static BattleCommandPrompt PromptWithTwoSkillsAndTargets(
+        string actorId = "hero"
+    ) => new(
+        new BattlerId(actorId),
+        AttackAction(),
         [
-            new BattleActionOption(
-                BattleContent.FireId,
-                "Fire",
-                4,
-                [new BattleTargetOption(new BattlerId("enemy"), "Enemy")]
-            ),
+            FireAction(),
+            FireAction() with
+            {
+                ActionId = new ActionId("ice"),
+                Name = "Ice",
+                TargetOptions =
+                [
+                    EnemyTarget("enemy"),
+                    EnemyTarget("enemy_2", slot: 1),
+                ],
+            },
         ]
+    );
+
+    private static BattleCommandPrompt PromptWithDisabledIce() => new(
+        new BattlerId("hero"),
+        AttackAction(),
+        [
+            FireAction(),
+            FireAction() with
+            {
+                ActionId = new ActionId("ice"),
+                Name = "Ice",
+                IsEnabled = false,
+                DisabledReason = "Not enough TP.",
+            },
+        ]
+    );
+
+    private static BattleCommandPrompt DisabledPrompt() => new(
+        new BattlerId("hero"),
+        AttackAction() with
+        {
+            IsEnabled = false,
+            DisabledReason = "No target.",
+        },
+        [
+            FireAction() with
+            {
+                IsEnabled = false,
+                DisabledReason = "Not enough TP.",
+            },
+        ]
+    );
+
+    private static BattleCommandPrompt RulePrompt(
+        BattleActionOption action
+    ) => new(new BattlerId("hero"), action, []);
+
+    private static BattleActionOption AttackAction() => new(
+        BattleContent.BasicAttackId,
+        "Attack",
+        BattleTargetRule.SingleEnemy,
+        0,
+        [EnemyTarget("enemy")],
+        true,
+        ""
+    );
+
+    private static BattleActionOption FireAction() => new(
+        BattleContent.FireId,
+        "Fire",
+        BattleTargetRule.SingleEnemy,
+        4,
+        [EnemyTarget("enemy")],
+        true,
+        ""
+    );
+
+    private static BattleActionOption SelfAction() => new(
+        new ActionId("self"),
+        "Self",
+        BattleTargetRule.Self,
+        0,
+        [
+            new BattleTargetOption(
+                "Self",
+                null,
+                [new BattlerId("hero")],
+                [new BattlerId("hero")],
+                BattleTeam.Player,
+                new BattleTargetGridPoint(
+                    BattleTeam.Player,
+                    PartyRow.Front,
+                    0
+                )
+            ),
+        ],
+        true,
+        ""
+    );
+
+    private static BattleActionOption AllAction() => new(
+        new ActionId("all"),
+        "All",
+        BattleTargetRule.AllEnemies,
+        0,
+        [
+            new BattleTargetOption(
+                "All Enemies",
+                null,
+                [new BattlerId("enemy"), new BattlerId("enemy_2")],
+                [new BattlerId("enemy"), new BattlerId("enemy_2")],
+                BattleTeam.Enemy,
+                new BattleTargetGridPoint(
+                    BattleTeam.Enemy,
+                    PartyRow.Front,
+                    0
+                )
+            ),
+        ],
+        true,
+        ""
+    );
+
+    private static BattleActionOption RowAction() => new(
+        new ActionId("row"),
+        "Row",
+        BattleTargetRule.RowEnemies,
+        0,
+        [
+            new BattleTargetOption(
+                "Front Row",
+                new BattlerId("enemy"),
+                [new BattlerId("enemy")],
+                [new BattlerId("enemy"), new BattlerId("enemy_2")],
+                BattleTeam.Enemy,
+                new BattleTargetGridPoint(
+                    BattleTeam.Enemy,
+                    PartyRow.Front,
+                    0
+                )
+            ),
+        ],
+        true,
+        ""
+    );
+
+    private static BattleTargetOption EnemyTarget(
+        string id,
+        int slot = 0
+    ) => new(
+        id,
+        new BattlerId(id),
+        [new BattlerId(id)],
+        [new BattlerId(id)],
+        BattleTeam.Enemy,
+        new BattleTargetGridPoint(BattleTeam.Enemy, PartyRow.Front, slot)
     );
 }

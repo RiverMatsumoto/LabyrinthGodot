@@ -26,7 +26,7 @@ border_color = Color(0.015686275, 0.1254902, 0.23921569, 1)
 
 [sub_resource type="PlaceholderTexture2D" id="PlaceholderTexture2D_lixw5"]
 
-[node name="CharacterUI" type="Control" unique_id=10715871]
+[node name="PartyMemberUi" type="Control" unique_id=10715871]
 custom_minimum_size = Vector2(210, 90)
 layout_mode = 3
 anchor_right = 0.165
@@ -111,7 +111,7 @@ value = 100.0
 rounded = true
 show_percentage = false
 
-[node name="HPLabel" type="RichTextLabel" parent="Bars" unique_id=1148312189]
+[node name="HPLabel" type="Label" parent="Bars" unique_id=1591503110]
 unique_name_in_owner = true
 layout_mode = 1
 anchors_preset = -1
@@ -122,11 +122,11 @@ anchor_bottom = 1.0
 offset_left = -0.06000042
 offset_top = -0.25
 offset_right = 0.07999802
-offset_bottom = -16.759995
-theme_override_font_sizes/normal_font_size = 12
+offset_bottom = -6.5833282
+theme_override_font_sizes/font_size = 16
 text = "HP"
 
-[node name="HPValue" type="RichTextLabel" parent="Bars" unique_id=1473756111]
+[node name="HPValue" type="Label" parent="Bars" unique_id=282937903]
 unique_name_in_owner = true
 layout_mode = 1
 anchors_preset = -1
@@ -135,13 +135,13 @@ anchor_right = 0.47000003
 anchor_bottom = 1.0
 offset_left = 36.0
 offset_top = 0.019996643
-offset_right = 1.7499924
-offset_bottom = -16.759995
-theme_override_font_sizes/normal_font_size = 12
+offset_right = 1.7499847
+offset_bottom = -6.7213287
+theme_override_font_sizes/font_size = 16
 text = "0"
 horizontal_alignment = 2
 
-[node name="TPLabel" type="RichTextLabel" parent="Bars" unique_id=363483795]
+[node name="TPLabel" type="Label" parent="Bars" unique_id=846446313]
 unique_name_in_owner = true
 layout_mode = 1
 anchors_preset = -1
@@ -149,11 +149,11 @@ anchor_left = 0.51500005
 anchor_top = 0.625
 anchor_right = 0.68
 anchor_bottom = 1.0
-offset_bottom = -16.509995
-theme_override_font_sizes/normal_font_size = 12
+offset_bottom = -6.3333282
+theme_override_font_sizes/font_size = 16
 text = "TP"
 
-[node name="TPValue" type="RichTextLabel" parent="Bars" unique_id=96245682]
+[node name="TPValue" type="Label" parent="Bars" unique_id=69372349]
 unique_name_in_owner = true
 layout_mode = 1
 anchors_preset = -1
@@ -163,12 +163,11 @@ anchor_bottom = 1.0
 offset_left = 133.0
 offset_top = 0.019996643
 offset_right = 0.010009766
-offset_bottom = -16.759995
-theme_override_font_sizes/normal_font_size = 12
+offset_bottom = -6.7213287
 text = "0"
 horizontal_alignment = 2
 
-[node name="NameLabel" type="RichTextLabel" parent="." unique_id=1756840857]
+[node name="NameLabel" type="Label" parent="." unique_id=1120169733]
 unique_name_in_owner = true
 layout_mode = 1
 anchors_preset = -1
@@ -176,12 +175,11 @@ anchor_top = 0.044000003
 anchor_right = 1.0
 anchor_bottom = 0.38900003
 offset_left = 39.0
-offset_top = 0.039999723
-offset_right = -7.022995
+offset_top = 0.03999996
+offset_right = -7.0229797
 offset_bottom = -0.010002136
-theme_override_font_sizes/normal_font_size = 14
+theme_override_font_sizes/font_size = 20
 text = "Name"
-autowrap_mode = 0
 
 [node name="StatusEffectBorder" type="Panel" parent="." unique_id=1911583962]
 unique_name_in_owner = true

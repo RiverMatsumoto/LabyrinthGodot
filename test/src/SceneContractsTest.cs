@@ -15,15 +15,15 @@ public class SceneContractsTest(Node testScene) : TestClass(testScene) {
       BattleContent.DefaultEncounterId
     ).ShouldNotBeNull();
     battle.GetNode("%Presenter").ShouldNotBeNull();
-    battle.GetNode("%Attack").ShouldNotBeNull();
-    battle.GetNode("%Skill").ShouldNotBeNull();
-    battle.GetNode("%Item").ShouldNotBeNull();
-    battle.GetNode("%Defence").ShouldNotBeNull();
-    battle.GetNode("%Move").ShouldNotBeNull();
-    battle.GetNode("%Escape").ShouldNotBeNull();
-    battle.GetNode("%SkillActions").ShouldNotBeNull();
-    battle.GetNode("%Target").ShouldNotBeNull();
-    battle.GetNode("%Message").ShouldNotBeNull();
+    battle.GetNode("Presenter/ActionMenu").ShouldNotBeNull();
+    battle.GetNode("Presenter/SkillActions").ShouldNotBeNull();
+    battle.GetNode("Presenter/PartySlots").ShouldNotBeNull();
+    battle.GetNode("Presenter/EnemySlots").ShouldNotBeNull();
+    battle.GetNode("Presenter/PartySlots/PlayerFront0/PartyMemberUi")
+      .ShouldNotBeNull();
+    battle.GetNode("Presenter/EnemySlots/EnemyFront0/TargetCaret")
+      .ShouldNotBeNull();
+    battle.GetNode("Presenter/MessagePanel/Message").ShouldNotBeNull();
     battle.Free();
   }
 

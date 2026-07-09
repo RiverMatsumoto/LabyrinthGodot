@@ -182,6 +182,16 @@ public partial class Battle : Control, IBattle
     private BattleScreenView BuildScreen(BattlerId? activeActorId)
     {
         var snapshot = BattleRepo.Snapshot();
+        var queuedCommands = snapshot.SubmittedPlayerCommands
+            .ToDictionary(
+                command => command.ActorId,
+                command => BattleRepo.Catalog.TryGetAction(
+                    command.ActionId,
+                    out var action
+                )
+                    ? action.Name
+                    : command.ActionId.Value
+            );
         return new BattleScreenView(
             snapshot.Turn,
             activeActorId,
@@ -195,7 +205,8 @@ public partial class Battle : Control, IBattle
                     unit.Stats.MaxHp,
                     unit.Tp,
                     unit.Stats.MaxTp,
-                    unit.IsAlive
+                    unit.IsAlive,
+                    queuedCommands.GetValueOrDefault(unit.Id)
                 ))
                 .ToArray()
         );
@@ -232,26 +243,125 @@ public partial class Battle : Control, IBattle
             return null;
         }
 
-        var targets = BattleRepo.GetValidTargets(actorId, actionId)
-            .Select(id =>
-            {
-                var unit = snapshot.Units.First(candidate =>
-                    candidate.Id == id);
-                return new BattleTargetOption(id, unit.Name);
-            })
-            .ToArray();
-        if (targets.Length == 0)
+        var actor = snapshot.Units.First(unit => unit.Id == actorId);
+        var targets = BuildTargetOptions(actor, snapshot, action);
+        var disabledReason = "";
+        if (actor.Tp < action.TpCost)
         {
-            return null;
+            disabledReason = "Not enough TP.";
+        }
+        else if (targets.Length == 0)
+        {
+            disabledReason = "No valid targets.";
         }
 
         return new BattleActionOption(
             action.Id,
             action.Name,
+            action.TargetRule,
             action.TpCost,
-            targets
+            targets,
+            string.IsNullOrEmpty(disabledReason),
+            disabledReason
         );
     }
+
+    private BattleTargetOption[] BuildTargetOptions(
+        BattleUnitView actor,
+        BattleSnapshot snapshot,
+        BattleActionDefinition action
+    )
+    {
+        var validIds = BattleRepo
+            .GetValidTargets(actor.Id, action.Id)
+            .ToHashSet();
+        var candidates = snapshot.Units
+            .Where(unit => validIds.Contains(unit.Id))
+            .OrderBy(unit => unit.Position.Row)
+            .ThenBy(unit => unit.Position.Index)
+            .ThenBy(unit => unit.Id.Value, StringComparer.Ordinal)
+            .ToArray();
+
+        if (candidates.Length == 0)
+        {
+            return [];
+        }
+
+        if (action.TargetRule == BattleTargetRule.Self)
+        {
+            return
+            [
+                new BattleTargetOption(
+                    "Self",
+                    null,
+                    [actor.Id],
+                    [actor.Id],
+                    actor.Team,
+                    GridPoint(actor)
+                ),
+            ];
+        }
+
+        if (
+            action.TargetRule is BattleTargetRule.AllAllies
+                or BattleTargetRule.AllEnemies
+        )
+        {
+            return
+            [
+                new BattleTargetOption(
+                    action.TargetRule == BattleTargetRule.AllAllies
+                        ? "All Allies"
+                        : "All Enemies",
+                    null,
+                    candidates.Select(unit => unit.Id).ToArray(),
+                    candidates.Select(unit => unit.Id).ToArray(),
+                    candidates[0].Team,
+                    GridPoint(candidates[0])
+                ),
+            ];
+        }
+
+        if (
+            action.TargetRule is BattleTargetRule.RowAllies
+                or BattleTargetRule.RowEnemies
+        )
+        {
+            return candidates
+                .GroupBy(unit => unit.Position.Row)
+                .Select(group =>
+                {
+                    var affected = group
+                        .OrderBy(unit => unit.Position.Index)
+                        .ThenBy(unit => unit.Id.Value, StringComparer.Ordinal)
+                        .ToArray();
+                    var anchor = affected[0];
+                    return new BattleTargetOption(
+                        $"{anchor.Position.Row} Row",
+                        anchor.Id,
+                        [anchor.Id],
+                        affected.Select(unit => unit.Id).ToArray(),
+                        anchor.Team,
+                        GridPoint(anchor)
+                    );
+                })
+                .ToArray();
+        }
+
+        return candidates
+            .Select(unit => new BattleTargetOption(
+                unit.Name,
+                unit.Id,
+                [unit.Id],
+                [unit.Id],
+                unit.Team,
+                GridPoint(unit)
+            ))
+            .ToArray();
+    }
+
+    private static BattleTargetGridPoint GridPoint(BattleUnitView unit) =>
+        new(unit.Team, unit.Position.Row, unit.Position.Index);
 
     private void HideBattle()
     {

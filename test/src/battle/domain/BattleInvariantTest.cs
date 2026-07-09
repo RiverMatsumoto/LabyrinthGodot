@@ -37,7 +37,8 @@ public class BattleInvariantTest(Node testScene) : TestClass(testScene) {
       [
         View("enemy", BattleTeam.Enemy, tp: 0),
         View("hero", BattleTeam.Player, tp: 20),
-      ]
+      ],
+      []
     );
 
     new BasicEnemyCommandPlanner().Plan(

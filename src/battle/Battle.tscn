@@ -2,7 +2,7 @@
 
 [ext_resource type="Script" uid="uid://cs40hrsd76ys1" path="res://src/battle/Battle.cs" id="1_battle"]
 [ext_resource type="Resource" uid="uid://b6pulfqapkhaa" path="res://src/battle/resources/BattleContent.tres" id="3_content"]
-[ext_resource type="PackedScene" uid="uid://bmmu5ntd3f6xy" path="res://src/battle/battle_presenter/Presenter.tscn" id="4_ott0i"]
+[ext_resource type="PackedScene" uid="uid://bmmu5ntd3f6xy" path="res://src/battle/battle_presenter/BattlePresenter.tscn" id="4_ott0i"]
 [ext_resource type="Resource" path="res://src/party/resources/PartyContent.tres" id="4_party_content"]
 
 [node name="Battle" type="Control" unique_id=1524882212]
@@ -19,4 +19,5 @@ PartyContent = ExtResource("4_party_content")
 
 [node name="Presenter" parent="." unique_id=1857128426 instance=ExtResource("4_ott0i")]
 unique_name_in_owner = true
-layout_mode = 0
+visible = false
+layout_mode = 1

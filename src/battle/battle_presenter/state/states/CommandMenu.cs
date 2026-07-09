@@ -7,30 +7,49 @@ public abstract partial record BattlePresenterLogicState
 {
     public record CommandMenu
         : ShowingCommandMenu,
+            IGet<Input.MenuActionSelected>,
             IGet<Input.AttackSelected>,
-            IGet<Input.SkillSelected>
+            IGet<Input.SkillSelected>,
+            IGet<Input.Confirmed>,
+            IGet<Input.BackRequested>
     {
-        public Type On(in Input.AttackSelected input)
+        public Type On(in Input.MenuActionSelected input)
         {
-            if (Data.Prompt?.Attack is not { } attack)
+            if (Data.Prompt is null)
             {
                 return ToSelf();
             }
 
-            OutputTargets(attack);
-            return To<AttackSelectingTarget>();
+            Data.SelectedMenuIndex = input.Index;
+            OutputCommandMenu();
+            return ToSelf();
         }
 
-        public Type On(in Input.SkillSelected input)
+        public Type On(in Input.AttackSelected input) => OpenAttackTargets();
+
+        public Type On(in Input.SkillSelected input) => OpenSkillActions();
+
+        public Type On(in Input.Confirmed input)
         {
-            if (Data.Prompt is not { } prompt || prompt.Skills.Count == 0)
+            var selected = SelectedMenuOption();
+            if (!selected.IsEnabled)
             {
                 return ToSelf();
             }
 
-            Data.SelectedSkillIndex = 0;
-            Output(new Output.RenderSkillActions(prompt, 0));
-            return To<SkillSelectingAction>();
+            return selected.Action switch
+            {
+                BattleCommandMenuAction.Attack => OpenAttackTargets(),
+                BattleCommandMenuAction.Skill => OpenSkillActions(),
+                BattleCommandMenuAction.Escape => RequestEscape(),
+                _ => ToSelf(),
+            };
+        }
+
+        public Type On(in Input.BackRequested input)
+        {
+            Output(new Output.UndoRequested());
+            return ToSelf();
         }
     }
 }

@@ -1,12 +1,16 @@
 namespace Labyrinth;
 
+using System.Collections.Generic;
+
 public abstract partial record BattlePresenterLogicState
 {
     public static class Output
     {
         public readonly record struct RenderBattle(BattleScreenView View);
         public readonly record struct RenderCommandMenu(
-            BattleCommandPrompt Prompt
+            BattleCommandPrompt Prompt,
+            IReadOnlyList<BattleCommandMenuOption> Options,
+            int SelectedIndex
         );
         public readonly record struct RenderSkillActions(
             BattleCommandPrompt Prompt,

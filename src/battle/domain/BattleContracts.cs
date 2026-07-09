@@ -154,7 +154,9 @@ public sealed record BattleUnitView(
 public sealed record BattleSnapshot(
     int Turn,
     BattleDomainPhase Phase,
-    IReadOnlyList<BattleUnitView> Units
+    /// <summary>Total number of battle units on field</summary>
+    IReadOnlyList<BattleUnitView> Units,
+    IReadOnlyList<BattleCommand> SubmittedPlayerCommands
 );
 
 public interface IRandomSource

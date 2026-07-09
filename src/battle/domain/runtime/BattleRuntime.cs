@@ -58,6 +58,10 @@ internal sealed class BattleRuntime
             .ThenBy(unit => unit.Position.Index)
             .ThenBy(unit => unit.Id.Value, System.StringComparer.Ordinal)
             .Select(unit => unit.View())
+            .ToArray(),
+        CommandOrder
+            .Where(PlayerCommands.ContainsKey)
+            .Select(id => PlayerCommands[id])
             .ToArray()
     );
 

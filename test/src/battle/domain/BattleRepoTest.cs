@@ -90,6 +90,35 @@ public class BattleRepoTest : TestClass
     }
 
     [Test]
+    public void SnapshotIncludesSubmittedCommandsAndUndoClearsThem()
+    {
+        var actionId = new ActionId("strike");
+        using var repo = new BattleRepo(Catalog(
+            new BattleActionDefinition(
+                actionId,
+                "Strike",
+                BattleTargetRule.SingleEnemy,
+                [FixedDamage(10)]
+            )
+        ));
+        var command = new BattleCommand(
+            new BattlerId("hero"),
+            actionId,
+            new BattlerId("enemy")
+        );
+        repo.Start(Setup(
+            [Seed("hero", BattleTeam.Player, actionId)],
+            [Seed("enemy", BattleTeam.Enemy, actionId)]
+        ));
+
+        repo.SubmitCommand(command).ShouldBeTrue();
+        repo.Snapshot().SubmittedPlayerCommands.ShouldBe([command]);
+
+        repo.UndoLastCommand().ShouldBeTrue();
+        repo.Snapshot().SubmittedPlayerCommands.ShouldBeEmpty();
+    }
+
+    [Test]
     public void BasicEnemyPlannerCreatesCommandForKnownAction()
     {
         var actionId = new ActionId("strike");
@@ -456,7 +485,7 @@ public class BattleRepoTest : TestClass
             BattleContent.ToxicRecoveryReactiveEffectId
         ).Conditions.ShouldNotBeEmpty();
         content.GetEncounter(new EncounterId("floor_1_squirrel"))
-            .Enemies.Single().Id.ShouldBe(new BattlerId("squirrel_1"));
+            .Enemies.First().Id.ShouldBe(new BattlerId("squirrel_1"));
         content.Catalog.GetAction(BattleContent.BasicAttackId)
             .TargetRule.ShouldBe(BattleTargetRule.SingleEnemy);
 
@@ -1122,17 +1151,17 @@ public class BattleRepoTest : TestClass
     private static BattleEnemyResource EnemyResource() => new()
     {
         Id = "squirrel",
-          DisplayName = "Squirrel",
-          Stats = new BattleStatsResource(),
-          Hp = 25,
-          Actions =
+        DisplayName = "Squirrel",
+        Stats = new BattleStatsResource(),
+        Hp = 25,
+        Actions =
           [
               new BattleActionResource
               {
                   Id = BattleContent.BasicAttackId.Value,
               },
           ],
-      };
+    };
 
     private static BattleEnemyPlacementResource Placement(
         string battlerId,

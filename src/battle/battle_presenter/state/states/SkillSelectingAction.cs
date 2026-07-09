@@ -9,7 +9,8 @@ public abstract partial record BattlePresenterLogicState
         : ShowingCommandMenu,
             IGet<Input.SkillActionSelected>,
             IGet<Input.Confirmed>,
-            IGet<Input.AttackSelected>
+            IGet<Input.AttackSelected>,
+            IGet<Input.BackRequested>
     {
         public Type On(in Input.SkillActionSelected input)
         {
@@ -23,42 +24,18 @@ public abstract partial record BattlePresenterLogicState
                 0,
                 Data.Prompt.Skills.Count - 1
             );
-            Output(new Output.RenderSkillActions(
-                Data.Prompt,
-                Data.SelectedSkillIndex
-            ));
+            OutputSkillActions();
             return ToSelf();
         }
 
-        public Type On(in Input.Confirmed input)
+        public Type On(in Input.Confirmed input) => OpenSkillTargets();
+
+        public Type On(in Input.AttackSelected input) => OpenAttackTargets();
+
+        public Type On(in Input.BackRequested input)
         {
-            if (Data.Prompt is null || Data.Prompt.Skills.Count == 0)
-            {
-                return ToSelf();
-            }
-
-            var skill = Data.Prompt.Skills[
-                Math.Clamp(
-                    Data.SelectedSkillIndex,
-                    0,
-                    Data.Prompt.Skills.Count - 1
-                )
-            ];
-            Data.SelectedTargetIndex = 0;
-            OutputTargets(skill);
-            return To<SkillSelectingTarget>();
-        }
-
-        public Type On(in Input.AttackSelected input)
-        {
-            if (Data.Prompt?.Attack is not { } attack)
-            {
-                return ToSelf();
-            }
-
-            Data.SelectedTargetIndex = 0;
-            OutputTargets(attack);
-            return To<AttackSelectingTarget>();
+            OutputCommandMenu();
+            return To<CommandMenu>();
         }
     }
 }
