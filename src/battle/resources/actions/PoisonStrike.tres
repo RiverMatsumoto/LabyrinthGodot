@@ -2,16 +2,22 @@
 
 [ext_resource type="Script" uid="uid://gwug75hcnrr3" path="res://src/battle/resources/effects/BattleEffectResource.cs" id="1_effect"]
 [ext_resource type="Script" uid="uid://5fk70j1vvyu2" path="res://src/battle/resources/effects/DamageBattleEffectResource.cs" id="2_smn15"]
+[ext_resource type="Script" uid="uid://bhmkg5kd0u5gw" path="res://src/battle/resources/effects/DamageStatScaleResource.cs" id="3_scale"]
 [ext_resource type="Script" uid="uid://dunuph1r4wi4" path="res://src/battle/resources/effects/ApplyStatusBattleEffectResource.cs" id="3_status"]
 [ext_resource type="Script" uid="uid://w8j6cwe8vpbk" path="res://src/battle/resources/actions/BattleActionResource.cs" id="4_action"]
 
-[sub_resource type="Resource" id="Damage_poison_strike"]
+[sub_resource type="Resource" id="Scale_strength"]
+script = ExtResource("3_scale")
+Stat = 2
+
+[sub_resource type="Resource" id="Resource_smn15"]
 script = ExtResource("2_smn15")
 DamageType = 2
-Power = 8.0
+PowerMultiplier = 0.8
+StatScales = Array[ExtResource("3_scale")]([SubResource("Scale_strength")])
 AnimationId = "stab"
 
-[sub_resource type="Resource" id="Status_poison"]
+[sub_resource type="Resource" id="Resource_202bk"]
 script = ExtResource("3_status")
 StatusId = "poison"
 Duration = 3
@@ -25,4 +31,4 @@ DisplayName = "Poison Strike"
 TargetRule = 2
 TpCost = 3
 Range = 1
-Effects = Array[ExtResource("1_effect")]([SubResource("Damage_poison_strike"), SubResource("Status_poison")])
+Effects = Array[ExtResource("1_effect")]([SubResource("Resource_smn15"), SubResource("Resource_202bk")])

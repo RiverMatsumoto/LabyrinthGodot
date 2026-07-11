@@ -21,7 +21,7 @@ internal sealed class BattleRuntime
     public LinkedList<BattleOperation> Operations { get; } = [];
     public List<ReactiveEffectInvocation> AfterActionReactiveEffects { get; } = [];
     public List<ReactiveEffectInvocation> EndTurnReactiveEffects { get; } = [];
-    public List<RuntimeReactiveEffect> ReactiveEffects { get; } = [];
+    public ReactiveEffectRegistry ReactiveEffects { get; } = new();
     public HashSet<(long RegistrationId, long CauseId)> ReactiveEffectGuards
         { get; } = [];
     public HashSet<BattlerId> HandledDeaths { get; } = [];

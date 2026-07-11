@@ -25,14 +25,6 @@ internal sealed class BattleEffectOperationBuilder(BattleRuntime runtime)
         switch (effect)
         {
             case DamageEffectDefinition damage:
-                var scaledDamage = damage.Spec with
-                {
-                    Power = ScaleAmount(
-                        context,
-                        ResolvePower(context, damage),
-                        damage.Scale
-                    ),
-                };
                 if (!string.IsNullOrWhiteSpace(damage.AnimationId))
                 {
                     operations.Add(new VisualCueOperation([
@@ -45,7 +37,7 @@ internal sealed class BattleEffectOperationBuilder(BattleRuntime runtime)
                 }
                 operations.Add(new DamageOperation(
                     context,
-                    scaledDamage
+                    damage.Spec
                 ));
                 break;
             case HealEffectDefinition heal:
@@ -128,27 +120,6 @@ internal sealed class BattleEffectOperationBuilder(BattleRuntime runtime)
             return context.TargetIds[0];
         }
         return default;
-    }
-
-    private static double ResolvePower(
-        EffectContext context,
-        DamageEffectDefinition damage
-    )
-    {
-        return damage.PowerSource switch
-        {
-            EffectPowerSource.SourceStatusPower => context.StatusPower,
-            EffectPowerSource.FixedTimesSourceStatusPower =>
-                damage.Spec.Power * context.StatusPower,
-            EffectPowerSource.SourceStatusPowerTimesStacks =>
-                context.StatusPower * context.StatusStacks,
-            EffectPowerSource.FixedTimesSourceStatusPowerTimesStacks =>
-                damage.Spec.Power
-                * context.StatusPower
-                * context.StatusStacks,
-            EffectPowerSource.Fixed => damage.Spec.Power,
-            _ => damage.Spec.Power,
-        };
     }
 
     private int ScaleAmount(

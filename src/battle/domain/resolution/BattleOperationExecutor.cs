@@ -17,8 +17,17 @@ internal sealed class BattleOperationExecutor(
     BattleDeathSystem deaths
 )
 {
+#if DEBUG
+    public static bool EnableOperationExecutionDebugOutput { get; set; } = false;
+#endif
     public void Execute(BattleOperation operation)
     {
+#if DEBUG
+        if (EnableOperationExecutionDebugOutput)
+        {
+            Console.WriteLine($"Operation: {operation.GetType()}");
+        }
+#endif
         switch (operation)
         {
             case ExecuteActionOperation execute:

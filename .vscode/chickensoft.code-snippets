@@ -1,20 +1,4 @@
 {
-    // Place your workspace snippets here. Each snippet is defined under a snippet name and has a scope, prefix, body and
-    // description. Add comma separated ids of the languages where the snippet is applicable in the scope field. If scope
-    // is left empty or omitted, the snippet gets applied to all languages. The prefix is what is
-    // used to trigger the snippet and the body will be expanded and inserted. Possible variables are:
-    // $1, $2 for tab stops, $0 for the final cursor position, and ${1:label}, ${2:another} for placeholders.
-    // Placeholders with the same ids are connected.
-    // Example:
-    // "Print to console": {
-    //   "scope": "javascript,typescript",
-    //   "prefix": "log",
-    //   "body": [
-    //     "console.log('$1');",
-    //     "$2"
-    //   ],
-    //   "description": "Log output to console"
-    // }
     "C# Class": {
         "scope": "csharp",
         "isFileTemplate": true,
@@ -26,9 +10,9 @@
             "{",
             "    $0",
             "}",
-            "",
+            ""
         ],
-        "description": "Project-style C# class file",
+        "description": "Project-style C# class file"
     },
     "C# Interface": {
         "scope": "csharp",
@@ -41,9 +25,9 @@
             "{",
             "    $0",
             "}",
-            "",
+            ""
         ],
-        "description": "Project-style C# interface file",
+        "description": "Project-style C# interface file"
     },
     "C# Record": {
         "scope": "csharp",
@@ -53,9 +37,9 @@
             "namespace ${1:$WORKSPACE_NAME};",
             "",
             "public record ${2:$TM_FILENAME_BASE}($0);",
-            "",
+            ""
         ],
-        "description": "Project-style C# record file",
+        "description": "Project-style C# record file"
     },
     "C# Disposable Repo Interface": {
         "scope": "csharp",
@@ -70,9 +54,9 @@
             "{",
             "    $0",
             "}",
-            "",
+            ""
         ],
-        "description": "Project-style IDisposable repository interface",
+        "description": "Project-style IDisposable repository interface"
     },
     "Chickensoft AutoNode": {
         "scope": "csharp",
@@ -90,34 +74,34 @@
             "    public override void _Notification(int what) => this.Notify(what);",
             "$0",
             "}",
-            "",
+            ""
         ],
-        "description": "Chickensoft AutoNode template",
+        "description": "Chickensoft AutoNode template"
     },
     "Chickensoft AutoInject Provision": {
         "scope": "csharp",
         "prefix": ["provide"],
         "body": [
-            "${1:ProvisionType} IProvide<${1:ProvisionType}>.Value() => ${2:ProvisionValue};",
+            "${1:ProvisionType} IProvide<${1:ProvisionType}>.Value() => ${2:ProvisionValue};"
         ],
-        "description": "Chickensoft AutoInject IProvide implementation",
+        "description": "Chickensoft AutoInject IProvide implementation"
     },
     "Chickensoft AutoInject Dependency": {
         "scope": "csharp",
         "prefix": ["depend"],
         "body": [
-            "[Dependency] ${1:public} ${2:DependencyType} ${3:DependencyValue} => this.DependOn<${2:DependencyType}>();",
+            "[Dependency] ${1:public} ${2:DependencyType} ${3:DependencyValue} => this.DependOn<${2:DependencyType}>();"
         ],
-        "description": "Chickensoft AutoInject Dependency attribute",
+        "description": "Chickensoft AutoInject Dependency attribute"
     },
     "Chickensoft AutoProp": {
         "scope": "csharp",
         "prefix": ["autoprop"],
         "body": [
             "public IAutoProp<${1:PropType}> ${2:PublicPropName} => ${3:_privatePropName};",
-            "private readonly AutoProp<${1:PropType}> ${3:_privatePropName} = new($0);",
+            "private readonly AutoProp<${1:PropType}> ${3:_privatePropName} = new($0);"
         ],
-        "description": "Chickensoft Collections AutoProp attribute",
+        "description": "Chickensoft Collections AutoProp attribute"
     },
     "Chickensoft LogicBlock": {
         "scope": "csharp",
@@ -136,37 +120,37 @@
             "{",
             "    $0",
             "}",
-            "",
+            ""
         ],
-        "description": "Project-style Chickensoft LogicBlock class",
+        "description": "Project-style Chickensoft LogicBlock class"
     },
     "Chickensoft LogicBlock Inputs": {
         "scope": "csharp",
         "prefix": ["logicblock-input", "lbin"],
         "body": [
-            "public readonly record struct ${1:MyInput}${2};",
+            "public readonly record struct ${1:MyInput}${2};"
         ],
-        "description": "Chickensoft LogicBlocks v6 input record",
+        "description": "Chickensoft LogicBlocks v6 input record"
     },
     "Chickensoft LogicBlock Outputs": {
         "scope": "csharp",
         "prefix": ["logicblock-output", "lbout"],
         "body": [
-            "public readonly record struct ${1:MyOutput}${2};",
+            "public readonly record struct ${1:MyOutput}${2};"
         ],
-        "description": "Chickensoft LogicBlocks v6 output record",
+        "description": "Chickensoft LogicBlocks v6 output record"
     },
     "Chickensoft LogicBlock Register States": {
         "scope": "csharp",
         "prefix": ["logicblock-register-states", "lbset"],
         "body": [
-            "public ${1:${TM_FILENAME_BASE}}()",
+            "public ${1:$TM_FILENAME_BASE}()",
             "{",
-            "    Set(new ${2:${TM_FILENAME_BASE}State}.${3:InitialState}());",
+            "    Set(new ${2:$TM_FILENAME_BASE}State.${3:InitialState}());",
             "    $0",
-            "}",
+            "}"
         ],
-        "description": "Project-style constructor for registering LogicBlock states",
+        "description": "Project-style constructor for registering LogicBlock states"
     },
     "Chickensoft LogicBlock Class Project Style": {
         "scope": "csharp",
@@ -185,9 +169,9 @@
             "{",
             "    $0",
             "}",
-            "",
+            ""
         ],
-        "description": "Project-style Chickensoft LogicBlock class with a body",
+        "description": "Project-style Chickensoft LogicBlock class with a body"
     },
     "Chickensoft LogicBlock State Base Project Style": {
         "scope": "csharp",
@@ -201,9 +185,9 @@
             "",
             "[Meta, StateDiagram]",
             "public abstract partial record ${2:${RELATIVE_FILEPATH/^src[\\\\\\/](?:(game)|(.+?))[\\\\\\/]state[\\\\\\/].*$/${1:+GameState}${2:/pascalcase}${2:+LogicState}/}} : LogicBlockState;",
-            "",
+            ""
         ],
-        "description": "Project-style base state record for Chickensoft LogicBlocks v6",
+        "description": "Project-style base state record for Chickensoft LogicBlocks v6"
     },
     "Chickensoft LogicBlock State Input File Project Style": {
         "scope": "csharp",
@@ -220,9 +204,9 @@
             "        $0",
             "    }",
             "}",
-            "",
+            ""
         ],
-        "description": "Project-style Input partial file for a Chickensoft LogicBlock state",
+        "description": "Project-style Input partial file for a Chickensoft LogicBlock state"
     },
     "Chickensoft LogicBlock State Output File Project Style": {
         "scope": "csharp",
@@ -239,9 +223,9 @@
             "        $0",
             "    }",
             "}",
-            "",
+            ""
         ],
-        "description": "Project-style Output partial file for a Chickensoft LogicBlock state",
+        "description": "Project-style Output partial file for a Chickensoft LogicBlock state"
     },
     "Chickensoft LogicBlock State Project Style": {
         "scope": "csharp",
@@ -262,9 +246,9 @@
             "        }",
             "    }",
             "}",
-            "",
+            ""
         ],
-        "description": "Project-style individual state file for Chickensoft LogicBlocks v6",
+        "description": "Project-style individual state file for Chickensoft LogicBlocks v6"
     },
     "Chickensoft LogicBlock Transition State Project Style": {
         "scope": "csharp",
@@ -292,9 +276,9 @@
             "        }",
             "    }",
             "}",
-            "",
+            ""
         ],
-        "description": "Project-style state file with an input transition for Chickensoft LogicBlocks v6",
+        "description": "Project-style state file with an input transition for Chickensoft LogicBlocks v6"
     },
     "Chickensoft LogicBlock Data Project Style": {
         "scope": "csharp",
@@ -313,9 +297,9 @@
             "        $0",
             "    }",
             "}",
-            "",
+            ""
         ],
-        "description": "Project-style nested Data record for a Chickensoft LogicBlock",
+        "description": "Project-style nested Data record for a Chickensoft LogicBlock"
     },
     "Chickensoft Data Record Project Style": {
         "scope": "csharp",
@@ -331,8 +315,8 @@
             "{",
             "    $0",
             "}",
-            "",
+            ""
         ],
-        "description": "Project-style Chickensoft data record",
-    },
+        "description": "Project-style Chickensoft data record"
+    }
 }

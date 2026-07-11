@@ -7,6 +7,5 @@ script = ExtResource("1_status")
 Id = "poison"
 DisplayName = "Poison"
 DefaultDuration = 3
-MaxStacks = 3
 ReactiveEffectIds = Array[String](["poison_tick"])
 metadata/_custom_type_script = "uid://b3nq66we03b8c"

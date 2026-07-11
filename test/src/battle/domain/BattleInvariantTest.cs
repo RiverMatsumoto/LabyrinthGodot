@@ -78,7 +78,12 @@ public class BattleInvariantTest(Node testScene) : TestClass(testScene) {
         "Attack",
         BattleTargetRule.SingleEnemy,
         [new DamageEffectDefinition(
-          new DamageSpec(DamageType.True, DamageMode.Fixed, 1)
+          new DamageSpec(
+            DamageType.True,
+            DamageMode.Fixed,
+            new DamageValueDefinition(1),
+            new DamageValueDefinition(1)
+          )
         )]
       ),
     ],

@@ -101,10 +101,6 @@ public partial class MapMovement : Node3D, IMapMovement
         MapMovementLogic.Set(MapRepo);
         MapMovementLogic.Set(GameRepo);
 
-#if DEBUG
-        AddToGroup(DebugConsole.MapMovementGroup);
-#endif
-
         _mapMovementBinding = MapMovementLogic.Bind()
             .OnOutput((in MapMovementLogicState.Output.MoveStarted output) =>
                 AnimateMove(output.Move, output.Duration))

@@ -24,7 +24,8 @@ public class BattleLogicTest : TestClass
                             new DamageSpec(
                                 DamageType.True,
                                 DamageMode.Fixed,
-                                5
+                                new DamageValueDefinition(5),
+                                new DamageValueDefinition(1)
                             ),
                             "attack"
                         ),

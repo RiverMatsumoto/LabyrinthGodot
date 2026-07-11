@@ -119,10 +119,12 @@ An action expands into `ActionStarted`, effect operations, and
 `ActionFinished`. Effects emit `BeforeEffect` and `AfterEffect`; mutations may
 also emit damage, healing, defeat, and status events.
 
-ReactiveEffects carry source, target, action, status, and stack metadata. Their
-typed conditions are AND-combined. Matches are ordered by priority and
-registration order, then scheduled as `Immediate`, `AfterCurrentAction`, or
-`EndOfTurn`. Cause guards and `BattleRepo.MaxReactiveEffectDepth` bound recursion.
+ReactiveEffects carry source, target, action, status, status stack, status
+power, damage type, and depth metadata. Their typed conditions are AND-combined.
+Registrations are indexed by trigger. Matches are ordered by priority and
+registration order, then scheduled as
+`Immediate`, `AfterCurrentAction`, or `EndOfTurn`. Cause guards and
+`BattleRepo.MaxReactiveEffectDepth` bound recursion.
 
 Innate party/enemy reactive effects register at battle start. Status reactive effects exist
 only while their status exists. Register reactive effect effects add catalog

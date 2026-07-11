@@ -59,15 +59,6 @@ public enum BattleResource
     Tp,
 }
 
-public enum EffectPowerSource
-{
-    Fixed,
-    SourceStatusPower,
-    FixedTimesSourceStatusPower,
-    SourceStatusPowerTimesStacks,
-    FixedTimesSourceStatusPowerTimesStacks,
-}
-
 /// <summary>Battle event metadata that can activate a reactive effect.</summary>
 public enum ReactiveEffectTrigger
 {
@@ -108,13 +99,54 @@ public enum ReactiveEffectOwnerRelation
     EventTarget,
 }
 
-public sealed record DamageSpec(
-    DamageType Type,
-    DamageMode Mode,
-    double Power,
-    bool CanCrit = false,
-    double CritMultiplier = 1.8
+public enum DamageValueSource
+{
+    Authored,
+    ReactiveStatusPower,
+}
+
+public sealed record DamageValueDefinition(
+    double AuthoredValue = 0,
+    DamageValueSource Source = DamageValueSource.Authored,
+    bool MultiplyByReactiveStatusPower = false,
+    bool MultiplyByReactiveStatusStacks = false,
+    StatusStackScaleDefinition? SourceStatusStackScale = null
 );
+
+public sealed record BattleStatScaleDefinition(
+    BattleStat Stat,
+    double Weight
+);
+
+public sealed record DamageSpec
+{
+    public DamageSpec(
+        DamageType type,
+        DamageMode mode,
+        DamageValueDefinition fixedAmount,
+        DamageValueDefinition powerMultiplier,
+        IReadOnlyList<BattleStatScaleDefinition>? statScales = null,
+        bool canCrit = false,
+        double critMultiplier = 2.5
+    )
+    {
+        Type = type;
+        Mode = mode;
+        FixedAmount = fixedAmount;
+        PowerMultiplier = powerMultiplier;
+        StatScales = statScales ?? [];
+        CanCrit = canCrit;
+        CritMultiplier = critMultiplier;
+    }
+
+    public DamageType Type { get; init; }
+    public DamageMode Mode { get; init; }
+    public DamageValueDefinition FixedAmount { get; init; }
+    public DamageValueDefinition PowerMultiplier { get; init; }
+    public IReadOnlyList<BattleStatScaleDefinition> StatScales { get; init; }
+    public bool CanCrit { get; init; }
+    public double CritMultiplier { get; init; }
+}
 
 public abstract record BattleEffectDefinition;
 
@@ -125,9 +157,7 @@ public sealed record StatusStackScaleDefinition(StatusId StatusId);
 
 public sealed record DamageEffectDefinition(
     DamageSpec Spec,
-    string AnimationId = "",
-    StatusStackScaleDefinition? Scale = null,
-    EffectPowerSource PowerSource = EffectPowerSource.Fixed
+    string AnimationId = ""
 ) : BattleEffectDefinition;
 
 public sealed record HealEffectDefinition(
@@ -177,6 +207,10 @@ public sealed record TriggerActionConditionDefinition(ActionId ActionId)
 
 public sealed record TriggerStatusConditionDefinition(StatusId StatusId)
     : ReactiveEffectConditionDefinition;
+
+public sealed record MatchesDamageTypeConditionDefinition(
+    IReadOnlyList<DamageType> DamageTypes
+) : ReactiveEffectConditionDefinition;
 
 public sealed record OwnerRelationConditionDefinition(
     ReactiveEffectOwnerRelation Relation
@@ -445,8 +479,15 @@ public sealed class BattleCatalog
                 case RegisterReactiveEffectEffectDefinition register:
                     RequireReactiveEffect(register.ReactiveEffectId, owner);
                     break;
-                case DamageEffectDefinition { Scale: { } scale }:
-                    RequireStatus(scale.StatusId, owner);
+                case DamageEffectDefinition damage:
+                    ValidateDamageValue(
+                        damage.Spec.FixedAmount,
+                        owner
+                    );
+                    ValidateDamageValue(
+                        damage.Spec.PowerMultiplier,
+                        owner
+                    );
                     break;
                 case HealEffectDefinition { Scale: { } scale }:
                     RequireStatus(scale.StatusId, owner);
@@ -503,6 +544,17 @@ public sealed class BattleCatalog
         }
     }
 
+    private void ValidateDamageValue(
+        DamageValueDefinition value,
+        string owner
+    )
+    {
+        if (value.SourceStatusStackScale is { } scale)
+        {
+            RequireStatus(scale.StatusId, owner);
+        }
+    }
+
     private static Dictionary<TKey, TValue> ToUniqueDictionary<TKey, TValue>(
         IEnumerable<TValue> values,
         Func<TValue, TKey> keySelector,
@@ -553,8 +605,19 @@ public static class BattleContent
                         new DamageSpec(
                             DamageType.Cut,
                             DamageMode.FromStats,
-                            12,
-                            CanCrit: true
+                            new DamageValueDefinition(),
+                            new DamageValueDefinition(1.2),
+                            [
+                                new BattleStatScaleDefinition(
+                                    BattleStat.Attack,
+                                    1
+                                ),
+                                new BattleStatScaleDefinition(
+                                    BattleStat.Strength,
+                                    1
+                                ),
+                            ],
+                            canCrit: true
                         ),
                         "cut"
                     ),
@@ -571,7 +634,14 @@ public static class BattleContent
                         new DamageSpec(
                             DamageType.Fire,
                             DamageMode.FromStats,
-                            18
+                            new DamageValueDefinition(),
+                            new DamageValueDefinition(1.8),
+                            [
+                                new BattleStatScaleDefinition(
+                                    BattleStat.Technique,
+                                    1
+                                ),
+                            ]
                         ),
                         "fire"
                     ),
@@ -589,7 +659,14 @@ public static class BattleContent
                         new DamageSpec(
                             DamageType.Stab,
                             DamageMode.FromStats,
-                            8
+                            new DamageValueDefinition(),
+                            new DamageValueDefinition(0.8),
+                            [
+                                new BattleStatScaleDefinition(
+                                    BattleStat.Strength,
+                                    1
+                                ),
+                            ]
                         ),
                         "stab"
                     ),
@@ -652,10 +729,12 @@ public static class BattleContent
                         new DamageSpec(
                             DamageType.True,
                             DamageMode.Fixed,
-                            10
-                        ),
-                        PowerSource:
-                            EffectPowerSource.FixedTimesSourceStatusPower
+                            new DamageValueDefinition(
+                                10,
+                                MultiplyByReactiveStatusPower: true
+                            ),
+                            new DamageValueDefinition(1)
+                        )
                     ),
                 ]
             ),

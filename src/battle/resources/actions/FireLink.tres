@@ -1,0 +1,13 @@
+[gd_resource type="Resource" script_class="BattleActionResource" format=3 uid="uid://b1wdgb3xnf1wx"]
+
+[ext_resource type="Script" uid="uid://gwug75hcnrr3" path="res://src/battle/resources/effects/BattleEffectResource.cs" id="1_qycle"]
+[ext_resource type="Script" uid="uid://w8j6cwe8vpbk" path="res://src/battle/resources/actions/BattleActionResource.cs" id="2_c3a32"]
+
+[resource]
+script = ExtResource("2_c3a32")
+Id = "fire_link"
+DisplayName = "Fire Link"
+TargetRule = 2
+TpCost = 5
+Range = 3
+metadata/_custom_type_script = "uid://w8j6cwe8vpbk"

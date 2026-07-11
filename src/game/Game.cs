@@ -35,10 +35,6 @@ public partial class Game : Node, IGame
 {
     public override void _Notification(int what) => this.Notify(what);
 
-#if DEBUG
-    private DebugConsole? _debugConsole;
-#endif
-
     #region Save
     [Signal]
     public delegate void SaveFileLoadedEventHandler(int id);
@@ -186,15 +182,6 @@ public partial class Game : Node, IGame
 
         GameLogic.Input(new GameLogicState.Input.EnterLabyrinth());
 
-#if DEBUG
-        _debugConsole = new DebugConsole();
-        _debugConsole.Initialize(
-            GameLogic,
-            MenuHub.MenuHubLogic,
-            Map.MapLogic
-        );
-        UiRoot.AddChild(_debugConsole);
-#endif
     }
 
     public override void _Input(InputEvent @event)
@@ -211,10 +198,6 @@ public partial class Game : Node, IGame
 
     public void OnExitTree()
     {
-#if DEBUG
-        _debugConsole?.Shutdown();
-#endif
-
         _gameBinding?.Dispose();
         GameLogic.Dispose();
         GameRepo.Dispose();
