@@ -32,7 +32,7 @@ internal sealed class BattleDamageSystem(BattleRuntime runtime)
                 source,
                 target,
                 operation.Spec,
-                operation.Context.Range
+                operation.Context
             );
             target.Hp = Math.Max(0, target.Hp - damage);
             popups.Add(new BattlePopup(
@@ -46,7 +46,8 @@ internal sealed class BattleDamageSystem(BattleRuntime runtime)
                 source.Id,
                 target.Id,
                 operation.Context.ActionId,
-                Depth: operation.Context.ReactiveEffectDepth
+                Depth: operation.Context.ReactiveEffectDepth,
+                DamageType: operation.Spec.Type
             )));
         }
 
@@ -70,47 +71,39 @@ internal sealed class BattleDamageSystem(BattleRuntime runtime)
         BattleUnit source,
         BattleUnit target,
         DamageSpec spec,
-        BattleRange range
+        EffectContext context
     )
     {
         double damage;
         if (spec.Mode == DamageMode.Fixed)
         {
-            damage = spec.Power;
-        }
-        else if (spec.Type == DamageType.True)
-        {
-            damage = spec.Power
-                + source.Stats.Strength
-                + source.Stats.Technique
-                + source.Stats.Attack;
-        }
-        else if (
-            spec.Type is DamageType.Fire
-                or DamageType.Ice
-                or DamageType.Lightning
-        )
-        {
-            var offense = spec.Power
-                + source.Stats.Technique
-                + (source.Stats.Attack * 0.5);
-            var defense = (target.Stats.Wisdom * 1.35)
-                + (target.Stats.Technique * 0.65)
-                + (target.Stats.Defense * 0.35);
-            damage = offense * (offense / (offense + defense + 1.0));
+            damage = ResolveDamageValue(context, spec.FixedAmount);
         }
         else
         {
-            var offense = spec.Power
-                + source.Stats.Strength
-                + source.Stats.Attack;
-            var defense = target.Stats.Defense
-                + (target.Stats.Vitality * 0.75);
-            damage = offense * (offense / (offense + defense + 1.0));
+            var offense = Math.Max(
+                0,
+                ResolveStatOffense(source, spec)
+                    * ResolveDamageValue(context, spec.PowerMultiplier)
+            );
+            if (spec.Type == DamageType.True)
+            {
+                damage = offense;
+            }
+            else
+            {
+                var defense = IsElemental(spec.Type)
+                    ? (target.Stats.Wisdom * 1.35)
+                        + (target.Stats.Technique * 0.65)
+                        + (target.Stats.Defense * 0.35)
+                    : target.Stats.Defense
+                        + (target.Stats.Vitality * 0.75);
+                damage = offense * (offense / (offense + defense + 1.0));
+            }
         }
 
         if (
-            range == BattleRange.Melee
+            context.Range == BattleRange.Melee
             && (
                 source.Position.Row == PartyRow.Back
                 || target.Position.Row == PartyRow.Back
@@ -152,4 +145,78 @@ internal sealed class BattleDamageSystem(BattleRuntime runtime)
 
         return Math.Max(0, (int)Math.Round(damage));
     }
+
+    private double ResolveDamageValue(
+        EffectContext context,
+        DamageValueDefinition value
+    )
+    {
+        var resolved = value.Source switch
+        {
+            DamageValueSource.ReactiveStatusPower => context.StatusPower,
+            _ => value.AuthoredValue,
+        };
+        if (value.MultiplyByReactiveStatusPower)
+        {
+            resolved *= context.StatusPower;
+        }
+        if (value.MultiplyByReactiveStatusStacks)
+        {
+            resolved *= context.StatusStacks;
+        }
+        if (value.SourceStatusStackScale is { } scale)
+        {
+            resolved *= ResolveStatusStacks(context, scale.StatusId);
+        }
+        return resolved;
+    }
+
+    private double ResolveStatusStacks(
+        EffectContext context,
+        StatusId statusId
+    )
+    {
+        if (
+            runtime.Units.TryGetValue(context.SourceId, out var source)
+            && source.Statuses.TryGetValue(statusId, out var status)
+        )
+        {
+            return status.Stacks;
+        }
+        return context.StatusId == statusId ? context.StatusStacks : 0;
+    }
+
+    private static double ResolveStatOffense(
+        BattleUnit source,
+        DamageSpec spec
+    )
+    {
+        double offense = 0;
+        foreach (var scale in spec.StatScales)
+        {
+            offense += StatValue(source.Stats, scale.Stat) * scale.Weight;
+        }
+        return offense;
+    }
+
+    private static double StatValue(BattleStats stats, BattleStat stat) =>
+        stat switch
+        {
+            BattleStat.MaxHp => stats.MaxHp,
+            BattleStat.MaxTp => stats.MaxTp,
+            BattleStat.Strength => stats.Strength,
+            BattleStat.Technique => stats.Technique,
+            BattleStat.Agility => stats.Agility,
+            BattleStat.Vitality => stats.Vitality,
+            BattleStat.Wisdom => stats.Wisdom,
+            BattleStat.Luck => stats.Luck,
+            BattleStat.Attack => stats.Attack,
+            BattleStat.Defense => stats.Defense,
+            _ => 0,
+        };
+
+    private static bool IsElemental(DamageType type) =>
+        type is DamageType.Fire
+            or DamageType.Ice
+            or DamageType.Lightning;
 }

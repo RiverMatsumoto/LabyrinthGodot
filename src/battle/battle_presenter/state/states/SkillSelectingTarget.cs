@@ -8,50 +8,50 @@ public abstract partial record BattlePresenterLogicState
     public record SkillSelectingTarget
         : ShowingCommandMenu,
             IGet<Input.TargetSelected>,
+            IGet<Input.TargetAnchorSelected>,
+            IGet<Input.TargetMoved>,
             IGet<Input.Confirmed>,
             IGet<Input.SkillSelected>,
-            IGet<Input.AttackSelected>
+            IGet<Input.AttackSelected>,
+            IGet<Input.BackRequested>
     {
         public Type On(in Input.TargetSelected input)
         {
-            Data.SelectedTargetIndex = input.Index;
-            if (Data.SelectedAction is { } action)
-            {
-                OutputTargets(action);
-            }
+            SelectTargetIndex(input.Index);
+            return ToSelf();
+        }
+
+        public Type On(in Input.TargetAnchorSelected input)
+        {
+            SelectTargetAnchor(input.AnchorId);
+            return ToSelf();
+        }
+
+        public Type On(in Input.TargetMoved input)
+        {
+            MoveTarget(input.RowDelta, input.SlotDelta);
             return ToSelf();
         }
 
         public Type On(in Input.Confirmed input)
         {
             SubmitSelectedAction();
-            return ToSelf();
+            return To<CommandMenu>();
         }
 
         public Type On(in Input.SkillSelected input)
         {
-            if (Data.Prompt is null || Data.Prompt.Skills.Count == 0)
-            {
-                return ToSelf();
-            }
-
-            Output(new Output.RenderSkillActions(
-                Data.Prompt,
-                Data.SelectedSkillIndex
-            ));
+            OutputSkillActions();
             return To<SkillSelectingAction>();
         }
 
-        public Type On(in Input.AttackSelected input)
-        {
-            if (Data.Prompt?.Attack is not { } attack)
-            {
-                return ToSelf();
-            }
+        public Type On(in Input.AttackSelected input) => OpenAttackTargets();
 
-            Data.SelectedTargetIndex = 0;
-            OutputTargets(attack);
-            return To<AttackSelectingTarget>();
+        public Type On(in Input.BackRequested input)
+        {
+            Data.SelectedAction = null;
+            OutputSkillActions();
+            return To<SkillSelectingAction>();
         }
     }
 }

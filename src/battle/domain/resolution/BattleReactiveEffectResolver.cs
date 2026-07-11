@@ -53,16 +53,16 @@ internal sealed class BattleReactiveEffectResolver(
     public void UnregisterStatusReactiveEffects(
         BattlerId ownerId,
         StatusId statusId
-    ) => runtime.ReactiveEffects.RemoveAll(reactiveEffect =>
+    ) => runtime.ReactiveEffects.RemoveWhere(reactiveEffect =>
         reactiveEffect.OwnerId == ownerId
         && reactiveEffect.SourceStatusId == statusId);
 
     public void Trigger(ReactiveEffectEvent reactiveEffectEvent)
     {
         var matching = runtime.ReactiveEffects
+            .Snapshot(reactiveEffectEvent.Trigger)
             .Where(reactiveEffect =>
-                reactiveEffect.Definition.Trigger == reactiveEffectEvent.Trigger
-                && reactiveEffect.HasUses
+                    reactiveEffect.HasUses
                 && runtime.Units.TryGetValue(
                     reactiveEffect.OwnerId,
                     out var owner
@@ -72,9 +72,6 @@ internal sealed class BattleReactiveEffectResolver(
                     || reactiveEffectEvent.Trigger == ReactiveEffectTrigger.Defeat
                 )
                 && ConditionsMatch(reactiveEffect, reactiveEffectEvent))
-            .OrderByDescending(reactiveEffect =>
-                reactiveEffect.Definition.Priority)
-            .ThenBy(reactiveEffect => reactiveEffect.RegistrationId)
             .ToArray();
 
         var immediate = new List<ReactiveEffectInvocation>();
@@ -129,7 +126,7 @@ internal sealed class BattleReactiveEffectResolver(
         }
 
         Flush(immediate, repeat: false);
-        runtime.ReactiveEffects.RemoveAll(reactiveEffect => !reactiveEffect.HasUses);
+        runtime.ReactiveEffects.RemoveWhere(reactiveEffect => !reactiveEffect.HasUses);
     }
 
     public void Flush(
@@ -229,6 +226,9 @@ internal sealed class BattleReactiveEffectResolver(
                     reactiveEffectEvent.ActionId == action.ActionId,
                 TriggerStatusConditionDefinition status =>
                     reactiveEffectEvent.StatusId == status.StatusId,
+                MatchesDamageTypeConditionDefinition damage =>
+                    reactiveEffectEvent.DamageType is { } damageType
+                    && damage.DamageTypes.Contains(damageType),
                 OwnerRelationConditionDefinition relation =>
                     relation.Relation switch
                     {

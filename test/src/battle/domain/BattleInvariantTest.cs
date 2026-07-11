@@ -37,7 +37,8 @@ public class BattleInvariantTest(Node testScene) : TestClass(testScene) {
       [
         View("enemy", BattleTeam.Enemy, tp: 0),
         View("hero", BattleTeam.Player, tp: 20),
-      ]
+      ],
+      []
     );
 
     new BasicEnemyCommandPlanner().Plan(
@@ -77,7 +78,12 @@ public class BattleInvariantTest(Node testScene) : TestClass(testScene) {
         "Attack",
         BattleTargetRule.SingleEnemy,
         [new DamageEffectDefinition(
-          new DamageSpec(DamageType.True, DamageMode.Fixed, 1)
+          new DamageSpec(
+            DamageType.True,
+            DamageMode.Fixed,
+            new DamageValueDefinition(1),
+            new DamageValueDefinition(1)
+          )
         )]
       ),
     ],

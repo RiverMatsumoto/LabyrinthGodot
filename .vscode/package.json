@@ -1,0 +1,14 @@
+{
+  "contributes": {
+    "snippets": [
+      {
+        "language": "cs",
+        "path": "./godot.code-snippets"
+      },
+      {
+        "language": "cs",
+        "path": "./chickensoft.code-snippets"
+      }
+    ]
+  }
+}

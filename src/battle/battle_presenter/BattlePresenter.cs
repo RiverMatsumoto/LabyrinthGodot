@@ -45,20 +45,13 @@ public partial class BattlePresenter : Control, IBattlePresenter
     public double BaseSpeed { get; set; } = 1;
 
     [Node] public Label Turn { get; set; } = default!;
-    [Node] public Label Party { get; set; } = default!;
-    [Node] public Label Enemies { get; set; } = default!;
+    [Node] public VBoxContainer PartySlots { get; set; } = default!;
+    [Node] public HBoxContainer FrontRow { get; set; } = default!;
+    [Node] public HBoxContainer BackRow { get; set; } = default!;
+    [Node] public Control EnemySlots { get; set; } = default!;
+    [Node] public ItemList ActionMenu { get; set; } = default!;
+    [Node] public ItemList SkillActions { get; set; } = default!;
     [Node] public Label Message { get; set; } = default!;
-    [Node] public Control Popups { get; set; } = default!;
-    [Node] public Button Attack { get; set; } = default!;
-    [Node] public Button Skill { get; set; } = default!;
-    [Node] public Button Item { get; set; } = default!;
-    [Node] public Button Defence { get; set; } = default!;
-    [Node] public Button Move { get; set; } = default!;
-    [Node] public Button Escape { get; set; } = default!;
-    [Node] public Button Undo { get; set; } = default!;
-    [Node] public Button Confirm { get; set; } = default!;
-    [Node] public OptionButton SkillActions { get; set; } = default!;
-    [Node] public OptionButton Target { get; set; } = default!;
 
     public bool IsPlaying => _finished is not null;
     public double EffectiveSpeed => CalculateEffectiveSpeed(
@@ -67,23 +60,23 @@ public partial class BattlePresenter : Control, IBattlePresenter
     );
 
     private readonly BattlePresenterLogic _logic = new();
+    private readonly Dictionary<BattleTargetGridPoint, UnitSlot> _slots = [];
     private BattlePresenterLogic.Binding? _binding;
     private Action? _finished;
     private double _elapsed;
     private double _duration;
+    private bool _ignoreTargetAcceptUntilRelease;
 
     public void OnResolved()
     {
-        Attack.Pressed += _logic.SelectAttack;
-        Skill.Pressed += _logic.SelectSkill;
-        Item.Pressed += _logic.SelectItem;
-        Defence.Pressed += _logic.SelectDefence;
-        Move.Pressed += _logic.SelectMove;
-        Escape.Pressed += _logic.RequestEscape;
-        Undo.Pressed += _logic.RequestUndo;
-        Confirm.Pressed += _logic.Confirm;
+        BuildSlotLookup();
+
+        ActionMenu.ItemSelected += OnActionMenuSelected;
+        ActionMenu.ItemActivated += OnActionMenuActivated;
+        ActionMenu.GuiInput += OnActionMenuGuiInput;
         SkillActions.ItemSelected += OnSkillActionSelected;
-        Target.ItemSelected += OnTargetSelected;
+        SkillActions.ItemActivated += OnSkillActionActivated;
+        SkillActions.GuiInput += OnSkillActionsGuiInput;
 
         _binding = _logic.Bind()
             .OnOutput((
@@ -91,7 +84,11 @@ public partial class BattlePresenter : Control, IBattlePresenter
             ) => RenderBattle(output.View))
             .OnOutput((
                 in BattlePresenterLogicState.Output.RenderCommandMenu output
-            ) => RenderCommandMenu(output.Prompt))
+            ) => RenderCommandMenu(
+                output.Prompt,
+                output.Options,
+                output.SelectedIndex
+            ))
             .OnOutput((
                 in BattlePresenterLogicState.Output.RenderSkillActions output
             ) => RenderSkillActions(output.Prompt, output.SelectedIndex))
@@ -118,11 +115,111 @@ public partial class BattlePresenter : Control, IBattlePresenter
             ) => FinishCueBatch())
             .OnOutput((
                 in BattlePresenterLogicState.Output.Hide _
-            ) => HideUi());
+            ) => HideUi())
+            .OnExit<BattlePresenterLogicState.Hidden>(_ => ShowUi())
+            .OnEnter<BattlePresenterLogicState.Hidden>(_ => HideUi());
 
         _logic.Start<BattlePresenterLogicState.Hidden>();
         SetProcess(false);
-        HideUi();
+    }
+
+    public override void _Input(InputEvent @event)
+    {
+        if (!Visible || !IsSelectingTarget)
+        {
+            return;
+        }
+
+        if (@event is InputEventMouseMotion)
+        {
+            TrySelectTargetAtMouse();
+            return;
+        }
+
+        if (
+            @event is InputEventMouseButton
+            {
+                ButtonIndex: MouseButton.Left,
+                Pressed: true,
+            }
+            && TrySelectTargetAtMouse()
+        )
+        {
+            _logic.Confirm();
+            GetViewport().SetInputAsHandled();
+        }
+    }
+
+    public override void _UnhandledInput(InputEvent @event)
+    {
+        if (!Visible)
+        {
+            return;
+        }
+
+        if (@event.IsActionPressed(GameInputs.UiCancel))
+        {
+            _logic.RequestUndo();
+            GetViewport().SetInputAsHandled();
+            return;
+        }
+
+        if (_ignoreTargetAcceptUntilRelease)
+        {
+            if (@event.IsActionReleased(GameInputs.UiAccept))
+            {
+                _ignoreTargetAcceptUntilRelease = false;
+                GetViewport().SetInputAsHandled();
+                return;
+            }
+
+            if (@event.IsActionPressed(GameInputs.UiAccept))
+            {
+                GetViewport().SetInputAsHandled();
+                return;
+            }
+        }
+
+        if (!IsSelectingTarget)
+        {
+            return;
+        }
+
+        if (@event.IsActionPressed(GameInputs.UiAccept))
+        {
+            _logic.Confirm();
+            GetViewport().SetInputAsHandled();
+            return;
+        }
+        if (@event.IsActionPressed(GameInputs.MoveForward))
+        {
+            _logic.MoveTarget(-1, 0);
+            GetViewport().SetInputAsHandled();
+            return;
+        }
+        if (@event.IsActionPressed(GameInputs.MoveBackward))
+        {
+            _logic.MoveTarget(1, 0);
+            GetViewport().SetInputAsHandled();
+            return;
+        }
+        if (
+            @event.IsActionPressed(GameInputs.TurnLeft)
+            || @event.IsActionPressed(GameInputs.MoveLeft)
+        )
+        {
+            _logic.MoveTarget(0, -1);
+            GetViewport().SetInputAsHandled();
+            return;
+        }
+        if (
+            @event.IsActionPressed(GameInputs.TurnRight)
+            || @event.IsActionPressed(GameInputs.MoveRight)
+        )
+        {
+            _logic.MoveTarget(0, 1);
+            GetViewport().SetInputAsHandled();
+        }
     }
 
     public override void _Process(double delta)
@@ -143,13 +240,13 @@ public partial class BattlePresenter : Control, IBattlePresenter
     )
     {
         _finished = null;
-        Visible = true;
+        ShowUi();
         _logic.ShowCommandPrompt(view, prompt);
     }
 
     public void Render(BattleScreenView view)
     {
-        Visible = true;
+        ShowUi();
         _logic.UpdateScreen(view);
     }
 
@@ -167,7 +264,7 @@ public partial class BattlePresenter : Control, IBattlePresenter
         ArgumentNullException.ThrowIfNull(cues);
         ArgumentNullException.ThrowIfNull(finished);
         _finished = finished;
-        Visible = true;
+        ShowUi();
         _logic.PlayCueBatch(view, cues);
     }
 
@@ -181,16 +278,12 @@ public partial class BattlePresenter : Control, IBattlePresenter
 
     public void OnExitTree()
     {
-        Attack.Pressed -= _logic.SelectAttack;
-        Skill.Pressed -= _logic.SelectSkill;
-        Item.Pressed -= _logic.SelectItem;
-        Defence.Pressed -= _logic.SelectDefence;
-        Move.Pressed -= _logic.SelectMove;
-        Escape.Pressed -= _logic.RequestEscape;
-        Undo.Pressed -= _logic.RequestUndo;
-        Confirm.Pressed -= _logic.Confirm;
+        ActionMenu.ItemSelected -= OnActionMenuSelected;
+        ActionMenu.ItemActivated -= OnActionMenuActivated;
+        ActionMenu.GuiInput -= OnActionMenuGuiInput;
         SkillActions.ItemSelected -= OnSkillActionSelected;
-        Target.ItemSelected -= OnTargetSelected;
+        SkillActions.ItemActivated -= OnSkillActionActivated;
+        SkillActions.GuiInput -= OnSkillActionsGuiInput;
         Cancel();
         _binding?.Dispose();
         _logic.Dispose();
@@ -201,11 +294,128 @@ public partial class BattlePresenter : Control, IBattlePresenter
         bool fastForward
     ) => Math.Max(0.01, baseSpeed) * (fastForward ? 2.0 : 1.0);
 
+    private bool IsSelectingTarget =>
+        _logic.State is BattlePresenterLogicState.AttackSelectingTarget
+            or BattlePresenterLogicState.SkillSelectingTarget;
+
+    private void OnActionMenuSelected(long index) =>
+        _logic.SelectMenuAction((int)index);
+
+    private void OnActionMenuGuiInput(InputEvent @event) =>
+        HandleMenuNavigation(
+            @event,
+            ActionMenu,
+            _logic.SelectMenuAction
+        );
+
+    private void OnActionMenuActivated(long index)
+    {
+        _logic.SelectMenuAction((int)index);
+        IgnoreTargetAcceptIfPressed();
+        _logic.Confirm();
+    }
+
     private void OnSkillActionSelected(long index) =>
         _logic.SelectSkillAction((int)index);
 
-    private void OnTargetSelected(long index) =>
-        _logic.SelectTarget((int)index);
+    private void OnSkillActionsGuiInput(InputEvent @event) =>
+        HandleMenuNavigation(
+            @event,
+            SkillActions,
+            _logic.SelectSkillAction
+        );
+
+    private void OnSkillActionActivated(long index)
+    {
+        _logic.SelectSkillAction((int)index);
+        IgnoreTargetAcceptIfPressed();
+        _logic.Confirm();
+    }
+
+    private void HandleMenuNavigation(
+        InputEvent @event,
+        ItemList list,
+        Action<int> select
+    )
+    {
+        var direction = MenuNavigationDirection(@event);
+        if (direction == 0 || !list.Visible)
+        {
+            return;
+        }
+
+        var index = NextEnabledItemIndex(list, direction);
+        if (index < 0)
+        {
+            return;
+        }
+
+        SelectMenuItem(list, index, list.GetItemCount());
+        select(index);
+        AcceptEvent();
+        GetViewport().SetInputAsHandled();
+    }
+
+    private static int MenuNavigationDirection(InputEvent @event)
+    {
+        if (
+            @event.IsActionPressed(GameInputs.MoveForward)
+            || @event.IsActionPressed("ui_up")
+        )
+        {
+            return -1;
+        }
+
+        if (
+            @event.IsActionPressed(GameInputs.MoveBackward)
+            || @event.IsActionPressed("ui_down")
+        )
+        {
+            return 1;
+        }
+
+        return 0;
+    }
+
+    private static int NextEnabledItemIndex(ItemList list, int direction)
+    {
+        var count = list.GetItemCount();
+        if (count == 0)
+        {
+            return -1;
+        }
+
+        var selected = list.GetSelectedItems();
+        var current = selected.Length > 0
+            ? selected[0]
+            : direction > 0 ? -1 : count;
+
+        for (var step = 1; step <= count; step++)
+        {
+            var index = (current + direction * step) % count;
+            if (index < 0)
+            {
+                index += count;
+            }
+
+            if (!list.IsItemDisabled(index))
+            {
+                return index;
+            }
+        }
+
+        return -1;
+    }
+
+    private void IgnoreTargetAcceptIfPressed()
+    {
+        if (Input.IsActionPressed(GameInputs.UiAccept))
+        {
+            _ignoreTargetAcceptUntilRelease = true;
+        }
+        AcceptEvent();
+        GetViewport().SetInputAsHandled();
+    }
 
     private void RenderBattle(BattleScreenView view)
     {
@@ -215,25 +425,66 @@ public partial class BattlePresenter : Control, IBattlePresenter
         Turn.Text = active is null
             ? $"Turn {view.Turn}"
             : $"Turn {view.Turn}: {active}";
-        Party.Text = FormatTeam(view, BattleTeam.Player);
-        Enemies.Text = FormatTeam(view, BattleTeam.Enemy);
+
+        ClearSlots();
+        foreach (var unit in view.Units)
+        {
+            var gridPoint = new BattleTargetGridPoint(
+                unit.Team,
+                unit.Position.Row,
+                unit.Position.Index
+            );
+            if (!_slots.TryGetValue(gridPoint, out var slot))
+            {
+                continue;
+            }
+
+            slot.UnitId = unit.Id;
+            slot.Root.Visible = true;
+            slot.Root.Modulate = unit.IsAlive
+                ? Colors.White
+                : new Color(0.5f, 0.5f, 0.5f, 0.7f);
+            slot.ActiveHighlight.Visible = unit.Id == view.ActiveActorId;
+            slot.QueuedCommand.Text = unit.QueuedCommandText ?? "";
+            slot.QueuedCommand.Visible =
+                !string.IsNullOrWhiteSpace(unit.QueuedCommandText);
+
+            if (slot.PartyUi is not null)
+            {
+                slot.PartyUi.SetNameLabel(unit.Name);
+                slot.PartyUi.SetHp(unit.Hp, unit.MaxHp);
+                slot.PartyUi.SetTp(unit.Tp, unit.MaxTp);
+            }
+            else
+            {
+                slot.EnemyName!.Text = unit.Name;
+                slot.EnemyVitals!.Text =
+                    $"HP {unit.Hp}/{unit.MaxHp}  TP {unit.Tp}/{unit.MaxTp}";
+            }
+        }
     }
 
-    private void RenderCommandMenu(BattleCommandPrompt prompt)
+    private void RenderCommandMenu(
+        BattleCommandPrompt prompt,
+        IReadOnlyList<BattleCommandMenuOption> options,
+        int selectedIndex
+    )
     {
         Message.Text = "Choose command";
+        ClearTargetVisuals();
         SkillActions.Clear();
         SkillActions.Visible = false;
-        Target.Clear();
-        Target.Visible = false;
-        Attack.Disabled = prompt.Attack is null;
-        Skill.Disabled = prompt.Skills.Count == 0;
-        Item.Disabled = !prompt.CanUseItem;
-        Defence.Disabled = !prompt.CanDefend;
-        Move.Disabled = !prompt.CanMove;
-        Escape.Disabled = false;
-        Undo.Disabled = false;
-        Confirm.Disabled = true;
+        ActionMenu.Clear();
+        ActionMenu.Visible = true;
+
+        for (var index = 0; index < options.Count; index++)
+        {
+            ActionMenu.AddItem(options[index].Name);
+            ActionMenu.SetItemDisabled(index, !options[index].IsEnabled);
+        }
+
+        SelectMenuItem(ActionMenu, selectedIndex, options.Count);
+        ActionMenu.GrabFocus();
     }
 
     private void RenderSkillActions(
@@ -242,43 +493,60 @@ public partial class BattlePresenter : Control, IBattlePresenter
     )
     {
         Message.Text = "Choose skill";
+        ClearTargetVisuals();
         SkillActions.Clear();
-        foreach (var skill in prompt.Skills)
-        {
-            SkillActions.AddItem(ActionText(skill));
-        }
         SkillActions.Visible = true;
-        if (prompt.Skills.Count > 0)
+
+        for (var index = 0; index < prompt.Skills.Count; index++)
         {
-            SkillActions.Select(Math.Clamp(
-                selectedIndex,
-                0,
-                prompt.Skills.Count - 1
-            ));
+            var skill = prompt.Skills[index];
+            SkillActions.AddItem(ActionText(skill));
+            SkillActions.SetItemDisabled(index, !skill.IsEnabled);
         }
-        Target.Clear();
-        Target.Visible = false;
-        Confirm.Disabled = prompt.Skills.Count == 0;
+
+        SelectMenuItem(SkillActions, selectedIndex, prompt.Skills.Count);
+        SkillActions.GrabFocus();
     }
 
     private void RenderTargets(BattleActionOption option, int selectedIndex)
     {
+        ClearTargetVisuals();
         Message.Text = $"{option.Name}: choose target";
-        Target.Clear();
-        foreach (var target in option.TargetOptions)
+        if (option.TargetOptions.Count == 0)
         {
-            Target.AddItem(target.Name);
+            return;
         }
-        Target.Visible = true;
-        if (option.TargetOptions.Count > 0)
+
+        var target = option.TargetOptions[Math.Clamp(
+            selectedIndex,
+            0,
+            option.TargetOptions.Count - 1
+        )];
+        var affected = target.AffectedIds.ToHashSet();
+        var anchors = target.AnchorIds.ToHashSet();
+
+        foreach (var slot in _slots.Values)
         {
-            Target.Select(Math.Clamp(
-                selectedIndex,
-                0,
-                option.TargetOptions.Count - 1
-            ));
+            if (slot.UnitId is not { } id)
+            {
+                continue;
+            }
+
+            slot.AffectedHighlight.Visible = affected.Contains(id);
+            slot.Caret.Visible = anchors.Contains(id);
+            if (slot.Caret.Visible)
+            {
+                slot.Caret.SetMode(
+                    slot.Team == BattleTeam.Player
+                        ? TargetSelectionCaretMode.Party
+                        : TargetSelectionCaretMode.Enemy
+                );
+            }
         }
-        Confirm.Disabled = option.TargetOptions.Count == 0;
+
+        ActionMenu.ReleaseFocus();
+        SkillActions.ReleaseFocus();
+        GrabFocus();
     }
 
     private void BeginCueVisual(BattleCue cue)
@@ -292,17 +560,10 @@ public partial class BattlePresenter : Control, IBattlePresenter
                 _duration = 0.35;
                 break;
             case PopupBatchCue batch:
-                foreach (var popup in batch.Popups)
-                {
-                    Popups.AddChild(new Label
-                    {
-                        Text = PopupText(popup),
-                        Position = new Vector2(
-                            16,
-                            32 * Popups.GetChildCount()
-                        ),
-                    });
-                }
+                Message.Text = string.Join(
+                    "  ",
+                    batch.Popups.Select(PopupText)
+                );
                 _duration = 0.5;
                 break;
             case StatusCue status:
@@ -337,18 +598,17 @@ public partial class BattlePresenter : Control, IBattlePresenter
     {
         Visible = false;
         Message.Text = "";
+        ActionMenu.Clear();
+        ActionMenu.Visible = false;
         SkillActions.Clear();
         SkillActions.Visible = false;
-        Target.Clear();
-        Target.Visible = false;
-        Attack.Disabled = true;
-        Skill.Disabled = true;
-        Item.Disabled = true;
-        Defence.Disabled = true;
-        Move.Disabled = true;
-        Escape.Disabled = true;
-        Undo.Disabled = true;
-        Confirm.Disabled = true;
+        ClearTargetVisuals();
+    }
+
+    private void ShowUi()
+    {
+        Visible = true;
+        ProcessMode = ProcessModeEnum.Inherit;
     }
 
     private void ClearCueVisual()
@@ -359,24 +619,110 @@ public partial class BattlePresenter : Control, IBattlePresenter
         {
             Message.Text = "";
         }
-        if (IsInstanceValid(Popups))
-        {
-            ClearPopups();
-        }
         SetProcess(false);
     }
 
-    private static string FormatTeam(
-        BattleScreenView view,
-        BattleTeam team
-    ) => string.Join(
-        "\n",
-        view.Units
-            .Where(unit => unit.Team == team)
-            .Select(unit =>
-                $"{unit.Name}  HP {unit.Hp}/{unit.MaxHp}  "
-                + $"TP {unit.Tp}/{unit.MaxTp}")
-    );
+    private void BuildSlotLookup()
+    {
+        _slots.Clear();
+        AddSlot(BattleTeam.Player, PartyRow.Front, 0);
+        AddSlot(BattleTeam.Player, PartyRow.Front, 1);
+        AddSlot(BattleTeam.Player, PartyRow.Front, 2);
+        AddSlot(BattleTeam.Player, PartyRow.Back, 0);
+        AddSlot(BattleTeam.Player, PartyRow.Back, 1);
+        AddSlot(BattleTeam.Player, PartyRow.Back, 2);
+        AddSlot(BattleTeam.Enemy, PartyRow.Back, 0);
+        AddSlot(BattleTeam.Enemy, PartyRow.Back, 1);
+        AddSlot(BattleTeam.Enemy, PartyRow.Back, 2);
+        AddSlot(BattleTeam.Enemy, PartyRow.Front, 0);
+        AddSlot(BattleTeam.Enemy, PartyRow.Front, 1);
+        AddSlot(BattleTeam.Enemy, PartyRow.Front, 2);
+    }
+
+    private void AddSlot(BattleTeam team, PartyRow row, int index)
+    {
+        var parent = team == BattleTeam.Player ? PartySlots : EnemySlots;
+        var name = team == BattleTeam.Player
+            ? $"Player{row}{index}"
+            : $"Enemy{row}{index}";
+        if (row == PartyRow.Front && team == BattleTeam.Player)
+        {
+            parent = FrontRow;
+        }
+        if (row == PartyRow.Back && team == BattleTeam.Player)
+        {
+            parent = BackRow;
+        }
+        var root = parent.GetNode<Control>(name);
+        var slot = new UnitSlot(team, row, index, root);
+        _slots[new BattleTargetGridPoint(team, row, index)] = slot;
+    }
+
+    private void ClearSlots()
+    {
+        foreach (var slot in _slots.Values)
+        {
+            slot.UnitId = null;
+            slot.Root.Visible = false;
+            slot.Root.Modulate = Colors.White;
+            slot.ActiveHighlight.Visible = false;
+            slot.AffectedHighlight.Visible = false;
+            slot.Caret.Visible = false;
+            slot.QueuedCommand.Text = "";
+            slot.QueuedCommand.Visible = false;
+            if (slot.EnemyName is not null)
+            {
+                slot.EnemyName.Text = "";
+            }
+            if (slot.EnemyVitals is not null)
+            {
+                slot.EnemyVitals.Text = "";
+            }
+        }
+    }
+
+    private void ClearTargetVisuals()
+    {
+        foreach (var slot in _slots.Values)
+        {
+            slot.AffectedHighlight.Visible = false;
+            slot.Caret.Visible = false;
+        }
+    }
+
+    private bool TrySelectTargetAtMouse()
+    {
+        var point = GetGlobalMousePosition();
+        foreach (var slot in _slots.Values)
+        {
+            if (
+                slot.UnitId is { } id
+                && slot.Root.Visible
+                && slot.Root.GetGlobalRect().HasPoint(point)
+            )
+            {
+                _logic.SelectTargetAnchor(id);
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    private static void SelectMenuItem(
+        ItemList list,
+        int selectedIndex,
+        int count
+    )
+    {
+        if (count == 0)
+        {
+            return;
+        }
+
+        list.Select(Math.Clamp(selectedIndex, 0, count - 1));
+        list.EnsureCurrentIsVisible();
+    }
 
     private static string ActionText(BattleActionOption option) =>
         $"{option.Name} ({option.TpCost} TP)";
@@ -393,11 +739,57 @@ public partial class BattlePresenter : Control, IBattlePresenter
             _ => popup.Amount.ToString(CultureInfo.InvariantCulture),
         };
 
-    private void ClearPopups()
+    private static void Fill(Control control)
     {
-        foreach (var child in Popups.GetChildren())
+        control.AnchorLeft = 0;
+        control.AnchorTop = 0;
+        control.AnchorRight = 1;
+        control.AnchorBottom = 1;
+        control.OffsetLeft = 0;
+        control.OffsetTop = 0;
+        control.OffsetRight = 0;
+        control.OffsetBottom = 0;
+    }
+
+    private sealed class UnitSlot
+    {
+        public UnitSlot(
+            BattleTeam team,
+            PartyRow row,
+            int index,
+            Control root
+        )
         {
-            child.QueueFree();
+            Team = team;
+            Row = row;
+            Index = index;
+            Root = root;
+            Root.MouseFilter = Control.MouseFilterEnum.Stop;
+            PartyUi = root.GetNodeOrNull<PartyMemberUi>("PartyMemberUi");
+            if (PartyUi is not null)
+            {
+                Fill(PartyUi);
+            }
+            EnemyName = root.GetNodeOrNull<Label>("EnemyName");
+            EnemyVitals = root.GetNodeOrNull<Label>("EnemyVitals");
+            QueuedCommand = root.GetNode<Label>("QueuedCommand");
+            ActiveHighlight = root.GetNode<ColorRect>("ActiveHighlight");
+            AffectedHighlight = root.GetNode<ColorRect>("AffectedHighlight");
+            Caret = root.GetNode<TargetSelectionCaret>("TargetCaret");
+            Caret.Visible = false;
         }
+
+        public BattleTeam Team { get; }
+        public PartyRow Row { get; }
+        public int Index { get; }
+        public Control Root { get; }
+        public PartyMemberUi? PartyUi { get; }
+        public Label? EnemyName { get; }
+        public Label? EnemyVitals { get; }
+        public Label QueuedCommand { get; }
+        public ColorRect ActiveHighlight { get; }
+        public ColorRect AffectedHighlight { get; }
+        public TargetSelectionCaret Caret { get; }
+        public BattlerId? UnitId { get; set; }
     }
 }

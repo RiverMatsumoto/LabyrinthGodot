@@ -154,7 +154,8 @@ public class BattleResolverExtractionTest(Node testScene)
                 new DamageSpec(
                     DamageType.True,
                     DamageMode.Fixed,
-                    5
+                    new DamageValueDefinition(5),
+                    new DamageValueDefinition(1)
                 ),
                 AnimationId: "attack"
             ),

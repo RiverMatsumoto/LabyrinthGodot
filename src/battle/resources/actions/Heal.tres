@@ -1,10 +1,10 @@
 [gd_resource type="Resource" script_class="BattleActionResource" format=3 uid="uid://b7gbnn1soap1f"]
 
-[ext_resource type="Script" uid="uid://gwug75hcnrr3" path="res://src/battle/resources/effect_resources/BattleEffectResource.cs" id="1_effect"]
-[ext_resource type="Script" uid="uid://l7mkr8b1xxgu" path="res://src/battle/resources/effect_resources/HealBattleEffectResource.cs" id="2_heal"]
-[ext_resource type="Script" uid="uid://w8j6cwe8vpbk" path="res://src/battle/resources/BattleActionResource.cs" id="3_action"]
+[ext_resource type="Script" uid="uid://gwug75hcnrr3" path="res://src/battle/resources/effects/BattleEffectResource.cs" id="1_effect"]
+[ext_resource type="Script" uid="uid://l7mkr8b1xxgu" path="res://src/battle/resources/effects/HealBattleEffectResource.cs" id="2_heal"]
+[ext_resource type="Script" uid="uid://w8j6cwe8vpbk" path="res://src/battle/resources/actions/BattleActionResource.cs" id="3_action"]
 
-[sub_resource type="Resource" id="Heal_default"]
+[sub_resource type="Resource" id="Resource_6here"]
 script = ExtResource("2_heal")
 Amount = 30
 AnimationId = "heal"
@@ -16,4 +16,4 @@ DisplayName = "Heal"
 TargetRule = 1
 TpCost = 4
 Range = 2
-Effects = Array[ExtResource("1_effect")]([SubResource("Heal_default")])
+Effects = Array[ExtResource("1_effect")]([SubResource("Resource_6here")])

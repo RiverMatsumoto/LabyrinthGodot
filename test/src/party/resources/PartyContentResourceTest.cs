@@ -148,7 +148,7 @@ public class PartyContentResourceTest(Node testScene) : TestClass(testScene)
 
         var action = basicAttack.Compile();
         action.TargetRule.ShouldBe(BattleTargetRule.SingleEnemy);
-        action.Range.ShouldBe(BattleRange.Melee);
+        action.Range.ShouldBe(BattleRange.FromWeapon);
         action.RetargetPolicy.ShouldBe(RetargetPolicy.NearestValid);
         action.Effects.ShouldNotBeEmpty();
     }

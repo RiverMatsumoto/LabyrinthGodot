@@ -25,7 +25,8 @@ public class BattleRepoTest : TestClass
                         new DamageSpec(
                             DamageType.True,
                             DamageMode.Fixed,
-                            10
+                            new DamageValueDefinition(10),
+                            new DamageValueDefinition(1)
                         ),
                         "strike"
                     ),
@@ -87,6 +88,35 @@ public class BattleRepoTest : TestClass
             actionId,
             heroId
         )).IsValid.ShouldBeFalse();
+    }
+
+    [Test]
+    public void SnapshotIncludesSubmittedCommandsAndUndoClearsThem()
+    {
+        var actionId = new ActionId("strike");
+        using var repo = new BattleRepo(Catalog(
+            new BattleActionDefinition(
+                actionId,
+                "Strike",
+                BattleTargetRule.SingleEnemy,
+                [FixedDamage(10)]
+            )
+        ));
+        var command = new BattleCommand(
+            new BattlerId("hero"),
+            actionId,
+            new BattlerId("enemy")
+        );
+        repo.Start(Setup(
+            [Seed("hero", BattleTeam.Player, actionId)],
+            [Seed("enemy", BattleTeam.Enemy, actionId)]
+        ));
+
+        repo.SubmitCommand(command).ShouldBeTrue();
+        repo.Snapshot().SubmittedPlayerCommands.ShouldBe([command]);
+
+        repo.UndoLastCommand().ShouldBeTrue();
+        repo.Snapshot().SubmittedPlayerCommands.ShouldBeEmpty();
     }
 
     [Test]
@@ -340,10 +370,12 @@ public class BattleRepoTest : TestClass
                             new DamageSpec(
                                 DamageType.True,
                                 DamageMode.Fixed,
-                                10
-                            ),
-                            PowerSource: EffectPowerSource
-                                .FixedTimesSourceStatusPower
+                                new DamageValueDefinition(
+                                    10,
+                                    MultiplyByReactiveStatusPower: true
+                                ),
+                                new DamageValueDefinition(1)
+                            )
                         ),
                     ]
                 ),
@@ -456,7 +488,7 @@ public class BattleRepoTest : TestClass
             BattleContent.ToxicRecoveryReactiveEffectId
         ).Conditions.ShouldNotBeEmpty();
         content.GetEncounter(new EncounterId("floor_1_squirrel"))
-            .Enemies.Single().Id.ShouldBe(new BattlerId("squirrel_1"));
+            .Enemies.First().Id.ShouldBe(new BattlerId("squirrel_1"));
         content.Catalog.GetAction(BattleContent.BasicAttackId)
             .TargetRule.ShouldBe(BattleTargetRule.SingleEnemy);
 
@@ -905,6 +937,325 @@ public class BattleRepoTest : TestClass
     }
 
     [Test]
+    public void FixedDamageIgnoresAttackerStats()
+    {
+        var actionId = new ActionId("fixed");
+        using var repo = new BattleRepo(Catalog(DamageAction(
+            actionId,
+            25
+        )));
+        repo.Start(Setup(
+            [
+                Seed(
+                    "hero",
+                    BattleTeam.Player,
+                    actionId,
+                    stats: BattleStats.Default with
+                    {
+                        Strength = 999,
+                        Technique = 999,
+                        Attack = 999,
+                    }
+                ),
+            ],
+            [Seed("enemy", BattleTeam.Enemy, actionId)]
+        ));
+
+        SubmitAndResolve(repo, actionId, "enemy");
+
+        Unit(repo, "enemy").Hp.ShouldBe(75);
+    }
+
+    [Test]
+    public void StatDamageUsesAuthoredStatWeights()
+    {
+        var strengthId = new ActionId("strength");
+        var techniqueId = new ActionId("technique");
+        var catalog = Catalog(
+            new BattleActionDefinition(
+                strengthId,
+                "Strength",
+                BattleTargetRule.SingleEnemy,
+                [StatDamage(
+                    DamageType.True,
+                    1,
+                    new BattleStatScaleDefinition(BattleStat.Strength, 1)
+                )],
+                RetargetPolicy: RetargetPolicy.NearestValid
+            ),
+            new BattleActionDefinition(
+                techniqueId,
+                "Technique",
+                BattleTargetRule.SingleEnemy,
+                [StatDamage(
+                    DamageType.True,
+                    1,
+                    new BattleStatScaleDefinition(BattleStat.Technique, 1)
+                )],
+                RetargetPolicy: RetargetPolicy.NearestValid
+            )
+        );
+        using var repo = new BattleRepo(catalog);
+        repo.Start(Setup(
+            [
+                Seed(
+                    "hero",
+                    BattleTeam.Player,
+                    strengthId,
+                    extraActions: [techniqueId],
+                    stats: BattleStats.Default with
+                    {
+                        Strength = 20,
+                        Technique = 5,
+                    }
+                ),
+            ],
+            [Seed("enemy", BattleTeam.Enemy, strengthId)]
+        ));
+
+        SubmitAndResolve(repo, strengthId, "enemy");
+        Unit(repo, "enemy").Hp.ShouldBe(80);
+
+        SubmitAndResolve(repo, techniqueId, "enemy");
+        Unit(repo, "enemy").Hp.ShouldBe(75);
+    }
+
+    [Test]
+    public void PowerMultiplierAffectsOffenseBeforeDefense()
+    {
+        var actionId = new ActionId("scaled_cut");
+        var catalog = Catalog(new BattleActionDefinition(
+            actionId,
+            "Scaled Cut",
+            BattleTargetRule.SingleEnemy,
+            [StatDamage(
+                DamageType.Cut,
+                2,
+                new BattleStatScaleDefinition(BattleStat.Strength, 1)
+            )],
+            RetargetPolicy: RetargetPolicy.NearestValid
+        ));
+        using var repo = new BattleRepo(catalog);
+        repo.Start(Setup(
+            [
+                Seed(
+                    "hero",
+                    BattleTeam.Player,
+                    actionId,
+                    stats: BattleStats.Default with { Strength = 10 }
+                ),
+            ],
+            [Seed("enemy", BattleTeam.Enemy, actionId)]
+        ));
+
+        SubmitAndResolve(repo, actionId, "enemy");
+
+        Unit(repo, "enemy").Hp.ShouldBe(86);
+    }
+
+    [Test]
+    public void ReactiveStatusPowerAndStacksMultiplyFixedDamage()
+    {
+        var poisonId = new ActionId("poison");
+        var waitId = new ActionId("wait");
+        var catalog = new BattleCatalog(
+            [
+                new BattleActionDefinition(
+                    poisonId,
+                    "Poison",
+                    BattleTargetRule.SingleEnemy,
+                    [new ApplyStatusEffectDefinition(
+                        BattleContent.PoisonId,
+                        Stacks: 1,
+                        Duration: 3,
+                        Power: 2
+                    )],
+                    RetargetPolicy: RetargetPolicy.NearestValid
+                ),
+                new BattleActionDefinition(
+                    waitId,
+                    "Wait",
+                    BattleTargetRule.Self,
+                    []
+                ),
+            ],
+            [
+                new StatusDefinition(
+                    BattleContent.PoisonId,
+                    "Poison",
+                    PreventsAction: false,
+                    DefaultDuration: 3,
+                    MaxStacks: 3,
+                    ReactiveEffectIdList: [BattleContent.PoisonTickReactiveEffectId]
+                ),
+            ],
+            [
+                new ReactiveEffectDefinition(
+                    BattleContent.PoisonTickReactiveEffectId,
+                    ReactiveEffectTrigger.TurnEnded,
+                    ReactiveEffectSchedule.EndOfTurn,
+                    ReactiveEffectTargetPolicy.Owner,
+                    Priority: 10,
+                    Conditions: [],
+                    Effects:
+                    [
+                        new DamageEffectDefinition(
+                            new DamageSpec(
+                                DamageType.True,
+                                DamageMode.Fixed,
+                                new DamageValueDefinition(
+                                    5,
+                                    MultiplyByReactiveStatusPower: true,
+                                    MultiplyByReactiveStatusStacks: true
+                                ),
+                                new DamageValueDefinition(1)
+                            )
+                        ),
+                    ]
+                ),
+            ]
+        );
+        using var repo = new BattleRepo(catalog);
+        repo.Start(Setup(
+            [
+                Seed(
+                    "hero",
+                    BattleTeam.Player,
+                    poisonId,
+                    extraActions: [waitId]
+                ),
+            ],
+            [Seed("enemy", BattleTeam.Enemy, waitId, hp: 1000)]
+        ));
+
+        SubmitAndResolve(repo, poisonId, "enemy");
+        Unit(repo, "enemy").Hp.ShouldBe(990);
+
+        SubmitAndResolve(repo, poisonId, "enemy");
+        Unit(repo, "enemy").Hp.ShouldBe(970);
+    }
+
+    [Test]
+    public void MatchesDamageTypeConditionUsesDamageEventType()
+    {
+        var fireId = new ActionId("fire");
+        var iceId = new ActionId("ice");
+        var reactiveEffectId = new ReactiveEffectId("fire_heal");
+        var reactiveEffect = new ReactiveEffectDefinition(
+            reactiveEffectId,
+            ReactiveEffectTrigger.Damage,
+            ReactiveEffectSchedule.Immediate,
+            ReactiveEffectTargetPolicy.Owner,
+            Priority: 0,
+            Conditions:
+            [
+                new MatchesDamageTypeConditionDefinition(
+                    [DamageType.Fire]
+                ),
+            ],
+            Effects: [new HealEffectDefinition(10)]
+        );
+        var catalog = new BattleCatalog(
+            [
+                DamageAction(fireId, 20, DamageType.Fire),
+                DamageAction(iceId, 20, DamageType.Ice),
+            ],
+            DefaultStatuses(),
+            DefaultReactiveEffects().Append(reactiveEffect)
+        );
+
+        using var fireRepo = DamageTypeMatchRepo(
+            catalog,
+            fireId,
+            reactiveEffectId
+        );
+        SubmitAndResolve(fireRepo, fireId, "enemy");
+        Unit(fireRepo, "enemy").Hp.ShouldBe(90);
+
+        using var iceRepo = DamageTypeMatchRepo(
+            catalog,
+            iceId,
+            reactiveEffectId
+        );
+        SubmitAndResolve(iceRepo, iceId, "enemy");
+        Unit(iceRepo, "enemy").Hp.ShouldBe(80);
+    }
+
+    [Test]
+    public void DamageResourceCompilesFixedAndStatAuthoring()
+    {
+        var fixedResource = new DamageBattleEffectResource
+        {
+            DamageType = DamageType.True,
+            Mode = DamageMode.Fixed,
+            FixedAmount = 10,
+            FixedAmountMultiplyByReactiveStatusPower = true,
+        };
+        var fixedEffect = fixedResource.Compile()
+            .ShouldBeOfType<DamageEffectDefinition>();
+
+        fixedEffect.Spec.FixedAmount.AuthoredValue.ShouldBe(10);
+        fixedEffect.Spec.FixedAmount
+            .MultiplyByReactiveStatusPower.ShouldBeTrue();
+
+        var statResource = new DamageBattleEffectResource
+        {
+            DamageType = DamageType.Fire,
+            Mode = DamageMode.FromStats,
+            PowerMultiplier = 1.8,
+            StatScales =
+            [
+                new DamageStatScaleResource
+                {
+                    Stat = BattleStat.Technique,
+                    Weight = 1.5,
+                },
+            ],
+        };
+        var statEffect = statResource.Compile()
+            .ShouldBeOfType<DamageEffectDefinition>();
+
+        statEffect.Spec.PowerMultiplier.AuthoredValue.ShouldBe(1.8);
+        statEffect.Spec.StatScales.Single().ShouldBe(
+            new BattleStatScaleDefinition(BattleStat.Technique, 1.5)
+        );
+    }
+
+    [Test]
+    public void DamageResourceHidesUnusedInspectorProperties()
+    {
+        var resource = new DamageBattleEffectResource
+        {
+            Mode = DamageMode.Fixed,
+        };
+
+        PropertyUsage(resource, "FixedAmount")
+            .HasFlag(PropertyUsageFlags.Editor).ShouldBeTrue();
+        PropertyUsage(resource, "PowerMultiplier")
+            .HasFlag(PropertyUsageFlags.Editor).ShouldBeFalse();
+        PropertyUsage(resource, "StatScales")
+            .HasFlag(PropertyUsageFlags.Editor).ShouldBeFalse();
+
+        resource.Mode = DamageMode.FromStats;
+        resource.PowerMultiplierSource =
+            DamageValueSource.ReactiveStatusPower;
+
+        PropertyUsage(resource, "FixedAmount")
+            .HasFlag(PropertyUsageFlags.Editor).ShouldBeFalse();
+        PropertyUsage(resource, "PowerMultiplier")
+            .HasFlag(PropertyUsageFlags.Editor).ShouldBeFalse();
+        PropertyUsage(resource, "StatScales")
+            .HasFlag(PropertyUsageFlags.Editor).ShouldBeTrue();
+
+        resource.CanCrit = false;
+        PropertyUsage(resource, "CritMultiplier")
+            .HasFlag(PropertyUsageFlags.Editor).ShouldBeFalse();
+        resource.CanCrit = true;
+        PropertyUsage(resource, "CritMultiplier")
+            .HasFlag(PropertyUsageFlags.Editor).ShouldBeTrue();
+    }
+
+    [Test]
     public void RejectsDuplicateAndMissingResourceReferences()
     {
         var duplicate = new ActionId("duplicate");
@@ -1000,8 +1351,21 @@ public class BattleRepoTest : TestClass
         new(new DamageSpec(
             DamageType.True,
             DamageMode.Fixed,
-            amount
+            new DamageValueDefinition(amount),
+            new DamageValueDefinition(1)
         ));
+
+    private static DamageEffectDefinition StatDamage(
+        DamageType type,
+        double powerMultiplier,
+        params BattleStatScaleDefinition[] statScales
+    ) => new(new DamageSpec(
+        type,
+        DamageMode.FromStats,
+        new DamageValueDefinition(),
+        new DamageValueDefinition(powerMultiplier),
+        statScales
+    ));
 
     private static BattleActionDefinition DamageAction(
         ActionId id,
@@ -1014,7 +1378,8 @@ public class BattleRepoTest : TestClass
         [new DamageEffectDefinition(new DamageSpec(
             type,
             DamageMode.Fixed,
-            amount
+            new DamageValueDefinition(amount),
+            new DamageValueDefinition(1)
         ))],
         RetargetPolicy: RetargetPolicy.NearestValid
     );
@@ -1119,20 +1484,50 @@ public class BattleRepoTest : TestClass
         return repo;
     }
 
+    private static BattleRepo DamageTypeMatchRepo(
+        BattleCatalog catalog,
+        ActionId actionId,
+        ReactiveEffectId reactiveEffectId
+    )
+    {
+        var repo = new BattleRepo(catalog);
+        repo.Start(Setup(
+            [Seed("hero", BattleTeam.Player, actionId)],
+            [
+                Seed(
+                    "enemy",
+                    BattleTeam.Enemy,
+                    actionId,
+                    reactiveEffects: [reactiveEffectId]
+                ),
+            ]
+        ));
+        return repo;
+    }
+
+    private static PropertyUsageFlags PropertyUsage(
+        GodotObject obj,
+        string propertyName
+    ) => obj.GetPropertyList()
+        .Single(property =>
+            property["name"].AsStringName() == propertyName)
+        ["usage"]
+        .As<PropertyUsageFlags>();
+
     private static BattleEnemyResource EnemyResource() => new()
     {
         Id = "squirrel",
-          DisplayName = "Squirrel",
-          Stats = new BattleStatsResource(),
-          Hp = 25,
-          Actions =
+        DisplayName = "Squirrel",
+        Stats = new BattleStatsResource(),
+        Hp = 25,
+        Actions =
           [
               new BattleActionResource
               {
                   Id = BattleContent.BasicAttackId.Value,
               },
           ],
-      };
+    };
 
     private static BattleEnemyPlacementResource Placement(
         string battlerId,
@@ -1204,12 +1599,16 @@ public class BattleRepoTest : TestClass
                     new DamageSpec(
                         DamageType.True,
                         DamageMode.Fixed,
-                        5
-                    ),
-                    Scale: new StatusStackScaleDefinition(
-                        BattleContent.PoisonId
+                        new DamageValueDefinition(
+                            5,
+                            SourceStatusStackScale:
+                                new StatusStackScaleDefinition(
+                                    BattleContent.PoisonId
+                                )
+                        ),
+                        new DamageValueDefinition(1)
                     )
-                ),
+                )
             ]
         ),
         new(
@@ -1282,13 +1681,14 @@ public class BattleRepoTest : TestClass
         IReadOnlyDictionary<DamageType, double>?
             damageResistances = null,
         IReadOnlyDictionary<DamageType, double>?
-            damageWeaknesses = null
+            damageWeaknesses = null,
+        BattleStats? stats = null
     ) => new(
         new BattlerId(id),
         id,
         team,
         new PartyPosition(row, slot),
-        BattleStats.Default with
+        (stats ?? BattleStats.Default) with
         {
             MaxHp = Math.Max(100, hp),
             Agility = agility,

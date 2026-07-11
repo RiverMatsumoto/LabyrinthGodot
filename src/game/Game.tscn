@@ -4,6 +4,8 @@
 [ext_resource type="PackedScene" uid="uid://bshr5ksopt2gv" path="res://src/menu_hub/MenuHub.tscn" id="2_menu_hub"]
 [ext_resource type="PackedScene" uid="uid://bds5grrhgtmic" path="res://src/battle/Battle.tscn" id="3_battle"]
 [ext_resource type="PackedScene" uid="uid://dgqhv8ahecoso" path="res://src/map/Map.tscn" id="5_map"]
+[ext_resource type="Theme" uid="uid://cippl83g5mgjo" path="res://src/theme/default_theme.tres" id="5_oijqn"]
+[ext_resource type="PackedScene" uid="uid://ctyf21v2jvvf" path="res://src/debug/DebugMenu.tscn" id="6_dxb18"]
 
 [node name="Game" type="Node" unique_id=1374111390]
 script = ExtResource("1_17mmo")
@@ -17,8 +19,20 @@ unique_name_in_owner = true
 [node name="UiRoot" type="Node" parent="." unique_id=1352889004]
 unique_name_in_owner = true
 
-[node name="MenuHub" parent="UiRoot" unique_id=781361827 instance=ExtResource("2_menu_hub")]
-unique_name_in_owner = true
+[node name="CanvasLayer" type="CanvasLayer" parent="UiRoot" unique_id=293322475]
 
-[node name="Battle" parent="UiRoot" unique_id=1524882212 instance=ExtResource("3_battle")]
+[node name="MenuHub" parent="UiRoot/CanvasLayer" unique_id=781361827 instance=ExtResource("2_menu_hub")]
 unique_name_in_owner = true
+visible = false
+
+[node name="CanvasLayer2" type="CanvasLayer" parent="UiRoot" unique_id=284302553]
+
+[node name="Battle" parent="UiRoot/CanvasLayer2" unique_id=1524882212 instance=ExtResource("3_battle")]
+unique_name_in_owner = true
+visible = false
+theme = ExtResource("5_oijqn")
+
+[node name="CanvasLayer3" type="CanvasLayer" parent="UiRoot" unique_id=506576489]
+
+[node name="DebugMenu" parent="UiRoot/CanvasLayer3" unique_id=1901701423 instance=ExtResource("6_dxb18")]
+visible = false

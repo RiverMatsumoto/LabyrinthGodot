@@ -1,12 +1,11 @@
 [gd_scene format=3 uid="uid://bds5grrhgtmic"]
 
 [ext_resource type="Script" uid="uid://cs40hrsd76ys1" path="res://src/battle/Battle.cs" id="1_battle"]
-[ext_resource type="Script" uid="uid://dv48glfkgmjom" path="res://src/battle/battle_presenter/BattlePresenter.cs" id="2_presenter"]
 [ext_resource type="Resource" uid="uid://b6pulfqapkhaa" path="res://src/battle/resources/BattleContent.tres" id="3_content"]
+[ext_resource type="PackedScene" uid="uid://bmmu5ntd3f6xy" path="res://src/battle/battle_presenter/BattlePresenter.tscn" id="4_ott0i"]
 [ext_resource type="Resource" path="res://src/party/resources/PartyContent.tres" id="4_party_content"]
 
 [node name="Battle" type="Control" unique_id=1524882212]
-visible = false
 layout_mode = 3
 anchors_preset = 15
 anchor_right = 1.0
@@ -18,139 +17,7 @@ script = ExtResource("1_battle")
 Content = ExtResource("3_content")
 PartyContent = ExtResource("4_party_content")
 
-[node name="Panel" type="Panel" parent="." unique_id=1829091622]
+[node name="Presenter" parent="." unique_id=1857128426 instance=ExtResource("4_ott0i")]
+unique_name_in_owner = true
+visible = false
 layout_mode = 1
-anchors_preset = 15
-anchor_right = 1.0
-anchor_bottom = 1.0
-grow_horizontal = 2
-grow_vertical = 2
-
-[node name="Margin" type="MarginContainer" parent="Panel" unique_id=2137150719]
-layout_mode = 1
-anchors_preset = 15
-anchor_right = 1.0
-anchor_bottom = 1.0
-offset_left = 32.0
-offset_top = 32.0
-offset_right = -32.0
-offset_bottom = -32.0
-grow_horizontal = 2
-grow_vertical = 2
-
-[node name="Layout" type="VBoxContainer" parent="Panel/Margin" unique_id=1805578583]
-layout_mode = 2
-theme_override_constants/separation = 12
-
-[node name="Turn" type="Label" parent="Panel/Margin/Layout" unique_id=1449746524]
-unique_name_in_owner = true
-layout_mode = 2
-text = "Battle"
-horizontal_alignment = 1
-
-[node name="Teams" type="HBoxContainer" parent="Panel/Margin/Layout" unique_id=551737011]
-layout_mode = 2
-size_flags_vertical = 3
-
-[node name="Party" type="Label" parent="Panel/Margin/Layout/Teams" unique_id=770010180]
-unique_name_in_owner = true
-layout_mode = 2
-size_flags_horizontal = 3
-text = "Party"
-
-[node name="Enemies" type="Label" parent="Panel/Margin/Layout/Teams" unique_id=193654723]
-unique_name_in_owner = true
-layout_mode = 2
-size_flags_horizontal = 3
-text = "Enemies"
-horizontal_alignment = 2
-
-[node name="Presenter" type="Control" parent="Panel/Margin/Layout" unique_id=273594170]
-unique_name_in_owner = true
-custom_minimum_size = Vector2(0, 96)
-layout_mode = 2
-mouse_filter = 2
-script = ExtResource("2_presenter")
-BaseSpeed = 0.5
-
-[node name="Message" type="Label" parent="Panel/Margin/Layout/Presenter" unique_id=982144203]
-unique_name_in_owner = true
-layout_mode = 1
-anchors_preset = 15
-anchor_right = 1.0
-anchor_bottom = 1.0
-grow_horizontal = 2
-grow_vertical = 2
-horizontal_alignment = 1
-vertical_alignment = 1
-
-[node name="Popups" type="Control" parent="Panel/Margin/Layout/Presenter" unique_id=1136066371]
-unique_name_in_owner = true
-layout_mode = 1
-anchors_preset = 15
-anchor_right = 1.0
-anchor_bottom = 1.0
-grow_horizontal = 2
-grow_vertical = 2
-mouse_filter = 2
-
-[node name="Commands" type="HBoxContainer" parent="Panel/Margin/Layout" unique_id=1627912126]
-layout_mode = 2
-theme_override_constants/separation = 8
-
-[node name="Attack" type="Button" parent="Panel/Margin/Layout/Commands" unique_id=367028249]
-unique_name_in_owner = true
-layout_mode = 2
-text = "ATTACK"
-
-[node name="Skill" type="Button" parent="Panel/Margin/Layout/Commands" unique_id=855102050]
-unique_name_in_owner = true
-layout_mode = 2
-text = "SKILL"
-
-[node name="Item" type="Button" parent="Panel/Margin/Layout/Commands" unique_id=278442979]
-unique_name_in_owner = true
-layout_mode = 2
-disabled = true
-text = "ITEM"
-
-[node name="Defence" type="Button" parent="Panel/Margin/Layout/Commands" unique_id=1953281667]
-unique_name_in_owner = true
-layout_mode = 2
-disabled = true
-text = "DEFENCE"
-
-[node name="Move" type="Button" parent="Panel/Margin/Layout/Commands" unique_id=120104519]
-unique_name_in_owner = true
-layout_mode = 2
-disabled = true
-text = "MOVE"
-
-[node name="Escape" type="Button" parent="Panel/Margin/Layout/Commands" unique_id=1763642190]
-unique_name_in_owner = true
-layout_mode = 2
-text = "ESCAPE"
-
-[node name="Undo" type="Button" parent="Panel/Margin/Layout/Commands" unique_id=1181209201]
-unique_name_in_owner = true
-layout_mode = 2
-text = "UNDO"
-
-[node name="Confirm" type="Button" parent="Panel/Margin/Layout/Commands" unique_id=1608523601]
-unique_name_in_owner = true
-layout_mode = 2
-text = "CONFIRM"
-
-[node name="Selectors" type="HBoxContainer" parent="Panel/Margin/Layout" unique_id=2059508715]
-layout_mode = 2
-theme_override_constants/separation = 8
-
-[node name="SkillActions" type="OptionButton" parent="Panel/Margin/Layout/Selectors" unique_id=1139239844]
-unique_name_in_owner = true
-layout_mode = 2
-size_flags_horizontal = 3
-
-[node name="Target" type="OptionButton" parent="Panel/Margin/Layout/Selectors" unique_id=961223365]
-unique_name_in_owner = true
-layout_mode = 2
-size_flags_horizontal = 3

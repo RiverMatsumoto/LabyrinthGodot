@@ -21,7 +21,7 @@ internal sealed class BattleRuntime
     public LinkedList<BattleOperation> Operations { get; } = [];
     public List<ReactiveEffectInvocation> AfterActionReactiveEffects { get; } = [];
     public List<ReactiveEffectInvocation> EndTurnReactiveEffects { get; } = [];
-    public List<RuntimeReactiveEffect> ReactiveEffects { get; } = [];
+    public ReactiveEffectRegistry ReactiveEffects { get; } = new();
     public HashSet<(long RegistrationId, long CauseId)> ReactiveEffectGuards
         { get; } = [];
     public HashSet<BattlerId> HandledDeaths { get; } = [];
@@ -58,6 +58,10 @@ internal sealed class BattleRuntime
             .ThenBy(unit => unit.Position.Index)
             .ThenBy(unit => unit.Id.Value, System.StringComparer.Ordinal)
             .Select(unit => unit.View())
+            .ToArray(),
+        CommandOrder
+            .Where(PlayerCommands.ContainsKey)
+            .Select(id => PlayerCommands[id])
             .ToArray()
     );
 

@@ -26,7 +26,8 @@ internal sealed record ReactiveEffectEvent(
     StatusId? StatusId = null,
     int StatusStacks = 0,
     double StatusPower = 0,
-    int Depth = 0
+    int Depth = 0,
+    DamageType? DamageType = null
 );
 
 /// <summary>Pairs a registered reactive effect with the event that matched it.</summary>

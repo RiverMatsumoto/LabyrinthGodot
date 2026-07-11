@@ -8,35 +8,43 @@ public abstract partial record BattlePresenterLogicState
     public record AttackSelectingTarget
         : ShowingCommandMenu,
             IGet<Input.TargetSelected>,
+            IGet<Input.TargetAnchorSelected>,
+            IGet<Input.TargetMoved>,
             IGet<Input.Confirmed>,
-            IGet<Input.SkillSelected>
+            IGet<Input.SkillSelected>,
+            IGet<Input.BackRequested>
     {
         public Type On(in Input.TargetSelected input)
         {
-            Data.SelectedTargetIndex = input.Index;
-            if (Data.SelectedAction is { } action)
-            {
-                OutputTargets(action);
-            }
+            SelectTargetIndex(input.Index);
+            return ToSelf();
+        }
+
+        public Type On(in Input.TargetAnchorSelected input)
+        {
+            SelectTargetAnchor(input.AnchorId);
+            return ToSelf();
+        }
+
+        public Type On(in Input.TargetMoved input)
+        {
+            MoveTarget(input.RowDelta, input.SlotDelta);
             return ToSelf();
         }
 
         public Type On(in Input.Confirmed input)
         {
             SubmitSelectedAction();
-            return ToSelf();
+            return To<CommandMenu>();
         }
 
-        public Type On(in Input.SkillSelected input)
-        {
-            if (Data.Prompt is not { } prompt || prompt.Skills.Count == 0)
-            {
-                return ToSelf();
-            }
+        public Type On(in Input.SkillSelected input) => OpenSkillActions();
 
-            Data.SelectedSkillIndex = 0;
-            Output(new Output.RenderSkillActions(prompt, 0));
-            return To<SkillSelectingAction>();
+        public Type On(in Input.BackRequested input)
+        {
+            Data.SelectedAction = null;
+            OutputCommandMenu();
+            return To<CommandMenu>();
         }
     }
 }

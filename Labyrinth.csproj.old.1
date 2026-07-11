@@ -1,0 +1,79 @@
+<Project Sdk="Godot.NET.Sdk/4.6.3">
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <EnableDynamicLoading>true</EnableDynamicLoading>
+    <LangVersion>latest</LangVersion>
+    <Nullable>enable</Nullable>
+    <RootNamespace>Labyrinth</RootNamespace>
+    <!-- Catch compiler-mismatch issues with the Introspection generator as early as possible -->
+    <WarningsAsErrors>CS9057</WarningsAsErrors>
+    <!-- Required for some nuget packages to work -->
+    <!-- godotengine/godot/issues/42271#issuecomment-751423827 -->
+    <CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
+    <!-- To show generated files -->
+    <!-- <EmitCompilerGeneratedFiles>true</EmitCompilerGeneratedFiles> -->
+    <!--
+      <CompilerGeneratedFilesOutputPath>.generated</CompilerGeneratedFilesOutputPath>
+    -->
+    <DebugType>portable</DebugType>
+    <DebugSymbols>true</DebugSymbols>
+    <Title>Labyrinth</Title>
+    <Version>1.0.0</Version>
+    <Description>Labyrinth</Description>
+    <Copyright>© 2026 RiverMatsumoto</Copyright>
+    <Authors>RiverMatsumoto</Authors>
+    <Company>RiverMatsumoto</Company>
+
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(RunTests)' == 'true'">
+    <DefineConstants>$(DefineConstants);RUN_TESTS</DefineConstants>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!-- Production dependencies go here! -->
+    <PackageReference Include="System.IO.Abstractions" Version="22.1.1" />
+    <PackageReference Include="EnvironmentAbstractions" Version="5.0.0" />
+    <PackageReference Include="GodotSharp.SourceGenerators" Version="2.6.0" PrivateAssets="all" OutputItemType="analyzer" />
+    <PackageReference Include="Chickensoft.SaveFileBuilder" Version="1.3.70" />
+    <PackageReference Include="Chickensoft.AutoInject" Version="2.13.8" PrivateAssets="all" />
+    <PackageReference Include="Chickensoft.Collections" Version="3.1.4" />
+    <PackageReference Include="Chickensoft.GameTools" Version="3.1.18" />
+    <PackageReference Include="Chickensoft.GodotNodeInterfaces" Version="3.0.16" />
+    <PackageReference Include="Chickensoft.Introspection" Version="3.0.3" />
+    <PackageReference Include="Chickensoft.Introspection.Generator" Version="3.0.3"  PrivateAssets="all" OutputItemType="analyzer" />
+    <PackageReference Include="Chickensoft.Serialization" Version="3.1.0" />
+    <PackageReference Include="Chickensoft.Serialization.Godot" Version="0.8.69" />
+    <PackageReference Include="Chickensoft.LogicBlocks" Version="6.1.0" />
+    <PackageReference Include="Chickensoft.LogicBlocks.Auto" Version="6.1.0" />
+    <PackageReference Include="Chickensoft.LogicBlocks.DiagramGenerator" Version="6.0.0" PrivateAssets="all" OutputItemType="analyzer" />
+    <PackageReference Include="Chickensoft.UMLGenerator" Version="1.3.1" />
+    <PackageReference Include="Chickensoft.Sync" Version="2.4.1" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <NuGetAuditSuppress Include="https://github.com/advisories/GHSA-xcvr-qv8h-m7xw" />
+  </ItemGroup>
+
+  <ItemGroup Condition="'$(RunTests)' == 'true'">
+    <!-- Test dependencies go here! -->
+    <!-- Dependencies added here will not be included in release builds. -->
+    <PackageReference Include="Chickensoft.GoDotTest" Version="2.0.33" />
+    <!-- Used to drive test scenes when testing visual code -->
+    <PackageReference Include="Chickensoft.GodotTestDriver" Version="3.1.68" />
+    <!-- Bring your own assertion library for tests! -->
+    <!-- We're using Shouldly for this example, but you can use anything. -->
+    <PackageReference Include="Shouldly" Version="4.3.0" />
+    <!-- LightMock is a mocking library that works without reflection. -->
+    <PackageReference Include="LightMock.Generator" Version="1.2.3" />
+    <!-- LightMoq is a Chickensoft package which makes it more like Moq. -->
+    <PackageReference Include="LightMoq" Version="0.1.0" />
+  </ItemGroup>
+
+  <ItemGroup Condition="'$(RunTests)' != 'true'">
+    <Compile Remove="test/**/*.cs" />
+    <Compile Remove="script_templates/**/*.cs" />
+    <None Remove="test/**/*" />
+    <EmbeddedResource Remove="test/**/*" />
+  </ItemGroup>
+</Project>

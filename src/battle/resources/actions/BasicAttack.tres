@@ -1,15 +1,24 @@
 [gd_resource type="Resource" script_class="BattleActionResource" format=3 uid="uid://cutdclklat13l"]
 
-[ext_resource type="Script" uid="uid://gwug75hcnrr3" path="res://src/battle/resources/effect_resources/BattleEffectResource.cs" id="1_effect"]
-[ext_resource type="Script" uid="uid://5fk70j1vvyu2" path="res://src/battle/resources/effect_resources/DamageBattleEffectResource.cs" id="2_6hgsh"]
-[ext_resource type="Script" uid="uid://w8j6cwe8vpbk" path="res://src/battle/resources/BattleActionResource.cs" id="3_action"]
+[ext_resource type="Script" uid="uid://gwug75hcnrr3" path="res://src/battle/resources/effects/BattleEffectResource.cs" id="1_effect"]
+[ext_resource type="Script" uid="uid://5fk70j1vvyu2" path="res://src/battle/resources/effects/DamageBattleEffectResource.cs" id="2_6hgsh"]
+[ext_resource type="Script" uid="uid://w8j6cwe8vpbk" path="res://src/battle/resources/actions/BattleActionResource.cs" id="3_action"]
+[ext_resource type="Script" uid="uid://bhmkg5kd0u5gw" path="res://src/battle/resources/effects/DamageStatScaleResource.cs" id="3_scale"]
 
-[sub_resource type="Resource" id="Damage_basic_attack"]
+[sub_resource type="Resource" id="Scale_attack"]
+script = ExtResource("3_scale")
+Stat = 8
+
+[sub_resource type="Resource" id="Scale_strength"]
+script = ExtResource("3_scale")
+Stat = 2
+
+[sub_resource type="Resource" id="Resource_6hgsh"]
 script = ExtResource("2_6hgsh")
 DamageType = 7
-Power = 12.0
+PowerMultiplier = 1.2
+StatScales = Array[ExtResource("3_scale")]([SubResource("Scale_attack"), SubResource("Scale_strength")])
 CanCrit = true
-CritMultiplier = 2.5
 AnimationId = "from_weapon"
 
 [resource]
@@ -18,5 +27,5 @@ Id = "basic_attack"
 DisplayName = "Attack"
 TargetRule = 2
 Range = 3
-Effects = Array[ExtResource("1_effect")]([SubResource("Damage_basic_attack")])
+Effects = Array[ExtResource("1_effect")]([SubResource("Resource_6hgsh")])
 metadata/_custom_type_script = "uid://w8j6cwe8vpbk"

@@ -1,0 +1,200 @@
+[gd_scene format=3 uid="uid://chn25mltsiwkj"]
+
+[ext_resource type="Script" uid="uid://d3473x7pnbeip" path="res://src/party_member_ui/PartyMemberUi.cs" id="1_lixw5"]
+[ext_resource type="StyleBox" uid="uid://cn1aoqrb53kea" path="res://src/party_member_ui/resources/PartyMemberHpBarBg.tres" id="2_iwe16"]
+[ext_resource type="StyleBox" uid="uid://kdv20re4m1vd" path="res://src/party_member_ui/resources/PartyMemberHpBarFill.tres" id="3_acldo"]
+[ext_resource type="StyleBox" uid="uid://dah4hhphwa680" path="res://src/party_member_ui/resources/PartyMemberTpBarBg.tres" id="4_u0t3x"]
+[ext_resource type="StyleBox" uid="uid://cxkgl8opsmdev" path="res://src/party_member_ui/resources/PartyMemberTpBarFill.tres" id="5_f1qoq"]
+
+[sub_resource type="Gradient" id="Gradient_l6t4r"]
+offsets = PackedFloat32Array(0, 0.9892473)
+colors = PackedColorArray(0.08036653, 0.23759261, 0.35130814, 1, 0.09182475, 0.3751759, 0.52669686, 1)
+
+[sub_resource type="GradientTexture2D" id="GradientTexture2D_a70xh"]
+gradient = SubResource("Gradient_l6t4r")
+fill_from = Vector2(0.8319088, 0.85470086)
+fill_to = Vector2(0.16524217, 0.14529915)
+
+[sub_resource type="StyleBoxTexture" id="StyleBoxTexture_l6t4r"]
+texture = SubResource("GradientTexture2D_a70xh")
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_nxwg1"]
+bg_color = Color(0.09019608, 0.3764706, 0.5254902, 1)
+border_width_right = 4
+border_width_bottom = 4
+border_color = Color(0.015686275, 0.1254902, 0.23921569, 1)
+
+[sub_resource type="PlaceholderTexture2D" id="PlaceholderTexture2D_lixw5"]
+
+[node name="PartyMemberUi" type="Control" unique_id=10715871]
+custom_minimum_size = Vector2(210, 90)
+layout_mode = 3
+anchor_right = 0.165
+anchor_bottom = 0.125
+offset_right = -0.2000122
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_lixw5")
+
+[node name="ColorRect" type="ColorRect" parent="." unique_id=968211983]
+unique_name_in_owner = true
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0.016059812, 0.12521425, 0.24099478, 1)
+
+[node name="MarginContainer" type="MarginContainer" parent="." unique_id=415074351]
+unique_name_in_owner = true
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/margin_left = 4
+theme_override_constants/margin_top = 4
+theme_override_constants/margin_right = 4
+theme_override_constants/margin_bottom = 4
+
+[node name="Panel" type="Panel" parent="MarginContainer" unique_id=271040567]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_styles/panel = SubResource("StyleBoxTexture_l6t4r")
+
+[node name="Bars" type="Control" parent="." unique_id=1049075481]
+unique_name_in_owner = true
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_top = -1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="HpBar" type="ProgressBar" parent="Bars" unique_id=1997753169]
+unique_name_in_owner = true
+layout_mode = 1
+anchors_preset = -1
+anchor_top = 0.84400004
+anchor_right = 0.49300003
+anchor_bottom = 1.0
+offset_left = 6.0
+offset_top = 0.039993286
+offset_right = -0.023010254
+offset_bottom = -6.0
+theme_override_styles/background = ExtResource("2_iwe16")
+theme_override_styles/fill = ExtResource("3_acldo")
+step = 1.0
+value = 100.0
+rounded = true
+show_percentage = false
+
+[node name="TpBar" type="ProgressBar" parent="Bars" unique_id=1866901846]
+unique_name_in_owner = true
+layout_mode = 1
+anchors_preset = -1
+anchor_left = 0.512
+anchor_top = 0.84400004
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = -0.03200531
+offset_top = 0.039993286
+offset_right = -6.0
+offset_bottom = -6.0
+theme_override_styles/background = ExtResource("4_u0t3x")
+theme_override_styles/fill = ExtResource("5_f1qoq")
+step = 1.0
+value = 100.0
+rounded = true
+show_percentage = false
+
+[node name="HPLabel" type="Label" parent="Bars" unique_id=1591503110]
+unique_name_in_owner = true
+layout_mode = 1
+anchors_preset = -1
+anchor_left = 0.038000003
+anchor_top = 0.625
+anchor_right = 0.202
+anchor_bottom = 1.0
+offset_left = -0.06000042
+offset_top = -0.25
+offset_right = 0.07999802
+offset_bottom = -6.5833282
+theme_override_font_sizes/font_size = 16
+text = "HP"
+
+[node name="HPValue" type="Label" parent="Bars" unique_id=282937903]
+unique_name_in_owner = true
+layout_mode = 1
+anchors_preset = -1
+anchor_top = 0.62200004
+anchor_right = 0.47000003
+anchor_bottom = 1.0
+offset_left = 36.0
+offset_top = 0.019996643
+offset_right = 1.7499847
+offset_bottom = -6.7213287
+theme_override_font_sizes/font_size = 16
+text = "0"
+horizontal_alignment = 2
+
+[node name="TPLabel" type="Label" parent="Bars" unique_id=846446313]
+unique_name_in_owner = true
+layout_mode = 1
+anchors_preset = -1
+anchor_left = 0.51500005
+anchor_top = 0.625
+anchor_right = 0.68
+anchor_bottom = 1.0
+offset_bottom = -6.3333282
+theme_override_font_sizes/font_size = 16
+text = "TP"
+
+[node name="TPValue" type="Label" parent="Bars" unique_id=69372349]
+unique_name_in_owner = true
+layout_mode = 1
+anchors_preset = -1
+anchor_top = 0.62200004
+anchor_right = 0.96400005
+anchor_bottom = 1.0
+offset_left = 133.0
+offset_top = 0.019996643
+offset_right = 0.010009766
+offset_bottom = -6.7213287
+text = "0"
+horizontal_alignment = 2
+
+[node name="NameLabel" type="Label" parent="." unique_id=1120169733]
+unique_name_in_owner = true
+layout_mode = 1
+anchors_preset = -1
+anchor_top = 0.044000003
+anchor_right = 1.0
+anchor_bottom = 0.38900003
+offset_left = 39.0
+offset_top = 0.03999996
+offset_right = -7.0229797
+offset_bottom = -0.010002136
+theme_override_font_sizes/font_size = 20
+text = "Name"
+
+[node name="StatusEffectBorder" type="Panel" parent="." unique_id=1911583962]
+unique_name_in_owner = true
+layout_mode = 1
+anchors_preset = -1
+offset_left = 4.0
+offset_top = 4.0
+offset_right = 36.0
+offset_bottom = 36.0
+theme_override_styles/panel = SubResource("StyleBoxFlat_nxwg1")
+
+[node name="StatusEffect" type="TextureRect" parent="StatusEffectBorder" unique_id=335162334]
+unique_name_in_owner = true
+visible = false
+layout_mode = 1
+offset_right = 28.0
+offset_bottom = 28.0
+texture = SubResource("PlaceholderTexture2D_lixw5")

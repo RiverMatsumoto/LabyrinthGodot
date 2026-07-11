@@ -1,0 +1,856 @@
+[gd_scene format=3 uid="uid://bmmu5ntd3f6xy"]
+
+[ext_resource type="Script" uid="uid://dv48glfkgmjom" path="res://src/battle/battle_presenter/BattlePresenter.cs" id="1_3dl6r"]
+[ext_resource type="Theme" uid="uid://cippl83g5mgjo" path="res://src/theme/default_theme.tres" id="1_dehh1"]
+[ext_resource type="PackedScene" uid="uid://b64nrxo5e1o7u" path="res://src/battle/battle_presenter/TargetSelectionCaret.tscn" id="2_dehh1"]
+[ext_resource type="PackedScene" uid="uid://chn25mltsiwkj" path="res://src/party_member_ui/PartyMemberUi.tscn" id="3_lokxc"]
+
+[node name="Presenter" type="Control" unique_id=1857128426]
+custom_minimum_size = Vector2(0, 96)
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+focus_mode = 2
+mouse_filter = 2
+theme = ExtResource("1_dehh1")
+script = ExtResource("1_3dl6r")
+BaseSpeed = 0.5
+
+[node name="Panel" type="Panel" parent="." unique_id=268699477]
+z_index = -10
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme = ExtResource("1_dehh1")
+
+[node name="MessagePanel" type="Panel" parent="." unique_id=1588069038]
+layout_mode = 1
+anchors_preset = -1
+anchor_right = 0.816
+anchor_bottom = 0.107
+grow_horizontal = 2
+theme = ExtResource("1_dehh1")
+
+[node name="Message" type="Label" parent="MessagePanel" unique_id=86610556]
+unique_name_in_owner = true
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme = ExtResource("1_dehh1")
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="Turn" type="Label" parent="." unique_id=2124146510]
+unique_name_in_owner = true
+layout_mode = 1
+anchors_preset = -1
+anchor_top = 0.48
+anchor_right = 1.0
+anchor_bottom = 0.54
+offset_left = 11.0
+offset_top = -30.399963
+offset_right = 11.0
+offset_bottom = -16.453308
+grow_horizontal = 2
+theme = ExtResource("1_dehh1")
+text = "Battle"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="EnemySlots" type="Control" parent="." unique_id=1276777430]
+unique_name_in_owner = true
+layout_mode = 1
+anchor_left = 0.23
+anchor_top = 0.13
+anchor_right = 0.77
+anchor_bottom = 0.36
+offset_left = -2.600006
+offset_top = 2.600006
+offset_right = -2.6000977
+offset_bottom = 2.600006
+grow_horizontal = 2
+grow_vertical = 2
+theme = ExtResource("1_dehh1")
+
+[node name="EnemyBack0" type="Panel" parent="EnemySlots" unique_id=1393169566]
+unique_name_in_owner = true
+visible = false
+layout_mode = 0
+offset_right = 190.0
+offset_bottom = 72.0
+
+[node name="EnemyName" type="Label" parent="EnemySlots/EnemyBack0" unique_id=986920729]
+layout_mode = 0
+theme_override_font_sizes/font_size = 14
+text = "Enemy"
+horizontal_alignment = 1
+
+[node name="EnemyVitals" type="Label" parent="EnemySlots/EnemyBack0" unique_id=1783865668]
+layout_mode = 1
+anchors_preset = 12
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_top = -26.0
+offset_right = 190.0
+grow_horizontal = 2
+grow_vertical = 0
+theme_override_font_sizes/font_size = 11
+horizontal_alignment = 1
+
+[node name="QueuedCommand" type="Label" parent="EnemySlots/EnemyBack0" unique_id=97929011]
+visible = false
+layout_mode = 1
+anchors_preset = 10
+anchor_right = 1.0
+offset_top = -20.0
+offset_bottom = 45.0
+grow_horizontal = 2
+theme_override_font_sizes/font_size = 11
+horizontal_alignment = 1
+
+[node name="AffectedHighlight" type="ColorRect" parent="EnemySlots/EnemyBack0" unique_id=1616188920]
+visible = false
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+color = Color(0.9, 0.82, 0.16, 0.22)
+
+[node name="ActiveHighlight" type="ColorRect" parent="EnemySlots/EnemyBack0" unique_id=712032616]
+visible = false
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+color = Color(0.2, 0.7, 1, 0.24)
+
+[node name="TargetCaret" parent="EnemySlots/EnemyBack0" unique_id=1340176103 instance=ExtResource("2_dehh1")]
+visible = false
+layout_mode = 1
+
+[node name="EnemyBack1" type="Panel" parent="EnemySlots" unique_id=477204262]
+unique_name_in_owner = true
+visible = false
+layout_mode = 0
+offset_left = 230.0
+offset_right = 420.0
+offset_bottom = 72.0
+
+[node name="EnemyName" type="Label" parent="EnemySlots/EnemyBack1" unique_id=1297823674]
+layout_mode = 0
+theme_override_font_sizes/font_size = 14
+text = "Enemy"
+horizontal_alignment = 1
+
+[node name="EnemyVitals" type="Label" parent="EnemySlots/EnemyBack1" unique_id=109490436]
+layout_mode = 1
+anchors_preset = 12
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_top = -26.0
+offset_right = 190.0
+grow_horizontal = 2
+grow_vertical = 0
+theme_override_font_sizes/font_size = 11
+horizontal_alignment = 1
+
+[node name="QueuedCommand" type="Label" parent="EnemySlots/EnemyBack1" unique_id=701284800]
+visible = false
+layout_mode = 1
+anchors_preset = 10
+anchor_right = 1.0
+offset_top = -20.0
+offset_bottom = 45.0
+grow_horizontal = 2
+theme_override_font_sizes/font_size = 11
+horizontal_alignment = 1
+
+[node name="AffectedHighlight" type="ColorRect" parent="EnemySlots/EnemyBack1" unique_id=1393008257]
+visible = false
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+color = Color(0.9, 0.82, 0.16, 0.22)
+
+[node name="ActiveHighlight" type="ColorRect" parent="EnemySlots/EnemyBack1" unique_id=1764760561]
+visible = false
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+color = Color(0.2, 0.7, 1, 0.24)
+
+[node name="TargetCaret" parent="EnemySlots/EnemyBack1" unique_id=701888849 instance=ExtResource("2_dehh1")]
+visible = false
+layout_mode = 1
+
+[node name="EnemyBack2" type="Panel" parent="EnemySlots" unique_id=201976589]
+unique_name_in_owner = true
+visible = false
+layout_mode = 0
+offset_left = 460.0
+offset_right = 650.0
+offset_bottom = 72.0
+
+[node name="EnemyName" type="Label" parent="EnemySlots/EnemyBack2" unique_id=1524446713]
+layout_mode = 0
+theme_override_font_sizes/font_size = 14
+text = "Enemy"
+horizontal_alignment = 1
+
+[node name="EnemyVitals" type="Label" parent="EnemySlots/EnemyBack2" unique_id=91524153]
+layout_mode = 1
+anchors_preset = 12
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_top = -26.0
+offset_right = 190.0
+grow_horizontal = 2
+grow_vertical = 0
+theme_override_font_sizes/font_size = 11
+horizontal_alignment = 1
+
+[node name="QueuedCommand" type="Label" parent="EnemySlots/EnemyBack2" unique_id=1012577669]
+visible = false
+layout_mode = 1
+anchors_preset = 10
+anchor_right = 1.0
+offset_top = -20.0
+offset_bottom = 45.0
+grow_horizontal = 2
+theme_override_font_sizes/font_size = 11
+horizontal_alignment = 1
+
+[node name="AffectedHighlight" type="ColorRect" parent="EnemySlots/EnemyBack2" unique_id=698840797]
+visible = false
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+color = Color(0.9, 0.82, 0.16, 0.22)
+
+[node name="ActiveHighlight" type="ColorRect" parent="EnemySlots/EnemyBack2" unique_id=189313414]
+visible = false
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+color = Color(0.2, 0.7, 1, 0.24)
+
+[node name="TargetCaret" parent="EnemySlots/EnemyBack2" unique_id=477098460 instance=ExtResource("2_dehh1")]
+visible = false
+layout_mode = 1
+
+[node name="EnemyFront0" type="Panel" parent="EnemySlots" unique_id=1148115108]
+unique_name_in_owner = true
+visible = false
+layout_mode = 0
+offset_top = 92.0
+offset_right = 190.0
+offset_bottom = 164.0
+
+[node name="EnemyName" type="Label" parent="EnemySlots/EnemyFront0" unique_id=1547671340]
+layout_mode = 0
+theme_override_font_sizes/font_size = 14
+text = "Enemy"
+horizontal_alignment = 1
+
+[node name="EnemyVitals" type="Label" parent="EnemySlots/EnemyFront0" unique_id=336759042]
+layout_mode = 1
+anchors_preset = 12
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_top = -26.0
+offset_right = 190.0
+grow_horizontal = 2
+grow_vertical = 0
+theme_override_font_sizes/font_size = 11
+horizontal_alignment = 1
+
+[node name="QueuedCommand" type="Label" parent="EnemySlots/EnemyFront0" unique_id=396433545]
+visible = false
+layout_mode = 1
+anchors_preset = 10
+anchor_right = 1.0
+offset_top = -20.0
+offset_bottom = 45.0
+grow_horizontal = 2
+theme_override_font_sizes/font_size = 11
+horizontal_alignment = 1
+
+[node name="AffectedHighlight" type="ColorRect" parent="EnemySlots/EnemyFront0" unique_id=2131922381]
+visible = false
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+color = Color(0.9, 0.82, 0.16, 0.22)
+
+[node name="ActiveHighlight" type="ColorRect" parent="EnemySlots/EnemyFront0" unique_id=244385011]
+visible = false
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+color = Color(0.2, 0.7, 1, 0.24)
+
+[node name="TargetCaret" parent="EnemySlots/EnemyFront0" unique_id=525268876 instance=ExtResource("2_dehh1")]
+visible = false
+layout_mode = 1
+
+[node name="EnemyFront1" type="Panel" parent="EnemySlots" unique_id=909531868]
+unique_name_in_owner = true
+visible = false
+layout_mode = 0
+offset_left = 230.0
+offset_top = 92.0
+offset_right = 420.0
+offset_bottom = 164.0
+
+[node name="EnemyName" type="Label" parent="EnemySlots/EnemyFront1" unique_id=1753338817]
+layout_mode = 0
+theme_override_font_sizes/font_size = 14
+text = "Enemy"
+horizontal_alignment = 1
+
+[node name="EnemyVitals" type="Label" parent="EnemySlots/EnemyFront1" unique_id=1281536374]
+layout_mode = 1
+anchors_preset = 12
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_top = -26.0
+offset_right = 190.0
+grow_horizontal = 2
+grow_vertical = 0
+theme_override_font_sizes/font_size = 11
+horizontal_alignment = 1
+
+[node name="QueuedCommand" type="Label" parent="EnemySlots/EnemyFront1" unique_id=1010691090]
+visible = false
+layout_mode = 1
+anchors_preset = 10
+anchor_right = 1.0
+offset_top = -20.0
+offset_bottom = 45.0
+grow_horizontal = 2
+theme_override_font_sizes/font_size = 11
+horizontal_alignment = 1
+
+[node name="AffectedHighlight" type="ColorRect" parent="EnemySlots/EnemyFront1" unique_id=930241149]
+visible = false
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+color = Color(0.9, 0.82, 0.16, 0.22)
+
+[node name="ActiveHighlight" type="ColorRect" parent="EnemySlots/EnemyFront1" unique_id=1810116058]
+visible = false
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+color = Color(0.2, 0.7, 1, 0.24)
+
+[node name="TargetCaret" parent="EnemySlots/EnemyFront1" unique_id=1923317915 instance=ExtResource("2_dehh1")]
+visible = false
+layout_mode = 1
+
+[node name="EnemyFront2" type="Panel" parent="EnemySlots" unique_id=1255941327]
+unique_name_in_owner = true
+visible = false
+layout_mode = 0
+offset_left = 460.0
+offset_top = 92.0
+offset_right = 650.0
+offset_bottom = 164.0
+
+[node name="EnemyName" type="Label" parent="EnemySlots/EnemyFront2" unique_id=502971726]
+layout_mode = 0
+theme_override_font_sizes/font_size = 14
+text = "Enemy"
+horizontal_alignment = 1
+
+[node name="EnemyVitals" type="Label" parent="EnemySlots/EnemyFront2" unique_id=1525215341]
+layout_mode = 1
+anchors_preset = 12
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_top = -26.0
+offset_right = 190.0
+grow_horizontal = 2
+grow_vertical = 0
+theme_override_font_sizes/font_size = 11
+horizontal_alignment = 1
+
+[node name="QueuedCommand" type="Label" parent="EnemySlots/EnemyFront2" unique_id=753770928]
+visible = false
+layout_mode = 1
+anchors_preset = 10
+anchor_right = 1.0
+offset_top = -20.0
+offset_bottom = 45.0
+grow_horizontal = 2
+theme_override_font_sizes/font_size = 11
+horizontal_alignment = 1
+
+[node name="AffectedHighlight" type="ColorRect" parent="EnemySlots/EnemyFront2" unique_id=722690896]
+visible = false
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+color = Color(0.9, 0.82, 0.16, 0.22)
+
+[node name="ActiveHighlight" type="ColorRect" parent="EnemySlots/EnemyFront2" unique_id=173784088]
+visible = false
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+color = Color(0.2, 0.7, 1, 0.24)
+
+[node name="TargetCaret" parent="EnemySlots/EnemyFront2" unique_id=1140597324 instance=ExtResource("2_dehh1")]
+visible = false
+layout_mode = 1
+
+[node name="PartySlots" type="VBoxContainer" parent="." unique_id=983451676]
+unique_name_in_owner = true
+layout_mode = 1
+anchors_preset = -1
+anchor_left = 0.24300002
+anchor_top = 0.786
+anchor_right = 0.78300005
+anchor_bottom = 0.97400004
+offset_left = 0.43997192
+offset_top = 0.11999512
+offset_right = 0.43969727
+offset_bottom = 0.079956055
+grow_horizontal = 2
+grow_vertical = 0
+theme = ExtResource("1_dehh1")
+
+[node name="FrontRow" type="HBoxContainer" parent="PartySlots" unique_id=2109833868]
+unique_name_in_owner = true
+layout_mode = 2
+alignment = 1
+
+[node name="PlayerFront0" type="Panel" parent="PartySlots/FrontRow" unique_id=785132630]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(210, 90)
+layout_mode = 2
+theme = ExtResource("1_dehh1")
+
+[node name="PartyMemberUi" parent="PartySlots/FrontRow/PlayerFront0" unique_id=1126516284 instance=ExtResource("3_lokxc")]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_right = 0.0
+
+[node name="AffectedHighlight" type="ColorRect" parent="PartySlots/FrontRow/PlayerFront0" unique_id=296423137]
+visible = false
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+color = Color(0.9, 0.82, 0.16, 0.22)
+
+[node name="ActiveHighlight" type="ColorRect" parent="PartySlots/FrontRow/PlayerFront0" unique_id=1128874569]
+visible = false
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+color = Color(0.2, 0.7, 1, 0.24)
+
+[node name="QueuedCommand" type="Label" parent="PartySlots/FrontRow/PlayerFront0" unique_id=401782491]
+visible = false
+layout_mode = 1
+anchors_preset = 12
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_top = 2.0
+offset_right = 210.0
+offset_bottom = 22.0
+grow_horizontal = 2
+grow_vertical = 0
+theme_override_font_sizes/font_size = 12
+horizontal_alignment = 1
+
+[node name="TargetCaret" parent="PartySlots/FrontRow/PlayerFront0" unique_id=316214720 instance=ExtResource("2_dehh1")]
+visible = false
+layout_mode = 1
+
+[node name="PlayerFront1" type="Panel" parent="PartySlots/FrontRow" unique_id=978711491]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(210, 90)
+layout_mode = 2
+theme = ExtResource("1_dehh1")
+metadata/_edit_use_anchors_ = true
+
+[node name="PartyMemberUi" parent="PartySlots/FrontRow/PlayerFront1" unique_id=1563698761 instance=ExtResource("3_lokxc")]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_right = 0.0
+theme = ExtResource("1_dehh1")
+
+[node name="AffectedHighlight" type="ColorRect" parent="PartySlots/FrontRow/PlayerFront1" unique_id=1833885431]
+visible = false
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+theme = ExtResource("1_dehh1")
+color = Color(0.9, 0.82, 0.16, 0.22)
+
+[node name="ActiveHighlight" type="ColorRect" parent="PartySlots/FrontRow/PlayerFront1" unique_id=1843752555]
+visible = false
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+theme = ExtResource("1_dehh1")
+color = Color(0.2, 0.7, 1, 0.24)
+
+[node name="QueuedCommand" type="Label" parent="PartySlots/FrontRow/PlayerFront1" unique_id=1084834085]
+visible = false
+layout_mode = 1
+anchors_preset = 12
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_top = 2.0
+offset_right = 210.0
+offset_bottom = 22.0
+grow_horizontal = 2
+grow_vertical = 0
+theme = ExtResource("1_dehh1")
+theme_override_font_sizes/font_size = 12
+horizontal_alignment = 1
+
+[node name="TargetCaret" parent="PartySlots/FrontRow/PlayerFront1" unique_id=334095123 instance=ExtResource("2_dehh1")]
+visible = false
+layout_mode = 1
+theme = ExtResource("1_dehh1")
+
+[node name="PlayerFront2" type="Panel" parent="PartySlots/FrontRow" unique_id=649975757]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(210, 90)
+layout_mode = 2
+theme = ExtResource("1_dehh1")
+metadata/_edit_use_anchors_ = true
+
+[node name="PartyMemberUi" parent="PartySlots/FrontRow/PlayerFront2" unique_id=1606302445 instance=ExtResource("3_lokxc")]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_right = 0.0
+
+[node name="AffectedHighlight" type="ColorRect" parent="PartySlots/FrontRow/PlayerFront2" unique_id=591422634]
+visible = false
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+color = Color(0.9, 0.82, 0.16, 0.22)
+
+[node name="ActiveHighlight" type="ColorRect" parent="PartySlots/FrontRow/PlayerFront2" unique_id=294465453]
+visible = false
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+color = Color(0.2, 0.7, 1, 0.24)
+
+[node name="QueuedCommand" type="Label" parent="PartySlots/FrontRow/PlayerFront2" unique_id=190332645]
+visible = false
+layout_mode = 1
+anchors_preset = 12
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_top = 2.0
+offset_right = 210.0
+offset_bottom = 22.0
+grow_horizontal = 2
+grow_vertical = 0
+theme_override_font_sizes/font_size = 12
+horizontal_alignment = 1
+
+[node name="TargetCaret" parent="PartySlots/FrontRow/PlayerFront2" unique_id=1751709450 instance=ExtResource("2_dehh1")]
+visible = false
+layout_mode = 1
+
+[node name="BackRow" type="HBoxContainer" parent="PartySlots" unique_id=2107352160]
+unique_name_in_owner = true
+layout_mode = 2
+alignment = 1
+
+[node name="PlayerBack0" type="Panel" parent="PartySlots/BackRow" unique_id=1709215950]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(210, 90)
+layout_mode = 2
+theme = ExtResource("1_dehh1")
+metadata/_edit_use_anchors_ = true
+
+[node name="PartyMemberUi" parent="PartySlots/BackRow/PlayerBack0" unique_id=778518079 instance=ExtResource("3_lokxc")]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_right = 0.0
+
+[node name="AffectedHighlight" type="ColorRect" parent="PartySlots/BackRow/PlayerBack0" unique_id=1646601770]
+visible = false
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+color = Color(0.9, 0.82, 0.16, 0.22)
+
+[node name="ActiveHighlight" type="ColorRect" parent="PartySlots/BackRow/PlayerBack0" unique_id=713947564]
+visible = false
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+color = Color(0.2, 0.7, 1, 0.24)
+
+[node name="QueuedCommand" type="Label" parent="PartySlots/BackRow/PlayerBack0" unique_id=175961288]
+visible = false
+layout_mode = 1
+anchors_preset = 12
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_top = 2.0
+offset_right = 210.0
+offset_bottom = 22.0
+grow_horizontal = 2
+grow_vertical = 0
+theme_override_font_sizes/font_size = 12
+horizontal_alignment = 1
+
+[node name="TargetCaret" parent="PartySlots/BackRow/PlayerBack0" unique_id=830821015 instance=ExtResource("2_dehh1")]
+visible = false
+layout_mode = 1
+
+[node name="PlayerBack1" type="Panel" parent="PartySlots/BackRow" unique_id=1888631785]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(210, 90)
+layout_mode = 2
+theme = ExtResource("1_dehh1")
+metadata/_edit_use_anchors_ = true
+
+[node name="PartyMemberUi" parent="PartySlots/BackRow/PlayerBack1" unique_id=1657461892 instance=ExtResource("3_lokxc")]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_right = 0.0
+
+[node name="AffectedHighlight" type="ColorRect" parent="PartySlots/BackRow/PlayerBack1" unique_id=922778584]
+visible = false
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+color = Color(0.9, 0.82, 0.16, 0.22)
+
+[node name="ActiveHighlight" type="ColorRect" parent="PartySlots/BackRow/PlayerBack1" unique_id=787035473]
+visible = false
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+color = Color(0.2, 0.7, 1, 0.24)
+
+[node name="QueuedCommand" type="Label" parent="PartySlots/BackRow/PlayerBack1" unique_id=1110443267]
+visible = false
+layout_mode = 1
+anchors_preset = 12
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_top = 2.0
+offset_right = 210.0
+offset_bottom = 22.0
+grow_horizontal = 2
+grow_vertical = 0
+theme_override_font_sizes/font_size = 12
+horizontal_alignment = 1
+
+[node name="TargetCaret" parent="PartySlots/BackRow/PlayerBack1" unique_id=2064617151 instance=ExtResource("2_dehh1")]
+visible = false
+layout_mode = 1
+
+[node name="PlayerBack2" type="Panel" parent="PartySlots/BackRow" unique_id=955833354]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(210, 90)
+layout_mode = 2
+theme = ExtResource("1_dehh1")
+metadata/_edit_use_anchors_ = true
+
+[node name="PartyMemberUi" parent="PartySlots/BackRow/PlayerBack2" unique_id=1062016866 instance=ExtResource("3_lokxc")]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_right = 0.0
+
+[node name="AffectedHighlight" type="ColorRect" parent="PartySlots/BackRow/PlayerBack2" unique_id=641136007]
+visible = false
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+color = Color(0.9, 0.82, 0.16, 0.22)
+
+[node name="ActiveHighlight" type="ColorRect" parent="PartySlots/BackRow/PlayerBack2" unique_id=422923279]
+visible = false
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+color = Color(0.2, 0.7, 1, 0.24)
+
+[node name="QueuedCommand" type="Label" parent="PartySlots/BackRow/PlayerBack2" unique_id=989608998]
+visible = false
+layout_mode = 1
+anchors_preset = 12
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_top = 2.0
+offset_right = 210.0
+offset_bottom = 22.0
+grow_horizontal = 2
+grow_vertical = 0
+theme_override_font_sizes/font_size = 12
+horizontal_alignment = 1
+
+[node name="TargetCaret" parent="PartySlots/BackRow/PlayerBack2" unique_id=1963060669 instance=ExtResource("2_dehh1")]
+visible = false
+layout_mode = 1
+
+[node name="ActionMenu" type="ItemList" parent="." unique_id=535588563]
+unique_name_in_owner = true
+layout_mode = 1
+anchors_preset = -1
+anchor_top = 0.17
+anchor_bottom = 0.72
+offset_left = 54.0
+offset_top = 171.38998
+offset_right = 304.0
+offset_bottom = 63.390015
+grow_vertical = 2
+theme = ExtResource("1_dehh1")
+text_overrun_behavior = 0
+
+[node name="SkillActions" type="ItemList" parent="." unique_id=1572379069]
+unique_name_in_owner = true
+visible = false
+layout_mode = 1
+anchors_preset = -1
+anchor_top = 0.17
+anchor_bottom = 0.72
+offset_left = 321.0
+offset_top = 171.38998
+offset_right = 571.0
+offset_bottom = 63.390015
+grow_vertical = 2
+theme = ExtResource("1_dehh1")
+text_overrun_behavior = 0

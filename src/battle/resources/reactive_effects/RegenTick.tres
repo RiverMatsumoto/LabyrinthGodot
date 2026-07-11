@@ -1,9 +1,9 @@
 [gd_resource type="Resource" script_class="BattleReactiveEffectResource" format=3 uid="uid://4ou7tjxrgrf8"]
 
-[ext_resource type="Script" uid="uid://s84xq2vpflf5" path="res://src/battle/resources/BattleReactiveEffectConditionResource.cs" id="1_1qlcj"]
-[ext_resource type="Script" uid="uid://cidn5h6e6ryfc" path="res://src/battle/resources/BattleReactiveEffectResource.cs" id="1_reactiveEffect"]
-[ext_resource type="Script" uid="uid://gwug75hcnrr3" path="res://src/battle/resources/effect_resources/BattleEffectResource.cs" id="2_3whua"]
-[ext_resource type="Script" uid="uid://l7mkr8b1xxgu" path="res://src/battle/resources/effect_resources/HealBattleEffectResource.cs" id="2_heal"]
+[ext_resource type="Script" uid="uid://s84xq2vpflf5" path="res://src/battle/resources/reactive_effects/conditions/BattleReactiveEffectConditionResource.cs" id="1_1qlcj"]
+[ext_resource type="Script" uid="uid://cidn5h6e6ryfc" path="res://src/battle/resources/reactive_effects/BattleReactiveEffectResource.cs" id="1_reactiveEffect"]
+[ext_resource type="Script" uid="uid://gwug75hcnrr3" path="res://src/battle/resources/effects/BattleEffectResource.cs" id="2_3whua"]
+[ext_resource type="Script" uid="uid://l7mkr8b1xxgu" path="res://src/battle/resources/effects/HealBattleEffectResource.cs" id="2_heal"]
 
 [sub_resource type="Resource" id="Resource_heal"]
 script = ExtResource("2_heal")

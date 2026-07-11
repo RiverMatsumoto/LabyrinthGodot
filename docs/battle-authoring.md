@@ -3,7 +3,7 @@
 Battle content is authored as Godot resources and compiled into immutable
 domain definitions before a battle starts.
 
-- [`BattleContentResource`](../src/battle/resources/BattleContentResource.cs)
+- [`BattleContentResource`](../src/battle/resources/catalog/BattleContentResource.cs)
   is the root catalog.
 - [`BattleDefinitions.cs`](../src/battle/domain/BattleDefinitions.cs) contains
   the compiled contracts.
@@ -26,7 +26,7 @@ or reactive effects.
 
 ## Actions
 
-[`BattleActionResource`](../src/battle/resources/BattleActionResource.cs):
+[`BattleActionResource`](../src/battle/resources/actions/BattleActionResource.cs):
 
 | Field | Meaning |
 | --- | --- |
@@ -43,18 +43,30 @@ Effects execute in authored order:
 
 | Resource | Fields |
 | --- | --- |
-| [`DamageBattleEffectResource`](../src/battle/resources/effect_resources/DamageBattleEffectResource.cs) | Damage type, fixed/stat mode, power, crit settings, animation, optional status-stack scaling |
-| [`HealBattleEffectResource`](../src/battle/resources/effect_resources/HealBattleEffectResource.cs) | Amount, animation, optional status-stack scaling |
-| [`ModifyResourceBattleEffectResource`](../src/battle/resources/effect_resources/ModifyResourceBattleEffectResource.cs) | HP/TP, signed amount, optional status-stack scaling |
-| [`ApplyStatusBattleEffectResource`](../src/battle/resources/effect_resources/ApplyStatusBattleEffectResource.cs) | Status ID, stacks, duration override, base chance |
-| [`RemoveStatusBattleEffectResource`](../src/battle/resources/effect_resources/RemoveStatusBattleEffectResource.cs) | Status ID |
-| [`AnimationBattleEffectResource`](../src/battle/resources/effect_resources/AnimationBattleEffectResource.cs) | Animation ID and wait flag |
-| [`WaitBattleEffectResource`](../src/battle/resources/effect_resources/WaitBattleEffectResource.cs) | Seconds |
-| [`RegisterReactiveEffectBattleEffectResource`](../src/battle/resources/effect_resources/RegisterReactiveEffectBattleEffectResource.cs) | Catalog reactive effect ID to register on the acting battler |
+| [`DamageBattleEffectResource`](../src/battle/resources/effects/DamageBattleEffectResource.cs) | Damage type, fixed/stat mode, value source, multipliers, stat scales, crit settings, animation |
+| [`HealBattleEffectResource`](../src/battle/resources/effects/HealBattleEffectResource.cs) | Amount, animation, optional status-stack scaling |
+| [`ModifyResourceBattleEffectResource`](../src/battle/resources/effects/ModifyResourceBattleEffectResource.cs) | HP/TP, signed amount, optional status-stack scaling |
+| [`ApplyStatusBattleEffectResource`](../src/battle/resources/effects/ApplyStatusBattleEffectResource.cs) | Status ID, stacks, duration override, base chance |
+| [`RemoveStatusBattleEffectResource`](../src/battle/resources/effects/RemoveStatusBattleEffectResource.cs) | Status ID |
+| [`AnimationBattleEffectResource`](../src/battle/resources/effects/AnimationBattleEffectResource.cs) | Animation ID and wait flag |
+| [`WaitBattleEffectResource`](../src/battle/resources/effects/WaitBattleEffectResource.cs) | Seconds |
+| [`RegisterReactiveEffectBattleEffectResource`](../src/battle/resources/effects/RegisterReactiveEffectBattleEffectResource.cs) | Catalog reactive effect ID to register on the acting battler |
 
-`ScaleBySourceStatusId` multiplies the authored amount or power by that
-status's stack count. A status-owned reactive effect retains the triggering stack
-count during removal.
+Damage authoring has two modes:
+
+- `Fixed`: resolves `FixedAmount`, then applies range, crit, and affinities.
+- `FromStats`: resolves `PowerMultiplier`, multiplies weighted source stats,
+  then applies defense, range, crit, and affinities.
+
+Damage values choose where their base value comes from:
+
+- `Authored`: use the visible authored number.
+- `ReactiveStatusPower`: use the current reactive status power.
+
+Each damage value can also multiply by reactive status power, reactive status
+stacks, or a named source status's stacks. Hidden inspector fields are not used
+by the selected mode/source. Heal and resource effects still use
+`ScaleBySourceStatusId` for stack scaling.
 
 ### Create an Action
 
@@ -68,7 +80,7 @@ count during removal.
 
 Enemy species data and encounter placement are separate.
 
-[`BattleEnemyResource`](../src/battle/resources/BattleEnemyResource.cs) owns:
+[`BattleEnemyResource`](../src/battle/resources/enemies/BattleEnemyResource.cs) owns:
 
 | Field | Meaning |
 | --- | --- |
@@ -83,7 +95,7 @@ Enemy species data and encounter placement are separate.
 
 It intentionally contains no row or slot.
 
-[`BattleEnemyPlacementResource`](../src/battle/resources/BattleEnemyPlacementResource.cs)
+[`BattleEnemyPlacementResource`](../src/battle/resources/encounters/BattleEnemyPlacementResource.cs)
 owns encounter-specific data:
 
 | Field | Meaning |
@@ -93,7 +105,7 @@ owns encounter-specific data:
 | `Row` | Front or back |
 | `Slot` | `0-2` |
 
-[`BattleEncounterResource`](../src/battle/resources/BattleEncounterResource.cs)
+[`BattleEncounterResource`](../src/battle/resources/encounters/BattleEncounterResource.cs)
 contains up to six placements plus experience, currency, and item rewards.
 Compilation rejects missing enemy references, duplicate battler IDs, duplicate
 positions, invalid slots, empty encounters, and more than six placements.
@@ -114,7 +126,7 @@ and positions. See
 
 ## Statuses
 
-[`BattleStatusResource`](../src/battle/resources/BattleStatusResource.cs):
+[`BattleStatusResource`](../src/battle/resources/statuses/BattleStatusResource.cs):
 
 | Field | Meaning |
 | --- | --- |
@@ -139,7 +151,7 @@ Authored examples:
 
 ## ReactiveEffects
 
-[`BattleReactiveEffectResource`](../src/battle/resources/BattleReactiveEffectResource.cs):
+[`BattleReactiveEffectResource`](../src/battle/resources/reactive_effects/BattleReactiveEffectResource.cs):
 
 | Field | Meaning |
 | --- | --- |
@@ -164,13 +176,15 @@ Conditions:
 
 | Resource | Match |
 | --- | --- |
-| [`OwnerHasStatusReactiveEffectConditionResource`](../src/battle/resources/OwnerHasStatusReactiveEffectConditionResource.cs) | Owner has a status with at least the requested stacks |
-| [`TriggerActionReactiveEffectConditionResource`](../src/battle/resources/TriggerActionReactiveEffectConditionResource.cs) | Event action ID matches |
-| [`TriggerStatusReactiveEffectConditionResource`](../src/battle/resources/TriggerStatusReactiveEffectConditionResource.cs) | Event status ID matches |
-| [`OwnerRelationReactiveEffectConditionResource`](../src/battle/resources/OwnerRelationReactiveEffectConditionResource.cs) | Owner is the event source or target |
+| [`OwnerHasStatusReactiveEffectConditionResource`](../src/battle/resources/reactive_effects/conditions/OwnerHasStatusReactiveEffectConditionResource.cs) | Owner has a status with at least the requested stacks |
+| [`TriggerActionReactiveEffectConditionResource`](../src/battle/resources/reactive_effects/conditions/TriggerActionReactiveEffectConditionResource.cs) | Event action ID matches |
+| [`TriggerStatusReactiveEffectConditionResource`](../src/battle/resources/reactive_effects/conditions/TriggerStatusReactiveEffectConditionResource.cs) | Event status ID matches |
+| [`MatchesDamageTypeCondition`](../src/battle/resources/reactive_effects/conditions/MatchesDamageTypeCondition.cs) | Damage event type is in the authored list |
+| [`OwnerRelationReactiveEffectConditionResource`](../src/battle/resources/reactive_effects/conditions/OwnerRelationReactiveEffectConditionResource.cs) | Owner is the event source or target |
 
 Conditions are AND-combined. Event metadata carries action ID, status ID,
-status stacks, source, target, cause, and reactive effect depth when applicable.
+status stacks, damage type, source, target, cause, and reactive effect depth
+when applicable.
 
 Schedules:
 
@@ -180,8 +194,9 @@ Schedules:
 - `EndOfTurn`: flush after `TurnEnded` and before status expiration. Reactive effects
   created during this flush are drained before expiration.
 
-Matching preserves priority, then registration order. Cause guards prevent one
-registration from handling the same cause twice. Reactive effect depth is capped by
+Matching examines registrations indexed to the event trigger and preserves
+priority, then registration order. Cause guards prevent one registration from
+handling the same cause twice. Reactive effect depth is capped by
 `BattleRepo.MaxReactiveEffectDepth`.
 
 ### ReactiveEffect Ownership
@@ -229,19 +244,28 @@ Final typed damage:
 computedDamage * (1 - resistance) * (1 + weakness)
 ```
 
-`True` damage bypasses damage affinities. Party members persist status
+Stat damage offense:
+
+```text
+max(0, sum(sourceStat * weight) * powerMultiplier)
+```
+
+Physical defense is `Defense + Vitality * 0.75`. Elemental defense is
+`Wisdom * 1.35 + Technique * 0.65 + Defense * 0.35`.
+
+`True` damage bypasses defense and damage affinities. Party members persist status
 resistances, status weaknesses, damage resistances, damage weaknesses, and
 passive reactive effect IDs through
 [`PartyData`](../src/party/domain/PartyData.cs).
 
 ## Stats and Equipment
 
-[`BattleStatsResource`](../src/battle/resources/BattleStatsResource.cs)
+[`BattleStatsResource`](../src/battle/resources/stats/BattleStatsResource.cs)
 authors HP, TP, primary stats, attack, and defense.
 
-[`BattleEquipmentResource`](../src/battle/resources/BattleEquipmentResource.cs)
+[`BattleEquipmentResource`](../src/battle/resources/equipment/BattleEquipmentResource.cs)
 contains an ID, display name, and ordered
-[`BattleStatModifierResource`](../src/battle/resources/BattleStatModifierResource.cs)
+[`BattleStatModifierResource`](../src/battle/resources/equipment/BattleStatModifierResource.cs)
 entries. Equipment modifiers contribute to party effective stats before the
 battle seed is created.
 

@@ -1,0 +1,53 @@
+[gd_scene format=3 uid="uid://ctyf21v2jvvf"]
+
+[ext_resource type="Script" uid="uid://dlgnmilcehfb0" path="res://src/debug/DebugMenu.cs" id="1_56mot"]
+
+[node name="DebugMenu" type="Control" unique_id=1583398656]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_56mot")
+
+[node name="Panel" type="Panel" parent="." unique_id=845895922]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="TabContainer" type="TabContainer" parent="." unique_id=2007209221]
+layout_mode = 1
+anchors_preset = -1
+anchor_left = 0.084895834
+anchor_top = 0.13055556
+anchor_right = 0.9046875
+anchor_bottom = 0.88796294
+current_tab = 0
+metadata/_edit_use_anchors_ = true
+
+[node name="Battle" type="Control" parent="TabContainer" unique_id=1567491379]
+layout_mode = 2
+metadata/_tab_index = 0
+
+[node name="EnableOperationDebugOutput" type="CheckButton" parent="TabContainer/Battle" unique_id=1432827394]
+unique_name_in_owner = true
+layout_mode = 1
+anchors_preset = -1
+anchor_left = 0.026
+anchor_top = 0.046000004
+anchor_right = 0.294
+anchor_bottom = 0.101
+offset_left = 0.07600021
+offset_top = 0.30399704
+offset_right = 0.24398804
+offset_bottom = -0.37599945
+text = "Enable Operation Debug Output"
+
+[node name="Other" type="Control" parent="TabContainer" unique_id=639934681]
+visible = false
+layout_mode = 2
+metadata/_tab_index = 1

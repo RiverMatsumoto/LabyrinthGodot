@@ -60,7 +60,7 @@ public enum PartyRow
 public readonly record struct PartyPosition(PartyRow Row, int Index)
 {
     public bool IsValid =>
-      Index is >= 0 and < BattleLimits.MaxFormationSlotsPerRow;
+        Index is >= 0 and < BattleLimits.MaxFormationSlotsPerRow;
 }
 
 public enum BattleStat
@@ -80,29 +80,29 @@ public enum BattleStat
 public readonly record struct StatModifier(BattleStat Stat, int Amount);
 
 public sealed record BattleStats(
-  int MaxHp,
-  int MaxTp,
-  int Strength,
-  int Technique,
-  int Agility,
-  int Vitality,
-  int Wisdom,
-  int Luck,
-  int Attack,
-  int Defense
+    int MaxHp,
+    int MaxTp,
+    int Strength,
+    int Technique,
+    int Agility,
+    int Vitality,
+    int Wisdom,
+    int Luck,
+    int Attack,
+    int Defense
 )
 {
     public static BattleStats Default => new(
-      MaxHp: 100,
-      MaxTp: 20,
-      Strength: 10,
-      Technique: 10,
-      Agility: 10,
-      Vitality: 10,
-      Wisdom: 10,
-      Luck: 10,
-      Attack: 0,
-      Defense: 0
+        MaxHp: 100,
+        MaxTp: 20,
+        Strength: 10,
+        Technique: 10,
+        Agility: 10,
+        Vitality: 10,
+        Wisdom: 10,
+        Luck: 10,
+        Attack: 0,
+        Defense: 0
     );
 
     public BattleStats Apply(IEnumerable<StatModifier> modifiers)

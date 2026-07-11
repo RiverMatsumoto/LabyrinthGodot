@@ -1,8 +1,8 @@
 [gd_resource type="Resource" script_class="BattleEncounterResource" format=3 uid="uid://bw0v5ywg6wuqc"]
 
-[ext_resource type="Script" uid="uid://ca8tj0yvswucy" path="res://src/battle/resources/BattleEnemyPlacementResource.cs" id="1_placement"]
+[ext_resource type="Script" uid="uid://ca8tj0yvswucy" path="res://src/battle/resources/encounters/BattleEnemyPlacementResource.cs" id="1_placement"]
 [ext_resource type="Resource" uid="uid://brjy0uahc8v70" path="res://src/battle/resources/enemies/Squirrel.tres" id="2_enemy"]
-[ext_resource type="Script" uid="uid://66srkle36pij" path="res://src/battle/resources/BattleEncounterResource.cs" id="4_rsm5i"]
+[ext_resource type="Script" uid="uid://66srkle36pij" path="res://src/battle/resources/encounters/BattleEncounterResource.cs" id="4_rsm5i"]
 
 [sub_resource type="Resource" id="Resource_placement"]
 script = ExtResource("1_placement")

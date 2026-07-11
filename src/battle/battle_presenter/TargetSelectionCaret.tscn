@@ -1,0 +1,75 @@
+[gd_scene format=3 uid="uid://b64nrxo5e1o7u"]
+
+[ext_resource type="Script" uid="uid://dcje7onb0n81a" path="res://src/battle/battle_presenter/TargetSelectionCaret.cs" id="1_tsc"]
+
+[node name="TargetSelectionCaret" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+script = ExtResource("1_tsc")
+
+[node name="PartyCorners" type="Control" parent="."]
+unique_name_in_owner = true
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+
+[node name="Left" type="Label" parent="PartyCorners"]
+layout_mode = 1
+anchors_preset = 12
+anchor_top = 0.5
+anchor_bottom = 0.5
+offset_top = -28.0
+offset_right = 24.0
+offset_bottom = 28.0
+grow_vertical = 2
+theme_override_font_sizes/font_size = 38
+text = "["
+vertical_alignment = 1
+
+[node name="Right" type="Label" parent="PartyCorners"]
+layout_mode = 1
+anchors_preset = 14
+anchor_left = 1.0
+anchor_top = 0.5
+anchor_right = 1.0
+anchor_bottom = 0.5
+offset_left = -24.0
+offset_top = -28.0
+offset_bottom = 28.0
+grow_horizontal = 0
+grow_vertical = 2
+theme_override_font_sizes/font_size = 38
+text = "]"
+horizontal_alignment = 2
+vertical_alignment = 1
+
+[node name="EnemyArrow" type="Control" parent="."]
+unique_name_in_owner = true
+layout_mode = 1
+anchors_preset = 10
+anchor_right = 1.0
+offset_top = -24.0
+offset_bottom = 24.0
+grow_horizontal = 2
+mouse_filter = 2
+
+[node name="Arrow" type="Label" parent="EnemyArrow"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_font_sizes/font_size = 24
+text = "v"
+horizontal_alignment = 1
+vertical_alignment = 1
